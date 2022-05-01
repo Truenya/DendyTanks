@@ -224,9 +224,9 @@ void Renderer::processEvents(){
 	            auto com = new MoveCommand(processor_->getPlayer(),{-1,0, 0, Position::Direction::Left});
 	            processor_->addPlayerCommand(com);
             }
-//			if (e.key.keysym.sym == SDLK_SPACE){
-//		        processor_->addPlayerCommand(new ShootCommand(processor_->getPlayer()));
-//	        }
+			if (e.key.keysym.sym == SDLK_SPACE){
+		        processor_->addPlayerCommand(new ShootCommand(processor_->getPlayer()));
+	        }
         }
 
     }
@@ -320,6 +320,13 @@ bool Renderer::render() {
 				SDL_RenderCopy(sdlRenderer_, sdlTankRight, &rightPlayerRect, &dstrect);
 				break;
 		}
+
+		positions = processor_->getShoots();
+		for (auto shoot:positions)
+		{
+			// добавить новый объект выстрела.
+		}
+
 		SDL_RenderCopy(sdlRenderer_, sdlFillTexture_, nullptr, &prevrect);
 	}
 

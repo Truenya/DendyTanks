@@ -19,6 +19,7 @@ struct CommandsProcessor {
 	void addPlayerCommand(BaseCommand* command);
 	bool processCommands();
 	[[nodiscard]] const renderMoveInfo getChangedPositions();
+	[[nodiscard]] const renderMoveInfo getShoots();
 
 	BaseGameObject *getPlayer() const;
 	[[nodiscard]]const Position worldSize() const;

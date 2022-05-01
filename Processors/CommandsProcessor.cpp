@@ -146,3 +146,11 @@ const BaseGameObject &CommandsProcessor::at(const Position &pos) const {
 	return world_.at(pos);
 }
 
+const renderShootInfo getShoots()
+{
+	renderShootInfo empty;
+	mutexCommands.lock();
+	std::swap (empty,playerShootPositions);
+	mutexCommands.unlock();
+	return empty;
+}

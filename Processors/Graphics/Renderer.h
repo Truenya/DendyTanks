@@ -12,6 +12,7 @@
 #include "../CommandsProcessor.h"
 #include "../../Entities/Commands/BaseCommand.h"
 #include "../Parsers/WorldGenerator.h"
+#include "ParticlesSystem.h"
 
 using namespace std::chrono;
 
@@ -51,6 +52,7 @@ class Renderer {
 	void updateFps(fpsChangeDirection direction);
 	time_t prevRender;
 	CommandsProcessor *processor_;
+	ParticlesSystem particles_;
 	std::atomic_bool &run_;
 public:
     int loop();
