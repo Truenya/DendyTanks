@@ -9,16 +9,18 @@
 #include "ObjectProps/Position.h"
 #include "../Errors/ErrorCode.h"
 #include <vector>
+
 struct BaseGameObject {
 	enum class Type{
 		Undefined,
 		Space,
 		Player,
-		Wall
+		Wall,
+		Shoot
 	};
 	BaseGameObject() ;
 	BaseGameObject(Position pos, Type typo,std::vector<std::vector<BaseGameObject>> *field);
-	BaseGameObject(int x, int y, Type typo);
+//	BaseGameObject(int x, int y, Type typo);
 
 	virtual ~BaseGameObject();
 	SdlErrorCodeExample move(Position deltaPos);

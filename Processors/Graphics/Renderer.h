@@ -8,8 +8,9 @@
 #include <SDL2/SDL.h>
 #include <iostream>
 #include <chrono>
+#include <atomic>
 #include "../CommandsProcessor.h"
-#include "../../Entities/Commands/MoveCommandExample.h"
+#include "../../Entities/Commands/BaseCommand.h"
 #include "../Parsers/WorldGenerator.h"
 
 using namespace std::chrono;

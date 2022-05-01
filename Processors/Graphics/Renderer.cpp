@@ -4,6 +4,8 @@
 #include "Renderer.h"
 #include <SDL2/SDL_image.h>
 #include <experimental/random>
+#include "../../Entities/Commands/MoveCommand.h"
+#include "../../Entities/Commands/ShootCommand.h"
 
 int Renderer::loop()
 {
@@ -207,22 +209,26 @@ void Renderer::processEvents(){
             if (e.key.keysym.sym == SDLK_UP) {
 	            auto player = processor_->getPlayer();
 				Position move = {0,-1,0,Position::Direction::Top };
-				auto com = new MoveCommandExample(player,move);
-				processor_->addCommand(com);
+				auto com = new MoveCommand(player,move);
+	            processor_->addPlayerCommand(com);
             }
             if (e.key.keysym.sym == SDLK_DOWN) {
-	            auto com = new MoveCommandExample(processor_->getPlayer(),{0,1 ,0,Position::Direction::Bot});
-	            processor_->addCommand(com);
+	            auto com = new MoveCommand(processor_->getPlayer(),{0,1 ,0,Position::Direction::Bot});
+	            processor_->addPlayerCommand(com);
             }
             if (e.key.keysym.sym == SDLK_RIGHT) {
-	            auto com = new MoveCommandExample(processor_->getPlayer(),{1,0 ,0,Position::Direction::Right});
-	            processor_->addCommand(com);
+	            auto com = new MoveCommand(processor_->getPlayer(),{1,0 ,0,Position::Direction::Right});
+	            processor_->addPlayerCommand(com);
             }
             if (e.key.keysym.sym == SDLK_LEFT) {
-	            auto com = new MoveCommandExample(processor_->getPlayer(),{-1,0, 0, Position::Direction::Left});
-	            processor_->addCommand(com);
+	            auto com = new MoveCommand(processor_->getPlayer(),{-1,0, 0, Position::Direction::Left});
+	            processor_->addPlayerCommand(com);
             }
+//			if (e.key.keysym.sym == SDLK_SPACE){
+//		        processor_->addPlayerCommand(new ShootCommand(processor_->getPlayer()));
+//	        }
         }
+
     }
 //	render();
 }

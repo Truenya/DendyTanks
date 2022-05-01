@@ -4,6 +4,7 @@
 
 #include "WorldGenerator.h"
 #include <iostream>
+#include "../../Entities/GameObjects/PlayerGameObject.h"
 MyGameWorld &WorldGenerator::generateWorld(const std::string& map_filepath) {
 	static MyGameWorld* ptr = nullptr;
 	if (ptr != nullptr)
@@ -55,7 +56,7 @@ MyGameWorld &WorldGenerator::parseFromString(const std::string& raw_file,MyGameW
 		world.at(space) = BaseGameObject(space,BaseGameObject::Type::Space,&world.field_);
 	}
 
-	world.at(playerCoordinates) = BaseGameObject(playerCoordinates,BaseGameObject::Type::Player,&world.field_);
+	world.at(playerCoordinates) = PlayerGameObject(playerCoordinates,&world.field_);
 	world.player_ = &world.at(playerCoordinates);
 	ptr = &world;
 	return world;

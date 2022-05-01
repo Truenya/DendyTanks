@@ -11,7 +11,8 @@
 struct BaseCommand {
 	enum class Type{
 		Undefined,
-		MoveCommand
+		MoveCommand,
+		ShootCommand
 	};
 	BaseCommand() ;
     BaseCommand(BaseGameObject*, Type) ;

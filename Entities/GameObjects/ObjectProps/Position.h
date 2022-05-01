@@ -39,14 +39,18 @@ struct Position {
 		Top,
 		Bot,
 		Left,
-		Right
+		Right,
+		Undefined
 	} mDirection;
+	void stepInDirection(bool inverse = false);
+	void reverseDirection();
 };
 
 struct Positions{
 	Position prevPos;
 	Position curPos;
 	Position dPos;
+	Position dstPos;
 };
 
 

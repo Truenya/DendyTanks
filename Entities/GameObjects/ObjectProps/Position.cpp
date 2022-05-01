@@ -141,3 +141,49 @@ Position Position::operator-() const {
 	}
 	return minus;
 }
+
+void Position::stepInDirection(bool inverse) {
+	// TODO сложная логика, преобразовать поправить сделать единообразной
+	if (inverse)
+		reverseDirection();
+	switch (mDirection) {
+		case Direction::Top:{
+			this->operator+=(Position{0,-1,0,Direction::Top});
+			break;
+		}
+		case Direction::Bot:{
+			this->operator+=(Position{0,1,0,Direction::Bot});
+			break;
+		}
+		case Direction::Left:{
+			this->operator+=(Position{-1,0,0,Direction::Bot});
+			break;
+		}
+		case Direction::Right:{
+			this->operator+=(Position{1,0,0,Direction::Bot});
+			break;
+		}
+	}
+}
+
+void Position::reverseDirection() {
+
+	switch (mDirection) {
+		case Direction::Top:{
+			mDirection = Direction::Bot;
+			break;
+		}
+		case Direction::Bot:{
+			mDirection = Direction::Top;
+			break;
+		}
+		case Direction::Left:{
+			mDirection = Direction::Right;
+			break;
+		}
+		case Direction::Right:{
+			mDirection = Direction::Left;
+			break;
+		}
+	}
+}

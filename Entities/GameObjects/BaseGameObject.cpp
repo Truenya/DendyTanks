@@ -44,12 +44,6 @@ BaseGameObject::BaseGameObject():
 		type(BaseGameObject::Type::Undefined)
 	{}
 
-BaseGameObject::BaseGameObject(int x, int y, BaseGameObject::Type typo) {
-	positions_.curPos.x = x;
-	positions_.curPos.y = y;
-	type = typo;
-}
-
 const Positions &BaseGameObject::getPositions() const {
 	return positions_;
 }

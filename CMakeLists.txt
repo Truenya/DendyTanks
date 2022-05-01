@@ -16,17 +16,18 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 file(GLOB mIncludes ./*.h )
 file(GLOB mSources ./*.cpp )
-
 file(GLOB_RECURSE mProcessorsIncludes Processors/*.h )
 file(GLOB_RECURSE mProcessorsSources Processors/*.cpp )
-file(GLOB_RECURSE mRecIncludes Entities/*.h)
-file(GLOB_RECURSE mRecSources Entities/*.cpp)
-message("Headers: ${mIncludes};${mRecIncludes}\nSources: ${mSources};${mRecSources}\n")
+file(GLOB_RECURSE mEntityIncludes Entities/*.h)
+file(GLOB_RECURSE mEntitySources Entities/*.cpp)
+message("Headers:\t$${mEntityIncludes};\n\t${mProcessorsIncludes}\n\
+Sources:\t${mSources};\n\t${mEntitySources};\n\t${mProcessorsSources}\n")
+
 #includes
 include_directories(${tcmalloc_INCLUDE_DIR})
 
 #results
-add_executable(ssdl ${mIncludes} ${mSources} ${mSources} ${mRecSources} ${mProcessorsIncludes} ${mProcessorsSources})
+add_executable(ssdl ${mIncludes} ${mSources} ${mEntityIncludes} ${mEntitySources} ${mProcessorsIncludes} ${mProcessorsSources})
 
 #linking
 target_link_libraries(ssdl tcmalloc SDL2 SDL2_image gtest)

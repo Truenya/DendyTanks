@@ -28,7 +28,7 @@ MyGameWorld::MyGameWorld(unsigned int x_dim, unsigned int y_dim) {
 //		for (int y = 0; y < y_dim; ++y) {
 ////			auto grbg = field_[x][y].release();
 ////			field_[x][y] = std::make_unique<BaseGameObject>(x,y,BaseGameObject::Type::Undefined);
-//			field_[x][y].move(Position{x+1,y+1});
+//			field_[x][y].stepInDirection(Position{x+1,y+1});
 //			field_[x][y].setType(BaseGameObject::Type::Undefined);
 //		}
 //	}
