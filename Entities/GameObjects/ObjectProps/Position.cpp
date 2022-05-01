@@ -4,27 +4,120 @@
 #include "Position.h"
 
 void Position::move(int x,int y,int z){
-    x_ += x;
-    y_ += y;
-    z_ += z;
+	x += x;
+	y += y;
+	z += z;
 }
 
-Position Position::operator+=(const Position &other) {
-	this->x_+=other.x_;
-	this->y_+=other.y_;
-	this->z_+=other.z_;
+Position& Position::operator+=(const Position &other) {
+	x+=other.x;
+	y+=other.y;
+	z+=other.z;
 	return *this;
 }
 
-Position Position::operator+=(const Position &&other) {
-	this->x_+=other.x_;
-	this->y_+=other.y_;
-	this->z_+=other.z_;
+Position& Position::operator+=(const Position &&other) {
+	x+=other.x;
+	y+=other.y;
+	z+=other.z;
 	return *this;
 }
 
-bool Position::isValid() {
-	if ((x_ <= -1 ) || (y_ <= -1) || (z_ <= -1))
+bool Position::isValid() const {
+	if ((x <= -1 ) || (y <= -1) || (z <= -1))
 		return false;
 	return true;
+}
+
+bool Position::operator==(const Position &rhs) const {
+	return x == rhs.x &&
+	       y == rhs.y &&
+	       z == rhs.z;
+}
+
+bool Position::operator!=(const Position &rhs) const {
+	return !(rhs == *this);
+}
+
+bool Position::operator<(const Position &rhs) const {
+	if (x < rhs.x)
+		return true;
+	if (rhs.x < x)
+		return false;
+	if (y < rhs.y)
+		return true;
+	if (rhs.y < y)
+		return false;
+	return z < rhs.z;
+}
+
+bool Position::operator>(const Position &rhs) const {
+	return rhs < *this;
+}
+
+bool Position::operator<=(const Position &rhs) const {
+	return !(rhs < *this);
+}
+
+bool Position::operator>=(const Position &rhs) const {
+	return !(*this < rhs);
+}
+
+
+Position Position::operator+(const Position &other) const {
+	Position position;
+	position.x = x+other.x;
+	position.y = y+other.y;
+	position.z = z+other.z;
+	return position;
+}
+
+Position Position::operator+(const Position &&other) const {
+	Position position;
+	position.x = x+other.x;
+	position.y = y+other.y;
+	position.z = z+other.z;
+	return position;
+}
+
+Position Position::operator-(const Position &other) const {
+	Position position;
+	position.x = x-other.x;
+	position.y = y-other.y;
+	position.z = z-other.z;
+	return position;
+}
+
+Position Position::operator-(const Position &&other) const {
+	Position position;
+	position.x = x-other.x;
+	position.y = y-other.y;
+	position.z = z-other.z;
+	return position;
+}
+
+Position& Position::operator-=(const Position &other) {
+	x-=other.x;
+	y-=other.y;
+	z-=other.z;
+	return *this;
+}
+
+Position& Position::operator-=(const Position &&other) {
+	x-=other.x;
+	y-=other.y;
+	z-=other.z;
+	return *this;
+}
+
+Position::operator bool() const {
+	return isValid();
+}
+
+Position Position::operator-() const {
+	Position minus = *this;
+	minus.x = -minus.x;
+	minus.y = -minus.y;
+	minus.z = -minus.z;
+	return minus;
 }

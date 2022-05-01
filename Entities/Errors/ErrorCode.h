@@ -10,7 +10,8 @@ class SdlErrorCodeExample {
 public:
 	enum Type{
 		NO_ERRORS,
-		NOT_INITIALIZED_OBJECT
+		NOT_INITIALIZED_OBJECT,
+		CANNOT_MOVE
 	};
 	SdlErrorCodeExample(Type t);
 	virtual ~SdlErrorCodeExample();

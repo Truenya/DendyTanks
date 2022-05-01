@@ -1,6 +1,9 @@
-#include "mySdlExample.h"
+#include "Processors/Graphics/Renderer.h"
+#include "Processors/Game.h"
 
 int main (int argc, char ** args) {
-    mySdlExample  l;
-    return l.loop();
+	Game l;
+	l.start();
+	l.stop();
+	return 0;
 }

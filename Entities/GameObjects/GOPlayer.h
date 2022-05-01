@@ -5,13 +5,13 @@
 #ifndef SSDL_GOPLAYER_H
 #define SSDL_GOPLAYER_H
 
-#include "GameObjectExample.h"
+#include "World/MyGameWorld.h"
 
-class GOPlayer : public GameObjectExample{
+class GOPlayer : public BaseGameObject{
 public:
 	virtual ~GOPlayer();
 
-	GOPlayer();
+	GOPlayer(int x,int y, BaseGameObject::Type typ);
 };
 
 

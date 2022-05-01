@@ -5,18 +5,16 @@
 #ifndef SSDL_MOVECOMMANDEXAMPLE_H
 #define SSDL_MOVECOMMANDEXAMPLE_H
 
-#include "CommandPatternExample.h"
+#include "BaseCommand.h"
 #include "../GameObjects/ObjectProps/Position.h"
 #include "gtest/gtest.h"
 
-class MoveCommandExample : CommandPatternExample{
-private:
-    MoveCommandExample(GameObjectExample *obj, Position dPos);
-	~MoveCommandExample() override;
-	Position dPos_;
-public:
+struct MoveCommandExample : public BaseCommand{
+	virtual ~MoveCommandExample();
     SdlErrorCodeExample execute() override;
-	GameObjectExample *obj_;
+	Position dPos_;
+
+	MoveCommandExample(BaseGameObject *obj, Position dPos);
 };
 
 

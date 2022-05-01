@@ -7,8 +7,10 @@
 
 #include <SDL2/SDL.h>
 #include <iostream>
-#include "Processors/WorldGenerator.h"
 #include <chrono>
+#include "../CommandsProcessor.h"
+#include "../../Entities/Commands/MoveCommandExample.h"
+#include "../Parsers/WorldGenerator.h"
 
 using namespace std::chrono;
 
@@ -17,30 +19,40 @@ using namespace std::chrono;
  * @details Вся логика внутри, снаружи запускается только loop
  * @TODO вынести в разделяемую библиотеку(подпроект)
  */
-class mySdlExample {
-
+static constexpr int MS_IN_SECOND = 1000;
+class Renderer {
+	enum class fpsChangeDirection{
+		increment,
+		decrement
+	};
     int screenWidth_ = 1000;
     int screenHeight_ = 1000;
-	coordinates dims;
+	Position dims;
 	int rectSize = 25;
+	int fps = 30;
+	int mspf = MS_IN_SECOND / fps;
     SDL_Window *sdlWindowTest_;
     SDL_Renderer *sdlRenderer_;
     SDL_Surface *scr;
     SDL_Texture *sdlWallTexture_;
 	SDL_Texture *sdlPlayerTexture_;
     SDL_Event e;
+	SDL_Rect playerRect;
     bool init_();
 	void fillMap();
     bool load_();
     int quit_();
-    bool run = true;
-    void processEvents(const int speed);//, int &x, int &y);
-	std::unique_ptr<MyGameWorld> gameWorld_;
+    void processEvents();
+	void updateFps(fpsChangeDirection direction);
 	time_t prevRender;
+	CommandsProcessor *processor_;
+	std::atomic_bool &run_;
 public:
     int loop();
-	mySdlExample();
+	Renderer(std::atomic_bool& run);
+	bool render();
 
+	void setProcessor(CommandsProcessor *processor);
 };
 
 

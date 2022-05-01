@@ -4,7 +4,9 @@
 
 #include "GOPlayer.h"
 
-GOPlayer::GOPlayer() {}
+GOPlayer::GOPlayer(int x,int y, BaseGameObject::Type typ): BaseGameObject(x,y,typ) {
+
+}
 
 GOPlayer::~GOPlayer() {
 

@@ -1,11 +1,11 @@
 //
 // Created by true on 2022-04-25.
 //
-#include "mySdlExample.h"
+#include "Renderer.h"
 #include <SDL2/SDL_image.h>
 #include <experimental/random>
 
-int mySdlExample::loop()
+int Renderer::loop()
 {
 //    static constexpr int speed = 10;
     if (init_()) {
@@ -17,8 +17,8 @@ int mySdlExample::loop()
         quit_();
         return 1;
     }
-	while(run)
-		processEvents(rectSize);
+	while(run_.load())
+		processEvents();
 //    SDL_Rect r;
 //
 //    int x = 0;
@@ -26,7 +26,7 @@ int mySdlExample::loop()
 //
 //    r.x = x;ggb
 //
-//    while (run) {
+//    while (run_) {
 //        processEvents(speed, x, y);
 //        r.x = x;
 //        r.y = y;
@@ -45,15 +45,14 @@ int mySdlExample::loop()
     return quit_();
 }
 
-bool mySdlExample::init_() {
+bool Renderer::init_() {
     bool initialized = false;
     if (SDL_Init(SDL_INIT_VIDEO) != 0) {
         std::cout << "Can't init_: " << SDL_GetError() << std::endl;
         system("pause");
         initialized |= true;
     }
-	gameWorld_.reset(WorldGenerator::generateWorld("labirinth.txt"));
-	dims = gameWorld_->size();
+	dims = processor_->worldSize();
 
 	SDL_DisplayMode DM;
 	SDL_GetCurrentDisplayMode(0, &DM);
@@ -101,7 +100,7 @@ bool mySdlExample::init_() {
     return initialized;
 }
 
-bool mySdlExample::load_() {
+bool Renderer::load_() {
     bool isLoadedIncorrectly = false;
 
     SDL_Surface * temp_surf = NULL;
@@ -140,7 +139,7 @@ bool mySdlExample::load_() {
     return isLoadedIncorrectly;
 }
 
-int mySdlExample::quit_() {
+int Renderer::quit_() {
 
     SDL_DestroyWindow(sdlWindowTest_);
     sdlWindowTest_ = nullptr;
@@ -155,85 +154,123 @@ int mySdlExample::quit_() {
     return 0;
 }
 
-void mySdlExample::processEvents(const int speed){//, int &x, int &y) {
-	int x,y;
-	x=y=0;
+void Renderer::processEvents(){
     while(SDL_PollEvent(&e)) {
         if (e.type == SDL_QUIT) {
-            run = false;
+	        run_.store(false);
         }
 
         if (e.type == SDL_KEYDOWN) {
             if (e.key.keysym.sym == SDLK_UP) {
-                y -= speed;
+	            auto player = processor_->getPlayer();
+				Position move = {0,-1 };
+				auto com = new MoveCommandExample(player,move);
+				processor_->addCommand(com);
             }
             if (e.key.keysym.sym == SDLK_DOWN) {
-                y += speed;
+	            auto com = new MoveCommandExample(processor_->getPlayer(),{0,1 });
+	            processor_->addCommand(com);
             }
             if (e.key.keysym.sym == SDLK_RIGHT) {
-                x += speed;
+	            auto com = new MoveCommandExample(processor_->getPlayer(),{1,0 });
+	            processor_->addCommand(com);
             }
             if (e.key.keysym.sym == SDLK_LEFT) {
-                x -= speed;
+	            auto com = new MoveCommandExample(processor_->getPlayer(),{-1,0 });
+	            processor_->addCommand(com);
             }
         }
     }
-	long int cur_time = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
-	long int dif = cur_time-prevRender;
-	if (dif >= 1000/60) {
-		if (dif<1000 && dif > 0) {
-			long int milisecondsPerFrame = (1000 - dif) / 60;
-			SDL_Delay(milisecondsPerFrame);
-			SDL_RenderPresent(sdlRenderer_);
-		}
-		prevRender = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
-	}
-	sched_yield();
+//	render();
 }
 
-mySdlExample::mySdlExample():
-	prevRender(duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count())
+Renderer::Renderer(std::atomic_bool &running):
+	prevRender(duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count()),
+	run_(running)
 {}
 
-void mySdlExample::fillMap() {
-	rectSize =  (screenHeight_ / dims.second) - 1;
+void Renderer::fillMap() {
+	rectSize =  (screenHeight_ / dims.y) - 1;
 //	SDL_Point wallTextureSize;
 //	SDL_QueryTexture(sdlWallTexture_, NULL, NULL, &wallTextureSize.x, &wallTextureSize.y);
 	SDL_Point playerTextureSize;
 	SDL_QueryTexture(sdlPlayerTexture_, NULL, NULL, &playerTextureSize.x, &playerTextureSize.y);
+	playerRect.w = playerTextureSize.x / 3 - 1;
+	playerRect.h = playerTextureSize.y / 3 - 1;
 
-	for (int i = 0; i < dims.first ; ++i) {
-		for (int j = 0; j < dims.second; ++j) {
-			if( (gameWorld_->at(i, j)->getType() != GameObjectExample::Type::Space)
+	for (int i = 0; i < dims.x ; ++i) {
+		for (int j = 0; j < dims.y; ++j) {
+			if( (processor_->at({i, j}).type != BaseGameObject::Type::Space)
 				&&
-				(gameWorld_->at(i, j)->getType() != GameObjectExample::Type::Undefined)) {
-				SDL_Rect srcrect;
-				srcrect.x = 0;
-				srcrect.y = 0;
-				srcrect.w = rectSize;
-				srcrect.h = rectSize;
+				(processor_->at({i, j}).type != BaseGameObject::Type::Undefined)) {
 				SDL_Rect dstrect;
 				dstrect.x = i * rectSize;
 				dstrect.y = j * rectSize;
 				dstrect.w = dstrect.h = rectSize;
-				if (gameWorld_->at(i, j)->getType() == GameObjectExample::Type::Wall) {
+				if (processor_->at({i, j}).type == BaseGameObject::Type::Wall) {
 					SDL_RenderCopy(sdlRenderer_, sdlWallTexture_, nullptr, &dstrect);
-				} else if (gameWorld_->at(i, j)->getType() == GameObjectExample::Type::Player)
+				} else if (processor_->at({i, j}).type == BaseGameObject::Type::Player)
 				{
-					srcrect.w = playerTextureSize.x/3 - 1;
-					srcrect.h = playerTextureSize.y/3 - 1;
-					SDL_RenderCopy(sdlRenderer_, sdlPlayerTexture_, &srcrect, &dstrect);
+					SDL_RenderCopy(sdlRenderer_, sdlPlayerTexture_, &playerRect, &dstrect);
 				}
 			}
 		}
 	}
 //	auto playerField = gameWorld_->at(0,0);
-//	while (playerField->getType() != GameObjectExample::Type::Space)
+//	while (playerField->getType() != BaseGameObject::Type::Space)
 //	{
 //		int x = std::experimental::randint(0,dims.first);
 //		int y = std::experimental::randint(0,dims.second);
 //		playerField = gameWorld_->at(x,y);
 //	}
-//	playerField->setType(GameObjectExample::Type::Player);
+//	playerField->setType(BaseGameObject::Type::player_);
 	SDL_RenderPresent(sdlRenderer_);
+}
+
+
+bool Renderer::render() {
+	// Замерим время выполнения
+	long int curTimeMs = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
+	// С прошлой отрисовки прошло сколько-то милисекунд
+	const long int MS_DIF = curTimeMs - prevRender;
+	auto dPositions = processor_->getChangedPositions();
+	for (const auto &positions: dPositions) {
+		SDL_Rect dstrect;
+		dstrect.x = positions.second.x * rectSize;
+		dstrect.y = positions.second.y * rectSize;
+		dstrect.w = dstrect.h = rectSize;
+		SDL_RenderCopy(sdlRenderer_, sdlPlayerTexture_, &playerRect, &dstrect);
+	}
+	// Чаще чем 60 раз в секунду рендерить не будем
+	if (MS_DIF >= mspf) {
+		// Если прошлая отрисовка не была проведена позади в будущем ;D
+		if (MS_DIF > 0) {
+			const long int milisecondsDelay = MS_DIF - mspf;
+			if(milisecondsDelay>=0){
+				updateFps(fpsChangeDirection::increment);
+				if (milisecondsDelay<1000)
+					SDL_Delay(milisecondsDelay);
+			}
+			else{
+				updateFps(fpsChangeDirection::decrement);
+			}
+		}
+		SDL_RenderPresent(sdlRenderer_);
+		prevRender = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
+	}
+	return true;
+}
+
+void Renderer::setProcessor(CommandsProcessor *processor) {
+	processor_ = processor;
+}
+
+void Renderer::updateFps(Renderer::fpsChangeDirection direction) {
+	if (fps < 30) {
+		if (direction == fpsChangeDirection::increment)
+			fps++;
+		if (direction == fpsChangeDirection::decrement)
+			fps--;
+		mspf = MS_IN_SECOND / (fps > 0 ? fps : 1);
+	}
 }

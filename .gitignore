@@ -1,0 +1,15 @@
+#ignore profiler datas
+*.profraw
+*.profdata
+profdata/*.profraw
+profdata/*.profdata
+
+#ignore images and texts
+*.png
+*.bmp
+*.txt
+
+#ignore build_dirs
+.idea
+Interface
+cmake-build-debug

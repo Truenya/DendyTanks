@@ -6,21 +6,24 @@
 #define SSDL_MYGAMEWORLD_H
 
 #include "vector"
-#include "../GameObjectExample.h"
 #include "memory"
-
-typedef std::unique_ptr<GameObjectExample> ptr_GamObjExample;
-typedef std::vector<std::vector<ptr_GamObjExample>> myGameWorldField;
-typedef std::pair<int, int> coordinates;
-
+class MyGameWorld;
+#include "../BaseGameObject.h"
+#include "../../../Processors/Parsers/WorldGenerator.h"
+//typedef std::unique_ptr<BaseGameObject> ptr_GamObjExample;
+//typedef std::vector<std::vector<ptr_GamObjExample>> myGameWorldField;
+typedef std::vector<std::vector<BaseGameObject>> myGameWorldField;
 class MyGameWorld {
 public:
 	MyGameWorld( unsigned int  x_dim, unsigned int y_dim);
 	~MyGameWorld();
-	[[nodiscard]] GameObjectExample *at(int , int) const;
-	coordinates size();
+	[[nodiscard]] BaseGameObject &at(Position) ;
+	Position size();
+	BaseGameObject *player_;
 private:
-	myGameWorldField field_;
+    myGameWorldField field_;
+	friend WorldGenerator;
+	friend BaseGameObject;
 };
 
 

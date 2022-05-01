@@ -7,13 +7,40 @@
 
 
 struct Position {
-    int x_;
-    int y_;
-    int z_ = 0;
+    int x = -1;
+    int y = -1;
+    int z = 0;
     void move(int x,int y,int z = 0);
-	bool isValid();
-	Position operator+=(const Position &other);
-	Position operator+=(const Position &&other);
+	explicit operator bool() const;
+	bool isValid() const;
+	Position& operator+=(const Position &other);
+	Position& operator+=(const Position &&other);
+	Position operator+(const Position &other) const;
+	Position operator+(const Position &&other) const;
+	Position operator-(const Position &other) const;
+	Position operator-(const Position &&other) const;
+	Position& operator-=(const Position &other);
+	Position& operator-=(const Position &&other);
+
+	Position operator-() const;
+
+	bool operator==(const Position &rhs) const;
+
+	bool operator!=(const Position &rhs) const;
+
+	bool operator<(const Position &rhs) const;
+
+	bool operator>(const Position &rhs) const;
+
+	bool operator<=(const Position &rhs) const;
+
+	bool operator>=(const Position &rhs) const;
+};
+
+struct Positions{
+	Position prevPos;
+	Position curPos;
+	Position dPos;
 };
 
 
