@@ -35,6 +35,12 @@ struct Position {
 	bool operator<=(const Position &rhs) const;
 
 	bool operator>=(const Position &rhs) const;
+	enum class Direction {
+		Top,
+		Bot,
+		Left,
+		Right
+	} mDirection;
 };
 
 struct Positions{

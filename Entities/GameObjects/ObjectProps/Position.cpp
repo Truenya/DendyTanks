@@ -13,6 +13,7 @@ Position& Position::operator+=(const Position &other) {
 	x+=other.x;
 	y+=other.y;
 	z+=other.z;
+	mDirection=other.mDirection;
 	return *this;
 }
 
@@ -20,6 +21,7 @@ Position& Position::operator+=(const Position &&other) {
 	x+=other.x;
 	y+=other.y;
 	z+=other.z;
+	mDirection=other.mDirection;
 	return *this;
 }
 
@@ -69,6 +71,7 @@ Position Position::operator+(const Position &other) const {
 	position.x = x+other.x;
 	position.y = y+other.y;
 	position.z = z+other.z;
+	position.mDirection=other.mDirection;
 	return position;
 }
 
@@ -77,6 +80,7 @@ Position Position::operator+(const Position &&other) const {
 	position.x = x+other.x;
 	position.y = y+other.y;
 	position.z = z+other.z;
+	position.mDirection=other.mDirection;
 	return position;
 }
 
@@ -85,6 +89,7 @@ Position Position::operator-(const Position &other) const {
 	position.x = x-other.x;
 	position.y = y-other.y;
 	position.z = z-other.z;
+	position.mDirection=other.mDirection;
 	return position;
 }
 
@@ -93,6 +98,7 @@ Position Position::operator-(const Position &&other) const {
 	position.x = x-other.x;
 	position.y = y-other.y;
 	position.z = z-other.z;
+	position.mDirection=other.mDirection;
 	return position;
 }
 
@@ -100,6 +106,7 @@ Position& Position::operator-=(const Position &other) {
 	x-=other.x;
 	y-=other.y;
 	z-=other.z;
+	mDirection=other.mDirection;
 	return *this;
 }
 
@@ -107,6 +114,7 @@ Position& Position::operator-=(const Position &&other) {
 	x-=other.x;
 	y-=other.y;
 	z-=other.z;
+	mDirection=other.mDirection;
 	return *this;
 }
 
@@ -119,5 +127,17 @@ Position Position::operator-() const {
 	minus.x = -minus.x;
 	minus.y = -minus.y;
 	minus.z = -minus.z;
+	if (mDirection == Direction::Top){
+		minus.mDirection = Direction::Bot;
+	}
+	if (mDirection == Direction::Bot){
+		minus.mDirection = Direction::Top;
+	}
+	if (mDirection == Direction::Left){
+		minus.mDirection = Direction::Right;
+	}
+	if (mDirection == Direction::Left){
+		minus.mDirection = Direction::Right;
+	}
 	return minus;
 }

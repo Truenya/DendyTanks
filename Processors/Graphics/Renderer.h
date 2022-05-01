@@ -35,8 +35,12 @@ class Renderer {
     SDL_Renderer *sdlRenderer_;
     SDL_Surface *scr;
     SDL_Texture *sdlWallTexture_;
-	SDL_Texture *sdlPlayerTexture_;
-    SDL_Event e;
+	SDL_Texture *sdlTankBottom;
+	SDL_Texture *sdlTankTop;
+	SDL_Texture *sdlTankLeft;
+	SDL_Texture *sdlTankRight;
+	SDL_Texture *sdlFillTexture_;
+	SDL_Event e;
 	SDL_Rect playerRect;
     bool init_();
 	void fillMap();

@@ -26,6 +26,7 @@ SdlErrorCodeExample BaseGameObject::move(Position deltaPos) {
 	positions_.prevPos = curPos;
 //	curPos += deltaPos;
 	positions_.curPos = newPos;
+	positions_.curPos.mDirection = deltaPos.mDirection;
 	positions_.dPos = std::move(deltaPos);
 	std::swap((*field_)[curPos.x][curPos.y],(*field_)[newPos.x][newPos.y]);
 	(*field_)[curPos.x][curPos.y].positions_.prevPos = newPos;
@@ -37,9 +38,9 @@ SdlErrorCodeExample BaseGameObject::move(Position deltaPos) {
 BaseGameObject::~BaseGameObject() = default;
 
 BaseGameObject::BaseGameObject():
-		positions_({{-1, -1, 0},
-	            {-1, -1, 0},
-	            {-1, -1, 0}}),
+		positions_({{-1, -1, 0,Position::Direction::Bot},
+	            {-1, -1, 0,Position::Direction::Bot},
+	            {-1, -1, 0,Position::Direction::Bot}}),
 		type(BaseGameObject::Type::Undefined)
 	{}
 
@@ -54,7 +55,7 @@ const Positions &BaseGameObject::getPositions() const {
 }
 
 BaseGameObject::BaseGameObject(Position pos, BaseGameObject::Type typo,std::vector<std::vector<BaseGameObject>> *field):
-	positions_({pos,pos,{0,0,0}}),
+	positions_({pos,pos,{0,0,0,Position::Direction::Bot}}),
 	type(typo),
 	field_(field)
 {}

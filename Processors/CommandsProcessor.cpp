@@ -50,11 +50,14 @@ bool CommandsProcessor::processPlayerMove(const BaseCommandPtr &command) {
 		{
 			auto mv_command = reinterpret_cast<MoveCommandExample*>(command.get());
 			auto delta = mv_command->dPos_;
-			auto newPos = delta + positions.curPos;
+			auto newPos = positions.curPos + delta;
 			if ((newPos) && (world_.at(newPos).type != BaseGameObject::Type::Space))
 				return false;
-			if (command->execute().getType()) {
-				syncStreamErrors_ << "Object is not initialized.\n";
+			if (auto type = command->execute().getType() != SdlErrorCodeExample::NO_ERRORS) {
+				if (type == SdlErrorCodeExample::NOT_INITIALIZED_OBJECT)
+					syncStreamErrors_ << "Object is not initialized.\n";
+				else if (type == SdlErrorCodeExample::CANNOT_MOVE)
+					syncStreamErrors_ << "Move outside of field or position is incorrect.\n";
 				syncStreamErrors_.emit();
 				return false;
 			}

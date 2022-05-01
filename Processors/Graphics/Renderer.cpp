@@ -104,12 +104,12 @@ bool Renderer::load_() {
     bool isLoadedIncorrectly = false;
 
     SDL_Surface * temp_surf = NULL;
+
     temp_surf = IMG_Load("cvetok.png");
     if (temp_surf == NULL) {
         std::cout << "Can't load image: " << IMG_GetError() << std::endl;
 	    isLoadedIncorrectly |= true;
     }
-
 	sdlWallTexture_ = SDL_CreateTextureFromSurface(sdlRenderer_, temp_surf);
 	SDL_FreeSurface(temp_surf);
 
@@ -117,21 +117,64 @@ bool Renderer::load_() {
 		std::cout << "Can't convert: " << SDL_GetError() << std::endl;
 		isLoadedIncorrectly |= true;
 	}
-	temp_surf = IMG_Load("tank.png");
+
+	temp_surf = IMG_Load("fill.png");
 	if (temp_surf == NULL) {
 		std::cout << "Can't load image: " << IMG_GetError() << std::endl;
 		isLoadedIncorrectly |= true;
 	}
+	sdlFillTexture_ = SDL_CreateTextureFromSurface(sdlRenderer_, temp_surf);
+	SDL_FreeSurface(temp_surf);
 
-	sdlPlayerTexture_ = SDL_CreateTextureFromSurface(sdlRenderer_, temp_surf);
-	if(sdlPlayerTexture_ == nullptr){
+	if(sdlFillTexture_ == nullptr){
 		std::cout << "Can't convert: " << SDL_GetError() << std::endl;
 		isLoadedIncorrectly |= true;
 	}
-//    SDL_RenderClear(sdlRenderer_);
-//	SDL_RenderDrawRects()
-//    SDL_RenderCopy(sdlRenderer_, sdlWallTexture_, nullptr, nullptr   );
-//    SDL_RenderPresent(sdlRenderer_);
+	temp_surf = IMG_Load("tank_b.png");
+	if (temp_surf == NULL) {
+		std::cout << "Can't load image: " << IMG_GetError() << std::endl;
+		isLoadedIncorrectly |= true;
+	}
+	sdlTankBottom = SDL_CreateTextureFromSurface(sdlRenderer_, temp_surf);
+	if(sdlTankBottom == nullptr){
+		std::cout << "Can't convert: " << SDL_GetError() << std::endl;
+		isLoadedIncorrectly |= true;
+	}
+
+	temp_surf = IMG_Load("tank_t.png");
+	if (temp_surf == NULL) {
+		std::cout << "Can't load image: " << IMG_GetError() << std::endl;
+		isLoadedIncorrectly |= true;
+	}
+	sdlTankTop = SDL_CreateTextureFromSurface(sdlRenderer_, temp_surf);
+	if(sdlTankTop == nullptr){
+		std::cout << "Can't convert: " << SDL_GetError() << std::endl;
+		isLoadedIncorrectly |= true;
+	}
+
+
+	temp_surf = IMG_Load("tank_l.png");
+	if (temp_surf == NULL) {
+		std::cout << "Can't load image: " << IMG_GetError() << std::endl;
+		isLoadedIncorrectly |= true;
+	}
+	sdlTankLeft = SDL_CreateTextureFromSurface(sdlRenderer_, temp_surf);
+	if(sdlTankLeft == nullptr){
+		std::cout << "Can't convert: " << SDL_GetError() << std::endl;
+		isLoadedIncorrectly |= true;
+	}
+
+	temp_surf = IMG_Load("tank_r.png");
+	if (temp_surf == NULL) {
+		std::cout << "Can't load image: " << IMG_GetError() << std::endl;
+		isLoadedIncorrectly |= true;
+	}
+	sdlTankRight = SDL_CreateTextureFromSurface(sdlRenderer_, temp_surf);
+	if(sdlTankRight == nullptr){
+		std::cout << "Can't convert: " << SDL_GetError() << std::endl;
+		isLoadedIncorrectly |= true;
+	}
+
 
 	fillMap();
 
@@ -163,20 +206,20 @@ void Renderer::processEvents(){
         if (e.type == SDL_KEYDOWN) {
             if (e.key.keysym.sym == SDLK_UP) {
 	            auto player = processor_->getPlayer();
-				Position move = {0,-1 };
+				Position move = {0,-1,0,Position::Direction::Top };
 				auto com = new MoveCommandExample(player,move);
 				processor_->addCommand(com);
             }
             if (e.key.keysym.sym == SDLK_DOWN) {
-	            auto com = new MoveCommandExample(processor_->getPlayer(),{0,1 });
+	            auto com = new MoveCommandExample(processor_->getPlayer(),{0,1 ,0,Position::Direction::Bot});
 	            processor_->addCommand(com);
             }
             if (e.key.keysym.sym == SDLK_RIGHT) {
-	            auto com = new MoveCommandExample(processor_->getPlayer(),{1,0 });
+	            auto com = new MoveCommandExample(processor_->getPlayer(),{1,0 ,0,Position::Direction::Right});
 	            processor_->addCommand(com);
             }
             if (e.key.keysym.sym == SDLK_LEFT) {
-	            auto com = new MoveCommandExample(processor_->getPlayer(),{-1,0 });
+	            auto com = new MoveCommandExample(processor_->getPlayer(),{-1,0, 0, Position::Direction::Left});
 	            processor_->addCommand(com);
             }
         }
@@ -194,7 +237,7 @@ void Renderer::fillMap() {
 //	SDL_Point wallTextureSize;
 //	SDL_QueryTexture(sdlWallTexture_, NULL, NULL, &wallTextureSize.x, &wallTextureSize.y);
 	SDL_Point playerTextureSize;
-	SDL_QueryTexture(sdlPlayerTexture_, NULL, NULL, &playerTextureSize.x, &playerTextureSize.y);
+	SDL_QueryTexture(sdlTankBottom, NULL, NULL, &playerTextureSize.x, &playerTextureSize.y);
 	playerRect.w = playerTextureSize.x / 3 - 1;
 	playerRect.h = playerTextureSize.y / 3 - 1;
 
@@ -211,7 +254,7 @@ void Renderer::fillMap() {
 					SDL_RenderCopy(sdlRenderer_, sdlWallTexture_, nullptr, &dstrect);
 				} else if (processor_->at({i, j}).type == BaseGameObject::Type::Player)
 				{
-					SDL_RenderCopy(sdlRenderer_, sdlPlayerTexture_, &playerRect, &dstrect);
+					SDL_RenderCopy(sdlRenderer_, sdlTankBottom, &playerRect, &dstrect);
 				}
 			}
 		}
@@ -239,8 +282,41 @@ bool Renderer::render() {
 		dstrect.x = positions.second.x * rectSize;
 		dstrect.y = positions.second.y * rectSize;
 		dstrect.w = dstrect.h = rectSize;
-		SDL_RenderCopy(sdlRenderer_, sdlPlayerTexture_, &playerRect, &dstrect);
+		SDL_Rect prevrect;
+		prevrect.x = positions.first.x * rectSize;
+		prevrect.y = positions.first.y * rectSize;
+		prevrect.w = prevrect.h = rectSize;
+		switch (positions.second.mDirection) {
+			case Position::Direction::Bot: {
+				SDL_RenderCopy(sdlRenderer_, sdlTankBottom, &playerRect, &dstrect);
+				break;
+			}
+			case Position::Direction::Top: {
+				SDL_Rect topPlayerRect = playerRect;
+				topPlayerRect.x += topPlayerRect.w + topPlayerRect.w + rectSize;
+				topPlayerRect.y += topPlayerRect.h + topPlayerRect.h;
+				topPlayerRect.w *= 1.1;
+				SDL_RenderCopy(sdlRenderer_, sdlTankTop, &topPlayerRect, &dstrect);
+				break;
+			}
+			case Position::Direction::Left: {
+				SDL_Rect leftPlayerRect = playerRect;
+				leftPlayerRect.x += leftPlayerRect.w + leftPlayerRect.w + rectSize + rectSize * 1.5;
+				leftPlayerRect.y += leftPlayerRect.h + leftPlayerRect.h - rectSize;
+//				leftPlayerRect.h *= 0.95;
+//				leftPlayerRect.w *= 2;
+				SDL_RenderCopy(sdlRenderer_, sdlTankLeft, &leftPlayerRect, &dstrect);
+				break;
+			}
+			case Position::Direction::Right:
+				SDL_Rect rightPlayerRect = playerRect;
+				rightPlayerRect.h *= 0.8;
+				SDL_RenderCopy(sdlRenderer_, sdlTankRight, &rightPlayerRect, &dstrect);
+				break;
+		}
+		SDL_RenderCopy(sdlRenderer_, sdlFillTexture_, nullptr, &prevrect);
 	}
+
 	// Чаще чем 60 раз в секунду рендерить не будем
 	if (MS_DIF >= mspf) {
 		// Если прошлая отрисовка не была проведена позади в будущем ;D

@@ -43,5 +43,5 @@ Position MyGameWorld::size() {
 }
 
 BaseGameObject &MyGameWorld::at(Position pos) {
-	return field_[pos.x][pos.y];
+ 	return field_[pos.x][pos.y];
 }
