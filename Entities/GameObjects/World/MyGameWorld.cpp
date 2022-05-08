@@ -4,9 +4,10 @@
 
 #include "MyGameWorld.h"
 
-MyGameWorld::MyGameWorld(unsigned int x_dim, unsigned int y_dim) {
-
-	//TODO Добавить проверки, вынести инициализацию из конструктора
+MyGameWorld::MyGameWorld(unsigned int x_dim, unsigned int y_dim)
+{
+	if(x_dim > 10000 || y_dim > 10000)
+		throw std::logic_error ("trying to construct too big world");
 	field_.resize(x_dim);
 	int x = 0;
 	for (auto &row: field_) {
@@ -18,17 +19,6 @@ MyGameWorld::MyGameWorld(unsigned int x_dim, unsigned int y_dim) {
 		}
 		++x;
 	}
-//	for (int x_ = 0; x_ < x_dim; ++x_) {
-////		field_.emplace_back(std::vector<ptr_GamObjExample>(y_dim));
-//		field_.emplace_back(std::vector<BaseGameObject>(y_dim));
-//
-//		for (int y_ = 0; y_ < y_dim; ++y_) {
-////			auto grbg = field_[x_][y_].release();
-////			field_[x_][y_] = std::make_unique<BaseGameObject>(x_,y_,BaseGameObject::Type::UNDEFINED);
-//			field_[x_][y_].stepInDirection(Position{x_+1,y_+1});
-//			field_[x_][y_].setType(BaseGameObject::Type::UNDEFINED);
-//		}
-//	}
 }
 
 MyGameWorld::~MyGameWorld() = default;

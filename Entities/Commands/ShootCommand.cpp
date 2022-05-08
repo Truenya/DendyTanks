@@ -11,8 +11,8 @@ ShootCommand::ShootCommand(BaseGameObject *object, BaseCommand::Type typo) : Bas
 ShootCommand::~ShootCommand() = default;
 
 SdlErrorCodeExample ShootCommand::execute() {
-	const auto prev_pos = obj_->positions_.curPos_;
-	const auto prev_type = (*obj_->field_)[obj_->positions_.curPos_.x_][obj_->positions_.curPos_.y_].type_;
+	const auto PREV_POS = obj_->positions_.curPos_;
+	const auto PREV_TYPE = (*obj_->field_)[obj_->positions_.curPos_.x_][obj_->positions_.curPos_.y_].type_;
 	obj_->step();
 	const auto &after_step_type = (*obj_->field_)[obj_->positions_.curPos_.x_][obj_->positions_.curPos_.y_].type_;
 	// If we shot not point-blank - lets make projectile obj_, that will move till next wall
@@ -23,7 +23,7 @@ SdlErrorCodeExample ShootCommand::execute() {
 	{
 		(*obj_->field_)[obj_->positions_.curPos_.x_][obj_->positions_.curPos_.y_].type_ = BaseGameObject::Type::SPACE;
 	}
-	if (prev_type == BaseGameObject::Type::PROJECTILE)
-		(*obj_->field_)[prev_pos.x_][prev_pos.y_].type_ = BaseGameObject::Type::SPACE;
+	if (PREV_TYPE == BaseGameObject::Type::PROJECTILE)
+		(*obj_->field_)[PREV_POS.x_][PREV_POS.y_].type_ = BaseGameObject::Type::SPACE;
 	return {SdlErrorCodeExample::NO_ERRORS};
 }

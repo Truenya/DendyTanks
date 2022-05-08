@@ -82,7 +82,7 @@ BaseGameObject::StepReturn BaseGameObject::step() {
 	bool proj = type_ == BaseGameObject::Type::PROJECTILE;
 	bool posvalid = positions_.curPos_.isValid();
 	bool posvalidbyworldsize = positions_.curPos_.isValidByWorldSize((*field_).size(), (*field_).at(0).size());
-	// FIXME mDirection_ is UNDEFINED
+
 	if (proj && posvalid  && posvalidbyworldsize)
 	{
 		auto next_pos = positions_.curPos_;
@@ -107,7 +107,6 @@ BaseGameObject::StepReturn BaseGameObject::step() {
 			(*field_)[positions_.prevPos_.x_][positions_.prevPos_.y_].type_ = BaseGameObject::Type::SPACE;
 			return StepReturn::SUCCESS;
 		}
-		// TODO экран поражения
 		return StepReturn::MEET_PROJECTILE;
 	}
 	return StepReturn::UNDEFINED_BEHAVIOR;

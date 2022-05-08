@@ -21,7 +21,6 @@ void Game::mainLoop () {
 		processor_.processParticles();
 		processor_.processCommands();
 		renderer_.render();
-		// TODO else
 		// сообщение об ошибке
 		sched_yield();
 	}

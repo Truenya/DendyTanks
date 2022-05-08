@@ -109,7 +109,6 @@ bool CommandsProcessor::processObjectMove(const BaseCommandPtr &command) {
 	auto mv_command = reinterpret_cast<MoveCommand*>(command.get());
 	auto delta = mv_command->dPos_;
 	auto new_pos = positions.curPos_ + delta;
-	// TODO legality of position could be processed on Position +/- operators
 	if ((new_pos) && (world_.at(new_pos).type_ != BaseGameObject::Type::SPACE))
 		return false;
 	auto type = command->execute().getType();

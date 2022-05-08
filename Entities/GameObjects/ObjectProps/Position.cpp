@@ -22,7 +22,10 @@ Position& Position::operator+=(const Position &&other) {
 }
 
 bool Position::isValid() const {
-	if ((x_ <= -1 ) || (y_ <= -1) || (z_ <= -1) || (x_ >= 1000) || (y_ >= 1000) || (z_ >= 1000))
+	if ((x_ <= -1 ) || (y_ <= -1)   ||
+		(z_ <= -1) || (x_ >= 1000)  ||
+		(y_ >= 1000) || (z_ >= 1000)||
+		mDirection_ == Direction::UNDEFINED)
 		return false;
 	return true;
 }
@@ -139,7 +142,6 @@ Position Position::operator-() const {
 }
 
 void Position::stepInDirection(bool inverse) {
-	// TODO сложная логика, преобразовать поправить сделать единообразной
 	if (inverse)
 		reverseDirection();
 	switch (mDirection_) {
@@ -160,7 +162,7 @@ void Position::stepInDirection(bool inverse) {
 			break;
 		}
 		case Direction::UNDEFINED:{
-			throw std::logic_error("Move in unknow direction");
+			throw std::logic_error("Move in unknown direction");
 		}
 	}
 }
@@ -197,7 +199,7 @@ double Position::calcDistance(const Position &other) const {
 }
 
 bool Position::isValidByWorldSize(size_t width, size_t height) const {
-	if (x_ >= width || y_ >= height)
+	if (x_ >= static_cast<ssize_t>(width) || y_ >= static_cast<ssize_t>(height))
 		return false;
 	return true;
 }

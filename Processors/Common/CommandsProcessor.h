@@ -17,7 +17,7 @@ typedef RenderMoveInfo RenderShootInfo;
 typedef std::unique_ptr<BaseCommand> BaseCommandPtr;
 
 struct CommandsProcessor {
-	CommandsProcessor(MyGameWorld &world);
+	CommandsProcessor(MyGameWorld &world); // NOLINT(google-explicit-constructor)
 	void addPlayerCommand(BaseCommand* command);
 	bool processCommands();
 	bool processParticles();

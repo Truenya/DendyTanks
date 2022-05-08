@@ -13,7 +13,8 @@ public:
 		NOT_INITIALIZED_OBJECT,
 		CANNOT_MOVE
 	};
-	SdlErrorCodeExample(Type t);
+
+	[[maybe_unused]] SdlErrorCodeExample(Type t); // NOLINT(google-explicit-constructor)
 	virtual ~SdlErrorCodeExample();
 	[[nodiscard]] Type getType() const;
 

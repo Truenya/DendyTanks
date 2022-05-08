@@ -5,7 +5,7 @@
 
 #include "ErrorCode.h"
 
-SdlErrorCodeExample::SdlErrorCodeExample(Type t):type_(t) {}
+[[maybe_unused]] [[maybe_unused]] SdlErrorCodeExample::SdlErrorCodeExample(Type t):type_(t) {}
 
 SdlErrorCodeExample::Type SdlErrorCodeExample::getType() const {
 	return type_;
