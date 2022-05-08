@@ -4,7 +4,7 @@
 
 #include <iostream>
 #include "CommandsProcessor.h"
-#include "../Entities/Commands/MoveCommand.h"
+#include "../../Entities/Commands/MoveCommand.h"
 CommandsProcessor::CommandsProcessor(MyGameWorld& world):
 	syncStreamErrors_(std::cerr),
 	world_(world)

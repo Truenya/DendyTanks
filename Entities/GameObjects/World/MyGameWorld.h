@@ -9,7 +9,7 @@
 #include "memory"
 #include "../BaseGameObject.h"
 class WorldGenerator;
-class CommandsProcessor;
+struct CommandsProcessor;
 //typedef std::unique_ptr<BaseGameObject> ptr_GamObjExample;
 //typedef std::vector<std::vector<ptr_GamObjExample>> MyGameWorldField;
 typedef std::vector<std::vector<BaseGameObject>> MyGameWorldField;

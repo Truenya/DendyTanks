@@ -6,7 +6,7 @@
 #define SSDL_PARTICLESSYSTEM_H
 #include <vector>
 #include <set>
-#include "../Entities/GameObjects/BaseGameObject.h"
+#include "../../Entities/GameObjects/BaseGameObject.h"
 #include <thread>
 typedef std::vector<std::pair<Position,Position>> RenderShootInfo;
 

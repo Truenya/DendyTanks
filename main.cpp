@@ -1,5 +1,5 @@
 #include "Processors/Graphics/Renderer.h"
-#include "Processors/Game.h"
+#include "Processors/Common/Game.h"
 
 int main () {
 	Game l;

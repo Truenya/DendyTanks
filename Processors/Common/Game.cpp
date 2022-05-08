@@ -30,9 +30,10 @@ void Game::mainLoop () {
 void Game::start() {
 	if (!work_.load()) {
 		work_.store(true);
+		renderer_.prepare();
 //		th_ProcessingCommands_ = std::jthread([&]() { mainLoop(); });
-		thRendering_ = std::jthread([&](){renderer_.loop();});
-		sleep(2);
+		thProcessingEvents_ = std::jthread([&](){ renderer_.processingEventsLoop();});
+//		sleep(2);
 		mainLoop();
 	}
 	else{
@@ -45,7 +46,7 @@ void Game::stop() {
 	if (work_.load()) {
 		work_.store(false);
 //		th_ProcessingCommands_.join();
-		thRendering_.join();
+		thProcessingEvents_.join();
 	}
 	else{
 		syncStreamErrors_ << "Trying to stop working, when already not such busy.";

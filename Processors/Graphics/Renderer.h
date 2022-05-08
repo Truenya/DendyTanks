@@ -9,16 +9,16 @@
 #include <iostream>
 #include <chrono>
 #include <atomic>
-#include "../CommandsProcessor.h"
+#include "../Common/CommandsProcessor.h"
 #include "../../Entities/Commands/BaseCommand.h"
 #include "../Parsers/WorldGenerator.h"
-#include "../ParticlesSystem.h"
+#include "../Common/ParticlesSystem.h"
 
 using namespace std::chrono;
 
 /**
  * @brief Класс взаимодействия с SDL2 библиотекой.
- * @details Вся логика внутри, снаружи запускается только loop
+ * @details Вся логика внутри, снаружи запускается только processingEventsLoop
  * @TODO вынести в разделяемую библиотеку(подпроект)
  */
 static constexpr int MS_IN_SECOND = 1000;
@@ -46,18 +46,22 @@ class Renderer {
 	SDL_Event sdlEvent_;
 	SDL_Rect playerRect_;
     bool init();
+	bool load();
 	void fillMap();
-    bool load();
     int quit();
     void processEvents();
 	void updateFps(FpsChangeDirection direction);
+	void prepareTextures();
 	time_t prevRender_;
 	CommandsProcessor *processor_;
 	std::atomic_bool &work_;
 public:
-    void loop();
+	void prepare();
+    void processingEventsLoop();
 	Renderer(std::atomic_bool& run);
 	bool render();
+	bool makeSomePauseIfNeeded(const long int cur_time_ms);
+	std::atomic_int_fast32_t renderTime_;
 
 	void setProcessor(CommandsProcessor *processor);
 
@@ -65,9 +69,9 @@ public:
 
 	void renderPlayerShoots();
 
-	void prepare ();
-
 	void setScreenPosition (SDL_Rect &dstrect, int i, int j) const;
+
+	void fillRectByPosition (SDL_Rect &dstrect, int i, int j) const;
 };
 
 

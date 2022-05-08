@@ -10,7 +10,7 @@
 #include "../Errors/ErrorCode.h"
 #include <vector>
 struct ShootCommand;
-class MoveCommand;
+struct MoveCommand;
 struct  BaseGameObject {
 	enum class Type{
 		UNDEFINED,

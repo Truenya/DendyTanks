@@ -16,7 +16,7 @@ MyGameWorld &WorldGenerator::generateWorld(const std::string& map_filepath) {
 }
 
 #include <list>
-MyGameWorld &WorldGenerator::parseFromString(const std::string& raw_file,MyGameWorld* ptr) {
+MyGameWorld &WorldGenerator::parseFromString(const std::string& raw_file, [[maybe_unused]] MyGameWorld* ptr) {
 	int x = 0;
 	int y = 0;
 	int max_x = 0;

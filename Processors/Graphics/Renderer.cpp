@@ -6,13 +6,14 @@
 #include "../../Entities/Commands/MoveCommand.h"
 #include "../../Entities/Commands/ShootCommand.h"
 
-void Renderer::loop ()
+void Renderer::processingEventsLoop ()
 {
-	init();
-	load();
+//	init();
+//	load();
 	while (work_.load())
 	{
 		processEvents();
+//		render();
 	}
 	quit();
 	return ;
@@ -205,44 +206,25 @@ void Renderer::processEvents ()
 {
 	while (SDL_PollEvent(&sdlEvent_))
 	{
-		if (sdlEvent_.type == SDL_QUIT)
+		if (sdlEvent_.type == SDL_QUIT)	work_.store(false);
+		if (sdlEvent_.type != SDL_KEYDOWN)	continue;
+		const auto PRESSED_KEY = sdlEvent_.key.keysym.sym;
+		switch (PRESSED_KEY)
 		{
-			work_.store(false);
+			case SDLK_UP: processor_->addPlayerCommand(new MoveCommand(processor_->getPlayer(),
+					{0, -1, 0, Position::Direction::TOP})); break;
+			case SDLK_DOWN: processor_->addPlayerCommand(new MoveCommand(processor_->getPlayer(),
+					{0, 1, 0, Position::Direction::BOT})); break;
+			case SDLK_RIGHT: processor_->addPlayerCommand(new MoveCommand(processor_->getPlayer(),
+					{1, 0, 0, Position::Direction::RIGHT})); break;
+			case SDLK_LEFT: processor_->addPlayerCommand(new MoveCommand(processor_->getPlayer(),
+					{-1, 0, 0, Position::Direction::LEFT})); break;
+			case SDLK_SPACE: processor_->addPlayerCommand(new ShootCommand(processor_->getPlayer(),
+					BaseCommand::Type::SHOOT_COMMAND)); break;
+			default:
+				continue;
 		}
-
-		if (sdlEvent_.type == SDL_KEYDOWN)
-		{
-			if (sdlEvent_.key.keysym.sym == SDLK_UP)
-			{
-				auto player = processor_->getPlayer();
-				Position move = {0, -1, 0, Position::Direction::TOP};
-				auto com = new MoveCommand(player, move);
-				processor_->addPlayerCommand(com);
-			}
-			if (sdlEvent_.key.keysym.sym == SDLK_DOWN)
-			{
-				auto com = new MoveCommand(processor_->getPlayer(), {0, 1, 0, Position::Direction::BOT});
-				processor_->addPlayerCommand(com);
-			}
-			if (sdlEvent_.key.keysym.sym == SDLK_RIGHT)
-			{
-				auto com = new MoveCommand(processor_->getPlayer(), {1, 0, 0, Position::Direction::RIGHT});
-				processor_->addPlayerCommand(com);
-			}
-			if (sdlEvent_.key.keysym.sym == SDLK_LEFT)
-			{
-				auto com = new MoveCommand(processor_->getPlayer(), {-1, 0, 0, Position::Direction::LEFT});
-				processor_->addPlayerCommand(com);
-			}
-			if (sdlEvent_.key.keysym.sym == SDLK_SPACE)
-			{
-				processor_
-						->addPlayerCommand(new ShootCommand(processor_->getPlayer(), BaseCommand::Type::SHOOT_COMMAND));
-			}
-		}
-
 	}
-//	render();
 }
 
 Renderer::Renderer (std::atomic_bool &running) :
@@ -252,40 +234,39 @@ Renderer::Renderer (std::atomic_bool &running) :
 
 void Renderer::fillMap ()
 {
-	prepare();
+	prepareTextures();
 
 	SDL_Rect dstrect;
 	for (int i = 0; i < worldSize_.x_; ++i)
 	{
 		for (int j = 0; j < worldSize_.y_; ++j)
 		{
-			if ((processor_->at({i, j}).type_ != BaseGameObject::Type::UNDEFINED))
-			{
-				setScreenPosition(dstrect, i, j);
-				if (processor_->at({i, j}).type_ == BaseGameObject::Type::WALL)
-				{
-					SDL_RenderCopy(sdlRenderer_, sdlWallTexture_, nullptr, &dstrect);
-				}
-				else if (processor_->at({i, j}).type_ == BaseGameObject::Type::PLAYER)
-				{
-					SDL_RenderCopy(sdlRenderer_, sdlTankBottomTextures_, &playerRect_, &dstrect);
-				}
-				else
-				{
-					SDL_RenderCopy(sdlRenderer_, sdlFillTexture_, nullptr, &dstrect);
-				}
-			}
+			fillRectByPosition(dstrect, i, j);
 		}
 	}
-//	auto playerField = gameWorld_->at(0,0);
-//	while (playerField->getType() != BaseGameObject::Type::SPACE)
-//	{
-//		int x_ = std::experimental::randint(0,worldSize_.first);
-//		int y_ = std::experimental::randint(0,worldSize_.second);
-//		playerField = gameWorld_->at(x_,y_);
-//	}
-//	playerField->setType(BaseGameObject::Type::player_);
 	SDL_RenderPresent(sdlRenderer_);
+}
+
+void Renderer::fillRectByPosition (SDL_Rect &dstrect, int i, int j) const
+{
+	auto type = processor_->at({i, j}).type_;
+	if (type == BaseGameObject::Type::UNDEFINED)
+		throw std::logic_error ("Trying to render unknown object");
+	setScreenPosition(dstrect, i, j);
+	switch (type)
+	{
+		case BaseGameObject::Type::WALL:
+			SDL_RenderCopy(sdlRenderer_, sdlWallTexture_, nullptr, &dstrect);
+			break;
+		case BaseGameObject::Type::PLAYER:
+			SDL_RenderCopy(sdlRenderer_, sdlTankBottomTextures_, &playerRect_, &dstrect);
+			break;
+		case BaseGameObject::Type::SPACE:
+			SDL_RenderCopy(sdlRenderer_, sdlFillTexture_, nullptr, &dstrect);
+			break;
+		default:
+			throw std::logic_error ("Trying to render unknown object");
+	}
 }
 
 void Renderer::setScreenPosition (SDL_Rect &dstrect, int i, int j) const
@@ -295,7 +276,7 @@ void Renderer::setScreenPosition (SDL_Rect &dstrect, int i, int j) const
 	dstrect.w = dstrect.h = rectSize_;
 }
 
-void Renderer::prepare ()
+void Renderer::prepareTextures ()
 {
 	SDL_RenderCopy(sdlRenderer_, sdlFillTexture_, nullptr, nullptr);
 	rectSize_ = (screenHeight_ / worldSize_.y_) - 1;
@@ -305,15 +286,19 @@ void Renderer::prepare ()
 	playerRect_.h = player_texture_size.y / 3 - 1;
 }
 
-
 bool Renderer::render ()
 {
 	// Замерим время выполнения
-	long int cur_time_ms = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
-	// С прошлой отрисовки прошло сколько-то милисекунд
-	const long int MS_DIF = cur_time_ms - prevRender_;
+	const long int cur_time_ms = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
 	renderPlayerMove();
 	renderPlayerShoots();
+	return makeSomePauseIfNeeded(cur_time_ms);
+}
+
+bool Renderer::makeSomePauseIfNeeded (const long cur_time_ms)
+{
+	// С прошлой отрисовки прошло сколько-то милисекунд
+	const long int MS_DIF = cur_time_ms - prevRender_;
 	// Чаще чем 30 раз в секунду рендерить не будем
 	if (MS_DIF >= mspf_)
 	{
@@ -321,12 +306,14 @@ bool Renderer::render ()
 		if (MS_DIF > 0)
 		{
 			const long int MILISECONDS_DELAY = MS_DIF - mspf_;
+			renderTime_.store(MS_DIF);
 			if (MILISECONDS_DELAY >= 0)
 			{
 				updateFps(FpsChangeDirection::INCREMENT);
 				if (MILISECONDS_DELAY < 1000)
 				{
 					SDL_Delay(MILISECONDS_DELAY);
+					return false;
 				}
 			}
 			else
@@ -378,16 +365,15 @@ void Renderer::renderPlayerShoots ()
 void Renderer::renderPlayerMove ()
 {
 	auto changed_positions = processor_->getChangedPositions();
+	SDL_Rect dstrect;
+	SDL_Rect prevrect;
 	for (const auto &positions: changed_positions)
 	{
-		SDL_Rect dstrect;
-		dstrect.x = positions.second.x_ * rectSize_;
-		dstrect.y = positions.second.y_ * rectSize_;
-		dstrect.w = dstrect.h = rectSize_;
-		SDL_Rect prevrect;
 		prevrect.x = positions.first.x_ * rectSize_;
 		prevrect.y = positions.first.y_ * rectSize_;
-		prevrect.w = prevrect.h = rectSize_;
+		dstrect.x = positions.second.x_ * rectSize_;
+		dstrect.y = positions.second.y_ * rectSize_;
+		dstrect.w = dstrect.h = prevrect.w = prevrect.h = rectSize_;
 		switch (positions.second.mDirection_)
 		{
 			case Position::Direction::BOT:
@@ -415,10 +401,8 @@ void Renderer::renderPlayerMove ()
 			case Position::Direction::LEFT:
 			{
 				SDL_Rect left_player_rect = playerRect_;
-				left_player_rect.x += left_player_rect.w + left_player_rect.w + rectSize_ + rectSize_ * 1.5;
+				left_player_rect.x += left_player_rect.w + left_player_rect.w + rectSize_ + static_cast<int>(rectSize_ * 1.5);
 				left_player_rect.y += left_player_rect.h + left_player_rect.h - rectSize_;
-//				left_player_rect.h *= 0.95;
-//				left_player_rect.w *= 2;
 				if (SDL_RenderCopy(sdlRenderer_, sdlTankLeftTextures_, &left_player_rect, &dstrect))
 				{
 					std::cout << "Can't render left direction: " << SDL_GetError() << std::endl;
@@ -427,27 +411,18 @@ void Renderer::renderPlayerMove ()
 			}
 			case Position::Direction::RIGHT:
 			{
-				SDL_Rect rightPlayerRect = playerRect_;
-				rightPlayerRect.h *= 0.8;
-				if (SDL_RenderCopy(sdlRenderer_, sdlTankRightTextures_, &rightPlayerRect, &dstrect))
+				SDL_Rect right_player_rect = playerRect_;
+				right_player_rect.h = static_cast<int>(right_player_rect.h * 0.8);
+				if (SDL_RenderCopy(sdlRenderer_, sdlTankRightTextures_, &right_player_rect, &dstrect))
 				{
 					std::cout << "Can't render bottom direction: " << SDL_GetError() << std::endl;
 				}
 				break;
 			}
-
 			case Position::Direction::UNDEFINED:{
 				throw std::logic_error("Move in unknow direction");
 			}
 		}
-
-//		auto shoots = processor_->getShoots();
-//		for (auto shoot:shoots)
-//		{
-//			// if prev shoot pos is equal to cur - render BIG_BOOM!
-//			// else - render just small red circle, that means - projectile in his way
-//		}
-//
 		SDL_RenderCopy(sdlRenderer_, sdlFillTexture_, nullptr, &prevrect);
 	}
 }
@@ -471,4 +446,10 @@ void Renderer::updateFps (Renderer::FpsChangeDirection direction)
 		}
 		mspf_ = MS_IN_SECOND / (fps_ > 0 ? fps_ : 1);
 	}
+}
+
+void Renderer::prepare ()
+{
+	init();
+	load();
 }

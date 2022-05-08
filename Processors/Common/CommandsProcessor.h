@@ -4,11 +4,11 @@
 
 #ifndef SSDL_COMMANDSPROCESSOR_H
 #define SSDL_COMMANDSPROCESSOR_H
-#include "../Entities/Commands/BaseCommand.h"
+#include "../../Entities/Commands/BaseCommand.h"
 #include <vector>
 #include <memory>
 #include <syncstream>
-#include "../Entities/GameObjects/World/MyGameWorld.h"
+#include "../../Entities/GameObjects/World/MyGameWorld.h"
 #include "ParticlesSystem.h"
 
 

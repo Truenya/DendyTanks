@@ -9,7 +9,7 @@
 #include <thread>
 #include <functional>
 #include <syncstream>
-#include "Graphics/Renderer.h"
+#include "../Graphics/Renderer.h"
 #include "CommandsProcessor.h"
 
 struct Game {
@@ -23,7 +23,7 @@ private:
 	Renderer renderer_;
 	CommandsProcessor processor_;
 //	std::jthread th_ProcessingCommands_;
-	std::jthread thRendering_;
+	std::jthread thProcessingEvents_;
 	void mainLoop () ;
 };
 
