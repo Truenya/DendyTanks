@@ -2,39 +2,35 @@
 // Created by true on 2022-04-27.
 //
 #include "Position.h"
-
-void Position::move(int x,int y,int z){
-	x += x;
-	y += y;
-	z += z;
-}
+#include <cmath>
+#include <stdexcept>
 
 Position& Position::operator+=(const Position &other) {
-	x+=other.x;
-	y+=other.y;
-	z+=other.z;
-	mDirection=other.mDirection;
+	x_+=other.x_;
+	y_+=other.y_;
+	z_+=other.z_;
+	mDirection_=other.mDirection_;
 	return *this;
 }
 
 Position& Position::operator+=(const Position &&other) {
-	x+=other.x;
-	y+=other.y;
-	z+=other.z;
-	mDirection=other.mDirection;
+	x_+=other.x_;
+	y_+=other.y_;
+	z_+=other.z_;
+	mDirection_=other.mDirection_;
 	return *this;
 }
 
 bool Position::isValid() const {
-	if ((x <= -1 ) || (y <= -1) || (z <= -1))
+	if ((x_ <= -1 ) || (y_ <= -1) || (z_ <= -1) || (x_ >= 1000) || (y_ >= 1000) || (z_ >= 1000))
 		return false;
 	return true;
 }
 
 bool Position::operator==(const Position &rhs) const {
-	return x == rhs.x &&
-	       y == rhs.y &&
-	       z == rhs.z;
+	return x_ == rhs.x_ &&
+	       y_ == rhs.y_ &&
+	       z_ == rhs.z_;
 }
 
 bool Position::operator!=(const Position &rhs) const {
@@ -42,15 +38,15 @@ bool Position::operator!=(const Position &rhs) const {
 }
 
 bool Position::operator<(const Position &rhs) const {
-	if (x < rhs.x)
+	if (x_ < rhs.x_)
 		return true;
-	if (rhs.x < x)
+	if (rhs.x_ < x_)
 		return false;
-	if (y < rhs.y)
+	if (y_ < rhs.y_)
 		return true;
-	if (rhs.y < y)
+	if (rhs.y_ < y_)
 		return false;
-	return z < rhs.z;
+	return z_ < rhs.z_;
 }
 
 bool Position::operator>(const Position &rhs) const {
@@ -68,53 +64,53 @@ bool Position::operator>=(const Position &rhs) const {
 
 Position Position::operator+(const Position &other) const {
 	Position position;
-	position.x = x+other.x;
-	position.y = y+other.y;
-	position.z = z+other.z;
-	position.mDirection=other.mDirection;
+	position.x_ = x_ + other.x_;
+	position.y_ = y_ + other.y_;
+	position.z_ = z_ + other.z_;
+	position.mDirection_=other.mDirection_;
 	return position;
 }
 
 Position Position::operator+(const Position &&other) const {
 	Position position;
-	position.x = x+other.x;
-	position.y = y+other.y;
-	position.z = z+other.z;
-	position.mDirection=other.mDirection;
+	position.x_ = x_ + other.x_;
+	position.y_ = y_ + other.y_;
+	position.z_ = z_ + other.z_;
+	position.mDirection_=other.mDirection_;
 	return position;
 }
 
 Position Position::operator-(const Position &other) const {
 	Position position;
-	position.x = x-other.x;
-	position.y = y-other.y;
-	position.z = z-other.z;
-	position.mDirection=other.mDirection;
+	position.x_ = x_ - other.x_;
+	position.y_ = y_ - other.y_;
+	position.z_ = z_ - other.z_;
+	position.mDirection_=other.mDirection_;
 	return position;
 }
 
 Position Position::operator-(const Position &&other) const {
 	Position position;
-	position.x = x-other.x;
-	position.y = y-other.y;
-	position.z = z-other.z;
-	position.mDirection=other.mDirection;
+	position.x_ = x_ - other.x_;
+	position.y_ = y_ - other.y_;
+	position.z_ = z_ - other.z_;
+	position.mDirection_=other.mDirection_;
 	return position;
 }
 
 Position& Position::operator-=(const Position &other) {
-	x-=other.x;
-	y-=other.y;
-	z-=other.z;
-	mDirection=other.mDirection;
+	x_-=other.x_;
+	y_-=other.y_;
+	z_-=other.z_;
+	mDirection_=other.mDirection_;
 	return *this;
 }
 
 Position& Position::operator-=(const Position &&other) {
-	x-=other.x;
-	y-=other.y;
-	z-=other.z;
-	mDirection=other.mDirection;
+	x_-=other.x_;
+	y_-=other.y_;
+	z_-=other.z_;
+	mDirection_=other.mDirection_;
 	return *this;
 }
 
@@ -124,20 +120,20 @@ Position::operator bool() const {
 
 Position Position::operator-() const {
 	Position minus = *this;
-	minus.x = -minus.x;
-	minus.y = -minus.y;
-	minus.z = -minus.z;
-	if (mDirection == Direction::Top){
-		minus.mDirection = Direction::Bot;
+	minus.x_ = -minus.x_;
+	minus.y_ = -minus.y_;
+	minus.z_ = -minus.z_;
+	if (mDirection_ == Direction::TOP){
+		minus.mDirection_ = Direction::BOT;
 	}
-	if (mDirection == Direction::Bot){
-		minus.mDirection = Direction::Top;
+	if (mDirection_ == Direction::BOT){
+		minus.mDirection_ = Direction::TOP;
 	}
-	if (mDirection == Direction::Left){
-		minus.mDirection = Direction::Right;
+	if (mDirection_ == Direction::LEFT){
+		minus.mDirection_ = Direction::RIGHT;
 	}
-	if (mDirection == Direction::Left){
-		minus.mDirection = Direction::Right;
+	if (mDirection_ == Direction::LEFT){
+		minus.mDirection_ = Direction::RIGHT;
 	}
 	return minus;
 }
@@ -146,44 +142,62 @@ void Position::stepInDirection(bool inverse) {
 	// TODO сложная логика, преобразовать поправить сделать единообразной
 	if (inverse)
 		reverseDirection();
-	switch (mDirection) {
-		case Direction::Top:{
-			this->operator+=(Position{0,-1,0,Direction::Top});
+	switch (mDirection_) {
+		case Direction::TOP:{
+			this->operator+=(Position{0,-1,0,Direction::TOP});
 			break;
 		}
-		case Direction::Bot:{
-			this->operator+=(Position{0,1,0,Direction::Bot});
+		case Direction::BOT:{
+			this->operator+=(Position{0,1,0,Direction::BOT});
 			break;
 		}
-		case Direction::Left:{
-			this->operator+=(Position{-1,0,0,Direction::Bot});
+		case Direction::LEFT:{
+			this->operator+=(Position{-1,0,0,Direction::BOT});
 			break;
 		}
-		case Direction::Right:{
-			this->operator+=(Position{1,0,0,Direction::Bot});
+		case Direction::RIGHT:{
+			this->operator+=(Position{1,0,0,Direction::BOT});
 			break;
+		}
+		case Direction::UNDEFINED:{
+			throw std::logic_error("Move in unknow direction");
 		}
 	}
 }
 
 void Position::reverseDirection() {
 
-	switch (mDirection) {
-		case Direction::Top:{
-			mDirection = Direction::Bot;
+	switch (mDirection_) {
+		case Direction::TOP:{
+			mDirection_ = Direction::BOT;
 			break;
 		}
-		case Direction::Bot:{
-			mDirection = Direction::Top;
+		case Direction::BOT:{
+			mDirection_ = Direction::TOP;
 			break;
 		}
-		case Direction::Left:{
-			mDirection = Direction::Right;
+		case Direction::LEFT:{
+			mDirection_ = Direction::RIGHT;
 			break;
 		}
-		case Direction::Right:{
-			mDirection = Direction::Left;
+		case Direction::RIGHT:{
+			mDirection_ = Direction::LEFT;
 			break;
+		}
+		case Direction::UNDEFINED:{
+			throw std::logic_error("Move in unknow direction");
 		}
 	}
+}
+
+double Position::calcDistance(const Position &other) const {
+	return std::sqrt((x_ - other.x_) * (x_ - other.x_) +
+	(y_ - other.y_) * (y_ - other.y_) +
+	(z_ - other.z_) * (z_ - other.z_));
+}
+
+bool Position::isValidByWorldSize(size_t width, size_t height) const {
+	if (x_ >= width || y_ >= height)
+		return false;
+	return true;
 }

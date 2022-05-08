@@ -3,363 +3,472 @@
 //
 #include "Renderer.h"
 #include <SDL2/SDL_image.h>
-#include <experimental/random>
 #include "../../Entities/Commands/MoveCommand.h"
 #include "../../Entities/Commands/ShootCommand.h"
 
-int Renderer::loop()
+void Renderer::loop ()
 {
-//    static constexpr int speed = 10;
-    if (init_()) {
-        quit_();
-        return 1;
-    }
-
-    if (load_()) {
-        quit_();
-        return 1;
-    }
-	while(run_.load())
+	init();
+	load();
+	while (work_.load())
+	{
 		processEvents();
-//    SDL_Rect r;
-//
-//    int x = 0;
-//    int y = 0;
-//
-//    r.x = x;ggb
-//
-//    while (run_) {
-//        processEvents(speed, x, y);
-//        r.x = x;
-//        r.y = y;
-
-//        SDL_FillRect(scr, nullptr, SDL_MapRGB(scr -> format, 255, 255, 255));
-//
-//        SDL_BlitSurface(sdlWallTexture_, nullptr, scr, &r);
-//
-//        SDL_UpdateWindowSurface(sdlWindowTest_);
-
-//        SDL_RenderClear(sdlRenderer_);
-//        SDL_RenderCopy(sdlRenderer_, sdlWallTexture_, nullptr, nullptr   );
-//        SDL_RenderPresent(sdlRenderer_);
-//    }
-
-    return quit_();
+	}
+	quit();
+	return ;
 }
 
-bool Renderer::init_() {
-    bool initialized = false;
-    if (SDL_Init(SDL_INIT_VIDEO) != 0) {
-        std::cout << "Can't init_: " << SDL_GetError() << std::endl;
-        system("pause");
-        initialized |= true;
-    }
-	dims = processor_->worldSize();
-
-	SDL_DisplayMode DM;
-	SDL_GetCurrentDisplayMode(0, &DM);
-	screenWidth_ = DM.w-80;
-	screenHeight_ = DM.h-80;
-
-
-
-    sdlWindowTest_ = SDL_CreateWindow("Пробное окно SDL2", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
-                                      screenWidth_, screenHeight_, SDL_WINDOW_SHOWN );
-    if (sdlWindowTest_ == nullptr) {
-        std::cout << "Can't create window: " << SDL_GetError() << std::endl;
-        initialized |= true;
-    }
-
-    sdlRenderer_ = SDL_CreateRenderer(sdlWindowTest_,-1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
-    if(sdlRenderer_ == nullptr)
-    {
-        std::cout << "Can't create renderer: " << SDL_GetError() << std::endl;
-        initialized |= true;
-    }
-	if (SDL_RenderClear(sdlRenderer_))
+bool Renderer::init ()
+{
+//    bool initialized = false;
+	if (SDL_Init(SDL_INIT_VIDEO) != 0)
 	{
+		std::cout << "Can't init: " << SDL_GetError() << std::endl;
+		quit();
+	}
+	worldSize_ = processor_->worldSize();
 
-		std::cout << "Can't clear renderer: " << SDL_GetError() << std::endl;
-		initialized |= true;
+	SDL_DisplayMode dm;
+	SDL_GetCurrentDisplayMode(0, &dm);
+	screenWidth_ = dm.w - 80;
+	screenHeight_ = dm.h - 80;
+
+
+	sdlWindowTest_ = SDL_CreateWindow("Пробное окно SDL2", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
+			screenWidth_, screenHeight_, SDL_WINDOW_SHOWN);
+	if (sdlWindowTest_ == nullptr)
+	{
+		std::cout << "Can't create window: " << SDL_GetError() << std::endl;
+		quit();
 	}
 
+	sdlRenderer_ = SDL_CreateRenderer(sdlWindowTest_, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+	if (sdlRenderer_ == nullptr)
+	{
+		std::cout << "Can't create renderer: " << SDL_GetError() << std::endl;
+		quit();
+	}
 
 	if (SDL_SetRenderDrawColor(sdlRenderer_, 0xFF, 0xFF, 0xFF, 0xFF))
 	{
 		std::cout << "Can't fill renderer: " << SDL_GetError() << std::endl;
-		initialized |= true;
+		quit();
 	}
-	SDL_RenderClear(sdlRenderer_);
 
-    int flags = IMG_INIT_PNG;
-    if ( !( IMG_Init( flags ) & flags ) ) {
-        std::cout << "Can't init_ image: " << IMG_GetError() << std::endl;
-        initialized |= true;
-    }
+	int flags = IMG_INIT_PNG;
+	if (!(IMG_Init(flags) & flags))
+	{
+		std::cout << "Can't init image: " << IMG_GetError() << std::endl;
+		quit();
+	}
 
-    scr = SDL_GetWindowSurface(sdlWindowTest_);
-
-    return initialized;
+	return false;
 }
 
-bool Renderer::load_() {
-    bool isLoadedIncorrectly = false;
+bool Renderer::load ()
+{
+//    bool isLoadedIncorrectly = false;
 
-    SDL_Surface * temp_surf = NULL;
-
-    temp_surf = IMG_Load("cvetok.png");
-    if (temp_surf == NULL) {
-        std::cout << "Can't load image: " << IMG_GetError() << std::endl;
-	    isLoadedIncorrectly |= true;
-    }
+	SDL_Surface *temp_surf;
+	temp_surf = IMG_Load("cvetok.png");
+	if (temp_surf == nullptr)
+	{
+		std::cout << "Can't load image: " << IMG_GetError() << std::endl;
+//	    isLoadedIncorrectly |= true;
+		exit(-1);
+	}
 	sdlWallTexture_ = SDL_CreateTextureFromSurface(sdlRenderer_, temp_surf);
 	SDL_FreeSurface(temp_surf);
 
-	if(sdlWallTexture_ == nullptr){
+	if (sdlWallTexture_ == nullptr)
+	{
 		std::cout << "Can't convert: " << SDL_GetError() << std::endl;
-		isLoadedIncorrectly |= true;
+//		isLoadedIncorrectly |= true;
+		exit(-1);
 	}
 
 	temp_surf = IMG_Load("fill.png");
-	if (temp_surf == NULL) {
+	if (temp_surf == nullptr)
+	{
 		std::cout << "Can't load image: " << IMG_GetError() << std::endl;
-		isLoadedIncorrectly |= true;
+//		isLoadedIncorrectly |= true;
+		exit(-1);
 	}
 	sdlFillTexture_ = SDL_CreateTextureFromSurface(sdlRenderer_, temp_surf);
 	SDL_FreeSurface(temp_surf);
 
-	if(sdlFillTexture_ == nullptr){
+	if (sdlFillTexture_ == nullptr)
+	{
 		std::cout << "Can't convert: " << SDL_GetError() << std::endl;
-		isLoadedIncorrectly |= true;
+//		isLoadedIncorrectly |= true;
+		exit(-1);
 	}
 	temp_surf = IMG_Load("tank_b.png");
-	if (temp_surf == NULL) {
+	if (temp_surf == nullptr)
+	{
 		std::cout << "Can't load image: " << IMG_GetError() << std::endl;
-		isLoadedIncorrectly |= true;
+//		isLoadedIncorrectly |= true;
+		exit(-1);
 	}
-	sdlTankBottom = SDL_CreateTextureFromSurface(sdlRenderer_, temp_surf);
-	if(sdlTankBottom == nullptr){
+	sdlTankBottomTextures_ = SDL_CreateTextureFromSurface(sdlRenderer_, temp_surf);
+	if (sdlTankBottomTextures_ == nullptr)
+	{
 		std::cout << "Can't convert: " << SDL_GetError() << std::endl;
-		isLoadedIncorrectly |= true;
+//		isLoadedIncorrectly |= true;
+		exit(-1);
 	}
 
 	temp_surf = IMG_Load("tank_t.png");
-	if (temp_surf == NULL) {
+	if (temp_surf == nullptr)
+	{
 		std::cout << "Can't load image: " << IMG_GetError() << std::endl;
-		isLoadedIncorrectly |= true;
+//		isLoadedIncorrectly |= true;
+		exit(-1);
 	}
-	sdlTankTop = SDL_CreateTextureFromSurface(sdlRenderer_, temp_surf);
-	if(sdlTankTop == nullptr){
+	sdlTankTopTextures_ = SDL_CreateTextureFromSurface(sdlRenderer_, temp_surf);
+	if (sdlTankTopTextures_ == nullptr)
+	{
 		std::cout << "Can't convert: " << SDL_GetError() << std::endl;
-		isLoadedIncorrectly |= true;
+//		isLoadedIncorrectly |= true;
+		exit(-1);
 	}
 
 
 	temp_surf = IMG_Load("tank_l.png");
-	if (temp_surf == NULL) {
+	if (temp_surf == nullptr)
+	{
 		std::cout << "Can't load image: " << IMG_GetError() << std::endl;
-		isLoadedIncorrectly |= true;
+//		isLoadedIncorrectly |= true;
+		exit(-1);
 	}
-	sdlTankLeft = SDL_CreateTextureFromSurface(sdlRenderer_, temp_surf);
-	if(sdlTankLeft == nullptr){
+	sdlTankLeftTextures_ = SDL_CreateTextureFromSurface(sdlRenderer_, temp_surf);
+	if (sdlTankLeftTextures_ == nullptr)
+	{
 		std::cout << "Can't convert: " << SDL_GetError() << std::endl;
-		isLoadedIncorrectly |= true;
+//		isLoadedIncorrectly |= true;
+		exit(-1);
 	}
 
 	temp_surf = IMG_Load("tank_r.png");
-	if (temp_surf == NULL) {
+	if (temp_surf == nullptr)
+	{
 		std::cout << "Can't load image: " << IMG_GetError() << std::endl;
-		isLoadedIncorrectly |= true;
+//		isLoadedIncorrectly |= true;
+		exit(-1);
 	}
-	sdlTankRight = SDL_CreateTextureFromSurface(sdlRenderer_, temp_surf);
-	if(sdlTankRight == nullptr){
+	sdlTankRightTextures_ = SDL_CreateTextureFromSurface(sdlRenderer_, temp_surf);
+	if (sdlTankRightTextures_ == nullptr)
+	{
 		std::cout << "Can't convert: " << SDL_GetError() << std::endl;
-		isLoadedIncorrectly |= true;
+//		isLoadedIncorrectly |= true;
+		exit(-1);
 	}
 
+	temp_surf = IMG_Load("explosion.png");
+	if (temp_surf == nullptr)
+	{
+		std::cout << "Can't load image: " << IMG_GetError() << std::endl;
+//		isLoadedIncorrectly |= true;
+		exit(-1);
+	}
+	sdlExplosionTextures_ = SDL_CreateTextureFromSurface(sdlRenderer_, temp_surf);
+	if (sdlExplosionTextures_ == nullptr)
+	{
+		std::cout << "Can't convert: " << SDL_GetError() << std::endl;
+//		isLoadedIncorrectly |= true;
+		exit(-1);
+	}
 
 	fillMap();
 
 
-    return isLoadedIncorrectly;
+	return false;
 }
 
-int Renderer::quit_() {
+int Renderer::quit ()
+{
+	work_.store(false);
+	SDL_DestroyWindow(sdlWindowTest_);
+	sdlWindowTest_ = nullptr;
 
-    SDL_DestroyWindow(sdlWindowTest_);
-    sdlWindowTest_ = nullptr;
+	SDL_DestroyRenderer(sdlRenderer_);
+	sdlRenderer_ = nullptr;
 
-    SDL_DestroyRenderer(sdlRenderer_);
-    sdlRenderer_ = nullptr;
+	SDL_DestroyTexture(sdlWallTexture_);
 
-    SDL_DestroyTexture(sdlWallTexture_);
-
-    SDL_Quit();
-    IMG_Quit();
-    return 0;
+	SDL_Quit();
+	IMG_Quit();
+	return 0;
 }
 
-void Renderer::processEvents(){
-    while(SDL_PollEvent(&e)) {
-        if (e.type == SDL_QUIT) {
-	        run_.store(false);
-        }
+void Renderer::processEvents ()
+{
+	while (SDL_PollEvent(&sdlEvent_))
+	{
+		if (sdlEvent_.type == SDL_QUIT)
+		{
+			work_.store(false);
+		}
 
-        if (e.type == SDL_KEYDOWN) {
-            if (e.key.keysym.sym == SDLK_UP) {
-	            auto player = processor_->getPlayer();
-				Position move = {0,-1,0,Position::Direction::Top };
-				auto com = new MoveCommand(player,move);
-	            processor_->addPlayerCommand(com);
-            }
-            if (e.key.keysym.sym == SDLK_DOWN) {
-	            auto com = new MoveCommand(processor_->getPlayer(),{0,1 ,0,Position::Direction::Bot});
-	            processor_->addPlayerCommand(com);
-            }
-            if (e.key.keysym.sym == SDLK_RIGHT) {
-	            auto com = new MoveCommand(processor_->getPlayer(),{1,0 ,0,Position::Direction::Right});
-	            processor_->addPlayerCommand(com);
-            }
-            if (e.key.keysym.sym == SDLK_LEFT) {
-	            auto com = new MoveCommand(processor_->getPlayer(),{-1,0, 0, Position::Direction::Left});
-	            processor_->addPlayerCommand(com);
-            }
-			if (e.key.keysym.sym == SDLK_SPACE){
-		        processor_->addPlayerCommand(new ShootCommand(processor_->getPlayer()));
-	        }
-        }
+		if (sdlEvent_.type == SDL_KEYDOWN)
+		{
+			if (sdlEvent_.key.keysym.sym == SDLK_UP)
+			{
+				auto player = processor_->getPlayer();
+				Position move = {0, -1, 0, Position::Direction::TOP};
+				auto com = new MoveCommand(player, move);
+				processor_->addPlayerCommand(com);
+			}
+			if (sdlEvent_.key.keysym.sym == SDLK_DOWN)
+			{
+				auto com = new MoveCommand(processor_->getPlayer(), {0, 1, 0, Position::Direction::BOT});
+				processor_->addPlayerCommand(com);
+			}
+			if (sdlEvent_.key.keysym.sym == SDLK_RIGHT)
+			{
+				auto com = new MoveCommand(processor_->getPlayer(), {1, 0, 0, Position::Direction::RIGHT});
+				processor_->addPlayerCommand(com);
+			}
+			if (sdlEvent_.key.keysym.sym == SDLK_LEFT)
+			{
+				auto com = new MoveCommand(processor_->getPlayer(), {-1, 0, 0, Position::Direction::LEFT});
+				processor_->addPlayerCommand(com);
+			}
+			if (sdlEvent_.key.keysym.sym == SDLK_SPACE)
+			{
+				processor_
+						->addPlayerCommand(new ShootCommand(processor_->getPlayer(), BaseCommand::Type::SHOOT_COMMAND));
+			}
+		}
 
-    }
+	}
 //	render();
 }
 
-Renderer::Renderer(std::atomic_bool &running):
-	prevRender(duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count()),
-	run_(running)
+Renderer::Renderer (std::atomic_bool &running) :
+		prevRender_(duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count()),
+		work_(running)
 {}
 
-void Renderer::fillMap() {
-	rectSize =  (screenHeight_ / dims.y) - 1;
-//	SDL_Point wallTextureSize;
-//	SDL_QueryTexture(sdlWallTexture_, NULL, NULL, &wallTextureSize.x, &wallTextureSize.y);
-	SDL_Point playerTextureSize;
-	SDL_QueryTexture(sdlTankBottom, NULL, NULL, &playerTextureSize.x, &playerTextureSize.y);
-	playerRect.w = playerTextureSize.x / 3 - 1;
-	playerRect.h = playerTextureSize.y / 3 - 1;
+void Renderer::fillMap ()
+{
+	prepare();
 
-	for (int i = 0; i < dims.x ; ++i) {
-		for (int j = 0; j < dims.y; ++j) {
-			if( (processor_->at({i, j}).type != BaseGameObject::Type::Space)
-				&&
-				(processor_->at({i, j}).type != BaseGameObject::Type::Undefined)) {
-				SDL_Rect dstrect;
-				dstrect.x = i * rectSize;
-				dstrect.y = j * rectSize;
-				dstrect.w = dstrect.h = rectSize;
-				if (processor_->at({i, j}).type == BaseGameObject::Type::Wall) {
-					SDL_RenderCopy(sdlRenderer_, sdlWallTexture_, nullptr, &dstrect);
-				} else if (processor_->at({i, j}).type == BaseGameObject::Type::Player)
+	SDL_Rect dstrect;
+	for (int i = 0; i < worldSize_.x_; ++i)
+	{
+		for (int j = 0; j < worldSize_.y_; ++j)
+		{
+			if ((processor_->at({i, j}).type_ != BaseGameObject::Type::UNDEFINED))
+			{
+				setScreenPosition(dstrect, i, j);
+				if (processor_->at({i, j}).type_ == BaseGameObject::Type::WALL)
 				{
-					SDL_RenderCopy(sdlRenderer_, sdlTankBottom, &playerRect, &dstrect);
+					SDL_RenderCopy(sdlRenderer_, sdlWallTexture_, nullptr, &dstrect);
+				}
+				else if (processor_->at({i, j}).type_ == BaseGameObject::Type::PLAYER)
+				{
+					SDL_RenderCopy(sdlRenderer_, sdlTankBottomTextures_, &playerRect_, &dstrect);
+				}
+				else
+				{
+					SDL_RenderCopy(sdlRenderer_, sdlFillTexture_, nullptr, &dstrect);
 				}
 			}
 		}
 	}
 //	auto playerField = gameWorld_->at(0,0);
-//	while (playerField->getType() != BaseGameObject::Type::Space)
+//	while (playerField->getType() != BaseGameObject::Type::SPACE)
 //	{
-//		int x = std::experimental::randint(0,dims.first);
-//		int y = std::experimental::randint(0,dims.second);
-//		playerField = gameWorld_->at(x,y);
+//		int x_ = std::experimental::randint(0,worldSize_.first);
+//		int y_ = std::experimental::randint(0,worldSize_.second);
+//		playerField = gameWorld_->at(x_,y_);
 //	}
 //	playerField->setType(BaseGameObject::Type::player_);
 	SDL_RenderPresent(sdlRenderer_);
 }
 
+void Renderer::setScreenPosition (SDL_Rect &dstrect, int i, int j) const
+{
+	dstrect.x = i * rectSize_;
+	dstrect.y = j * rectSize_;
+	dstrect.w = dstrect.h = rectSize_;
+}
 
-bool Renderer::render() {
+void Renderer::prepare ()
+{
+	SDL_RenderCopy(sdlRenderer_, sdlFillTexture_, nullptr, nullptr);
+	rectSize_ = (screenHeight_ / worldSize_.y_) - 1;
+	SDL_Point player_texture_size;
+	SDL_QueryTexture(sdlTankBottomTextures_, NULL, NULL, &player_texture_size.x, &player_texture_size.y);
+	playerRect_.w = player_texture_size.x / 3 - 1;
+	playerRect_.h = player_texture_size.y / 3 - 1;
+}
+
+
+bool Renderer::render ()
+{
 	// Замерим время выполнения
-	long int curTimeMs = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
+	long int cur_time_ms = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
 	// С прошлой отрисовки прошло сколько-то милисекунд
-	const long int MS_DIF = curTimeMs - prevRender;
-	auto dPositions = processor_->getChangedPositions();
-	for (const auto &positions: dPositions) {
-		SDL_Rect dstrect;
-		dstrect.x = positions.second.x * rectSize;
-		dstrect.y = positions.second.y * rectSize;
-		dstrect.w = dstrect.h = rectSize;
-		SDL_Rect prevrect;
-		prevrect.x = positions.first.x * rectSize;
-		prevrect.y = positions.first.y * rectSize;
-		prevrect.w = prevrect.h = rectSize;
-		switch (positions.second.mDirection) {
-			case Position::Direction::Bot: {
-				SDL_RenderCopy(sdlRenderer_, sdlTankBottom, &playerRect, &dstrect);
-				break;
-			}
-			case Position::Direction::Top: {
-				SDL_Rect topPlayerRect = playerRect;
-				topPlayerRect.x += topPlayerRect.w + topPlayerRect.w + rectSize;
-				topPlayerRect.y += topPlayerRect.h + topPlayerRect.h;
-				topPlayerRect.w *= 1.1;
-				SDL_RenderCopy(sdlRenderer_, sdlTankTop, &topPlayerRect, &dstrect);
-				break;
-			}
-			case Position::Direction::Left: {
-				SDL_Rect leftPlayerRect = playerRect;
-				leftPlayerRect.x += leftPlayerRect.w + leftPlayerRect.w + rectSize + rectSize * 1.5;
-				leftPlayerRect.y += leftPlayerRect.h + leftPlayerRect.h - rectSize;
-//				leftPlayerRect.h *= 0.95;
-//				leftPlayerRect.w *= 2;
-				SDL_RenderCopy(sdlRenderer_, sdlTankLeft, &leftPlayerRect, &dstrect);
-				break;
-			}
-			case Position::Direction::Right:
-				SDL_Rect rightPlayerRect = playerRect;
-				rightPlayerRect.h *= 0.8;
-				SDL_RenderCopy(sdlRenderer_, sdlTankRight, &rightPlayerRect, &dstrect);
-				break;
-		}
-
-		positions = processor_->getShoots();
-		for (auto shoot:positions)
-		{
-			// добавить новый объект выстрела.
-		}
-
-		SDL_RenderCopy(sdlRenderer_, sdlFillTexture_, nullptr, &prevrect);
-	}
-
-	// Чаще чем 60 раз в секунду рендерить не будем
-	if (MS_DIF >= mspf) {
+	const long int MS_DIF = cur_time_ms - prevRender_;
+	renderPlayerMove();
+	renderPlayerShoots();
+	// Чаще чем 30 раз в секунду рендерить не будем
+	if (MS_DIF >= mspf_)
+	{
 		// Если прошлая отрисовка не была проведена позади в будущем ;D
-		if (MS_DIF > 0) {
-			const long int milisecondsDelay = MS_DIF - mspf;
-			if(milisecondsDelay>=0){
-				updateFps(fpsChangeDirection::increment);
-				if (milisecondsDelay<1000)
-					SDL_Delay(milisecondsDelay);
+		if (MS_DIF > 0)
+		{
+			const long int MILISECONDS_DELAY = MS_DIF - mspf_;
+			if (MILISECONDS_DELAY >= 0)
+			{
+				updateFps(FpsChangeDirection::INCREMENT);
+				if (MILISECONDS_DELAY < 1000)
+				{
+					SDL_Delay(MILISECONDS_DELAY);
+				}
 			}
-			else{
-				updateFps(fpsChangeDirection::decrement);
+			else
+			{
+				updateFps(FpsChangeDirection::DECREMENT);
 			}
 		}
 		SDL_RenderPresent(sdlRenderer_);
-		prevRender = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
+		prevRender_ = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
 	}
 	return true;
 }
 
-void Renderer::setProcessor(CommandsProcessor *processor) {
+void Renderer::renderPlayerShoots ()
+{
+	auto shoots = processor_->getShoots();
+	SDL_Point explosion_texture_size;
+	SDL_QueryTexture(sdlExplosionTextures_, NULL, NULL, &explosion_texture_size.x, &explosion_texture_size.y);
+
+	SDL_Rect explosion_rect;
+	SDL_Rect projectile_rect;
+	explosion_rect.w = projectile_rect.w = explosion_texture_size.x / 5;
+	explosion_rect.h = projectile_rect.h = explosion_texture_size.y / 2;
+	explosion_rect.x = explosion_rect.w * 4;
+	explosion_rect.y = projectile_rect.y = projectile_rect.x = 0;
+
+
+	SDL_Rect dstrect;
+	SDL_Rect fillrect;
+	dstrect.w = dstrect.h = fillrect.w = fillrect.h = rectSize_;
+	for (const auto &shoot: shoots)
+	{
+		dstrect.x = shoot.second.x_ * rectSize_;
+		dstrect.y = shoot.second.y_ * rectSize_;
+		fillrect.x = shoot.first.x_ * rectSize_;
+		fillrect.y = shoot.first.y_ * rectSize_;
+		if (shoot.first == shoot.second)
+		{
+			SDL_RenderCopy(sdlRenderer_, sdlExplosionTextures_, &explosion_rect, &dstrect);
+		}
+		else
+		{
+			SDL_RenderCopy(sdlRenderer_, sdlFillTexture_, nullptr, &fillrect);
+			SDL_RenderCopy(sdlRenderer_, sdlExplosionTextures_, &explosion_rect, &dstrect);
+		}
+	}
+}
+
+void Renderer::renderPlayerMove ()
+{
+	auto changed_positions = processor_->getChangedPositions();
+	for (const auto &positions: changed_positions)
+	{
+		SDL_Rect dstrect;
+		dstrect.x = positions.second.x_ * rectSize_;
+		dstrect.y = positions.second.y_ * rectSize_;
+		dstrect.w = dstrect.h = rectSize_;
+		SDL_Rect prevrect;
+		prevrect.x = positions.first.x_ * rectSize_;
+		prevrect.y = positions.first.y_ * rectSize_;
+		prevrect.w = prevrect.h = rectSize_;
+		switch (positions.second.mDirection_)
+		{
+			case Position::Direction::BOT:
+			{
+				if (SDL_RenderCopy(sdlRenderer_, sdlTankBottomTextures_, &playerRect_, &dstrect))
+				{
+					std::cout << "Can't render bottom direction: " << SDL_GetError() << std::endl;
+				}
+				break;
+			}
+				// FIXME не понимаю как я квадраты тут настраивал, надо отладиться получше с этими квадратами
+			case Position::Direction::TOP:
+			{
+				// TODO вынести их в поля класса
+				SDL_Rect top_player_rect = playerRect_;
+				top_player_rect.x += top_player_rect.w + top_player_rect.w + rectSize_;
+				top_player_rect.y += top_player_rect.h + top_player_rect.h;
+				top_player_rect.w *= 1.1;
+				if (SDL_RenderCopy(sdlRenderer_, sdlTankTopTextures_, &top_player_rect, &dstrect))
+				{
+					std::cout << "Can't render top direction: " << SDL_GetError() << std::endl;
+				}
+				break;
+			}
+			case Position::Direction::LEFT:
+			{
+				SDL_Rect left_player_rect = playerRect_;
+				left_player_rect.x += left_player_rect.w + left_player_rect.w + rectSize_ + rectSize_ * 1.5;
+				left_player_rect.y += left_player_rect.h + left_player_rect.h - rectSize_;
+//				left_player_rect.h *= 0.95;
+//				left_player_rect.w *= 2;
+				if (SDL_RenderCopy(sdlRenderer_, sdlTankLeftTextures_, &left_player_rect, &dstrect))
+				{
+					std::cout << "Can't render left direction: " << SDL_GetError() << std::endl;
+				}
+				break;
+			}
+			case Position::Direction::RIGHT:
+			{
+				SDL_Rect rightPlayerRect = playerRect_;
+				rightPlayerRect.h *= 0.8;
+				if (SDL_RenderCopy(sdlRenderer_, sdlTankRightTextures_, &rightPlayerRect, &dstrect))
+				{
+					std::cout << "Can't render bottom direction: " << SDL_GetError() << std::endl;
+				}
+				break;
+			}
+
+			case Position::Direction::UNDEFINED:{
+				throw std::logic_error("Move in unknow direction");
+			}
+		}
+
+//		auto shoots = processor_->getShoots();
+//		for (auto shoot:shoots)
+//		{
+//			// if prev shoot pos is equal to cur - render BIG_BOOM!
+//			// else - render just small red circle, that means - projectile in his way
+//		}
+//
+		SDL_RenderCopy(sdlRenderer_, sdlFillTexture_, nullptr, &prevrect);
+	}
+}
+
+void Renderer::setProcessor (CommandsProcessor *processor)
+{
 	processor_ = processor;
 }
 
-void Renderer::updateFps(Renderer::fpsChangeDirection direction) {
-	if (fps < 30) {
-		if (direction == fpsChangeDirection::increment)
-			fps++;
-		if (direction == fpsChangeDirection::decrement)
-			fps--;
-		mspf = MS_IN_SECOND / (fps > 0 ? fps : 1);
+void Renderer::updateFps (Renderer::FpsChangeDirection direction)
+{
+	if (fps_ < 30)
+	{
+		if (direction == FpsChangeDirection::INCREMENT)
+		{
+			fps_++;
+		}
+		if (direction == FpsChangeDirection::DECREMENT)
+		{
+			fps_--;
+		}
+		mspf_ = MS_IN_SECOND / (fps_ > 0 ? fps_ : 1);
 	}
 }

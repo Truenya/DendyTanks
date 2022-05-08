@@ -10,7 +10,7 @@ pkg_check_modules(gtest REQUIRED gtest)
 #settings
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_FLAGS "-g -O0 -std=c++2a -fsized-deallocation -fprofile-generate")
+set(CMAKE_CXX_FLAGS "-g -O0 -std=c++2a -fsized-deallocation -fprofile-generate -Wall -Wextra -Wpedantic")
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 

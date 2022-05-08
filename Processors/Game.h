@@ -17,15 +17,14 @@ struct Game {
 	~Game();
 	void start();
 	void stop();
-	void init();
 private:
 	std::atomic_bool work_;
 	std::osyncstream syncStreamErrors_;
 	Renderer renderer_;
 	CommandsProcessor processor_;
-	std::jthread th_ProcessingCommands_;
-	std::jthread th_Rendering_;
-	void mainLoop_ () ;
+//	std::jthread th_ProcessingCommands_;
+	std::jthread thRendering_;
+	void mainLoop () ;
 };
 
 

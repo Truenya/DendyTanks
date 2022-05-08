@@ -8,7 +8,7 @@
 
 struct ShootCommand : public BaseCommand{
 	ShootCommand(BaseGameObject* object, Type typo);
-	virtual ~ShootCommand();
+	~ShootCommand() override;
 	SdlErrorCodeExample execute() override;
 };
 

@@ -9,28 +9,40 @@
 #include "ObjectProps/Position.h"
 #include "../Errors/ErrorCode.h"
 #include <vector>
-
-struct BaseGameObject {
+struct ShootCommand;
+class MoveCommand;
+struct  BaseGameObject {
 	enum class Type{
-		Undefined,
-		Space,
-		Player,
-		Wall,
-		Shoot
+		UNDEFINED,
+		SPACE,
+		PLAYER,
+		WALL,
+		PROJECTILE
+	};
+	enum class StepReturn{
+		SUCCESS,
+		MEET_WALL,
+		MEET_PLAYER,
+		MEET_PROJECTILE,
+		UNDEFINED_BEHAVIOR
 	};
 	BaseGameObject() ;
 	BaseGameObject(Position pos, Type typo,std::vector<std::vector<BaseGameObject>> *field);
-//	BaseGameObject(int x, int y, Type typo);
+//	BaseGameObject(int x_, int y_, Type typo);return false;
 
 	virtual ~BaseGameObject();
-	SdlErrorCodeExample move(Position deltaPos);
-	Type type;
+	SdlErrorCodeExample move(Position delta_pos);
+	Type type_;
 
 	[[nodiscard]] const Positions &getPositions() const;
-
+	StepReturn step();
+	void setDestinationPoint(const Position& pos);
 protected:
 	Positions positions_;
 	std::vector<std::vector<BaseGameObject>> *field_;
+	friend struct ShootCommand;
+	friend struct MoveCommand;
+
 };
 
 

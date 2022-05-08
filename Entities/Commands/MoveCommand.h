@@ -10,11 +10,11 @@
 #include "gtest/gtest.h"
 
 struct MoveCommand : public BaseCommand{
-	virtual ~MoveCommand();
+	~MoveCommand() override;
     SdlErrorCodeExample execute() override;
 	Position dPos_;
 
-	MoveCommand(BaseGameObject *obj, Position dPos);
+	MoveCommand(BaseGameObject *obj, Position d_pos);
 };
 
 

@@ -15,7 +15,7 @@ public:
 	};
 	SdlErrorCodeExample(Type t);
 	virtual ~SdlErrorCodeExample();
-	Type getType() const;
+	[[nodiscard]] Type getType() const;
 
 private:
 	Type type_;

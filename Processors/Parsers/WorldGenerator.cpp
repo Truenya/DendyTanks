@@ -20,9 +20,9 @@ MyGameWorld &WorldGenerator::parseFromString(const std::string& raw_file,MyGameW
 	int x = 0;
 	int y = 0;
 	int max_x = 0;
-	std::list<Position> wallCoordinates;
-	std::list<Position> spaceCoordinates;
-	Position playerCoordinates;
+	std::list<Position> wall_coordinates;
+	std::list<Position> space_coordinates;
+	Position player_coordinates;
 	for (const char& ch: raw_file){
 		if (ch == '\n') {
 			++y;
@@ -31,14 +31,14 @@ MyGameWorld &WorldGenerator::parseFromString(const std::string& raw_file,MyGameW
 		}
 		else {
 			if (ch == '#') {
-				wallCoordinates.emplace_back(Position{x, y});
+				wall_coordinates.emplace_back(Position{x, y,0,Position::Direction::UNDEFINED});
 				++x;
 			}
 			else if (ch == ' ') {
-				spaceCoordinates.emplace_back(Position{x, y});
+				space_coordinates.emplace_back(Position{x, y,0,Position::Direction::UNDEFINED});
 				++x;
 			}else if (ch == 'A'){
-				playerCoordinates = {x,y};
+				player_coordinates = {x,y,0,Position::Direction::BOT};
 			}
 			else{
 				std::cerr<<"Некорректный символ:" << ch;
@@ -46,18 +46,18 @@ MyGameWorld &WorldGenerator::parseFromString(const std::string& raw_file,MyGameW
 		}
 	}
 	static auto world = MyGameWorld(max_x, y);
-	for (auto wall:wallCoordinates)
+	for (auto wall:wall_coordinates)
 	{
-		world.at(wall) = BaseGameObject(wall,BaseGameObject::Type::Wall,&world.field_);
+		world.at(wall) = BaseGameObject(wall,BaseGameObject::Type::WALL,&world.field_);
 	}
 
-	for (auto space:spaceCoordinates)
+	for (auto space:space_coordinates)
 	{
-		world.at(space) = BaseGameObject(space,BaseGameObject::Type::Space,&world.field_);
+		world.at(space) = BaseGameObject(space,BaseGameObject::Type::SPACE,&world.field_);
 	}
 
-	world.at(playerCoordinates) = PlayerGameObject(playerCoordinates,&world.field_);
-	world.player_ = &world.at(playerCoordinates);
+	world.at(player_coordinates) = PlayerGameObject(player_coordinates,&world.field_);
+	world.player_ = &world.at(player_coordinates);
 	ptr = &world;
 	return world;
 }

@@ -11,4 +11,4 @@ SdlErrorCodeExample::Type SdlErrorCodeExample::getType() const {
 	return type_;
 }
 
-SdlErrorCodeExample::~SdlErrorCodeExample() {}
+SdlErrorCodeExample::~SdlErrorCodeExample() = default;

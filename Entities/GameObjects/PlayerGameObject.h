@@ -9,7 +9,7 @@
 
 class PlayerGameObject : public BaseGameObject{
 public:
-	virtual ~PlayerGameObject();
+	~PlayerGameObject() override;
 
 	PlayerGameObject(Position position, std::vector<std::vector<BaseGameObject>> *field);
 };

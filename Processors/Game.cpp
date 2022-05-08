@@ -13,31 +13,27 @@ Game::Game(): syncStreamErrors_(std::cerr),
 	renderer_.setProcessor(&processor_);
 }
 
-Game::~Game() {
-
-}
+Game::~Game() = default;
 
 
-void Game::mainLoop_ () {
-	while(work_.load())
-	{
-		if (processor_.processCommands())
-			renderer_.render();
-		else
-			renderer_.render();
+void Game::mainLoop () {
+	while(work_.load()){
+		processor_.processParticles();
+		processor_.processCommands();
+		renderer_.render();
 		// TODO else
 		// сообщение об ошибке
 		sched_yield();
 	}
-};
+}
 
 void Game::start() {
 	if (!work_.load()) {
 		work_.store(true);
-//		th_ProcessingCommands_ = std::jthread([&]() { mainLoop_(); });
-		th_Rendering_ = std::jthread([&](){renderer_.loop();});
+//		th_ProcessingCommands_ = std::jthread([&]() { mainLoop(); });
+		thRendering_ = std::jthread([&](){renderer_.loop();});
 		sleep(2);
-		mainLoop_();
+		mainLoop();
 	}
 	else{
 		syncStreamErrors_ << "Trying to get work_, when already working.";
@@ -49,14 +45,10 @@ void Game::stop() {
 	if (work_.load()) {
 		work_.store(false);
 //		th_ProcessingCommands_.join();
-		th_Rendering_.join();
+		thRendering_.join();
 	}
 	else{
 		syncStreamErrors_ << "Trying to stop working, when already not such busy.";
 		syncStreamErrors_.emit();
 	}
-}
-
-void Game::init() {
-	renderer_.setProcessor(&processor_);
 }

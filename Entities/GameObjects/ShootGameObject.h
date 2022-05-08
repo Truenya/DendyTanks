@@ -10,7 +10,7 @@
 struct ShootGameObject : public  BaseGameObject{
 	ShootGameObject(Position pos,std::vector<std::vector<BaseGameObject>> *field);
 	~ShootGameObject() override;
-	bool needExplosion;
+	bool needExplosion_;
 };
 
 

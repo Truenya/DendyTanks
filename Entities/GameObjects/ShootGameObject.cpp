@@ -4,10 +4,9 @@
 
 #include "ShootGameObject.h"
 
-ShootGameObject::~ShootGameObject() {
+ShootGameObject::~ShootGameObject() = default;
 
-}
-
-ShootGameObject::ShootGameObject(Position pos, std::vector<std::vector<BaseGameObject>> *field): BaseGameObject(pos,Type::Shoot,field), needExplosion(true) {
+ShootGameObject::ShootGameObject(Position pos, std::vector<std::vector<BaseGameObject>> *field):
+BaseGameObject(pos, Type::PROJECTILE, field), needExplosion_(true) {
 
 }

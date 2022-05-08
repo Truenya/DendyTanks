@@ -10,17 +10,17 @@
 
 struct BaseCommand {
 	enum class Type{
-		Undefined,
-		MoveCommand,
-		ShootCommand
+		UNDEFINED,
+		MOVE_COMMAND,
+		SHOOT_COMMAND
 	};
 	BaseCommand() ;
     BaseCommand(BaseGameObject*, Type) ;
 	virtual ~BaseCommand();
 
 	virtual SdlErrorCodeExample execute() = 0;
-	BaseGameObject *obj;
-	Type type;
+	BaseGameObject *obj_;
+	Type type_;
 };
 
 

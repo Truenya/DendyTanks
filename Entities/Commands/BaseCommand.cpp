@@ -4,14 +4,12 @@
 
 #include "BaseCommand.h"
 
-BaseCommand::~BaseCommand() {
+BaseCommand::~BaseCommand() = default;
+
+BaseCommand::BaseCommand(): obj_(nullptr), type_(Type::UNDEFINED) {
 
 }
 
-BaseCommand::BaseCommand():obj(nullptr),type(Type::Undefined) {
-
-}
-
-BaseCommand::BaseCommand(BaseGameObject * gameObject, BaseCommand::Type comType): obj(gameObject), type(comType) {
+BaseCommand::BaseCommand(BaseGameObject * game_object, BaseCommand::Type com_type): obj_(game_object), type_(com_type) {
 
 }

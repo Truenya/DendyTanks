@@ -7,23 +7,24 @@
 
 #include "vector"
 #include "memory"
-class MyGameWorld;
 #include "../BaseGameObject.h"
-#include "../../../Processors/Parsers/WorldGenerator.h"
+class WorldGenerator;
+class CommandsProcessor;
 //typedef std::unique_ptr<BaseGameObject> ptr_GamObjExample;
-//typedef std::vector<std::vector<ptr_GamObjExample>> myGameWorldField;
-typedef std::vector<std::vector<BaseGameObject>> myGameWorldField;
+//typedef std::vector<std::vector<ptr_GamObjExample>> MyGameWorldField;
+typedef std::vector<std::vector<BaseGameObject>> MyGameWorldField;
 class MyGameWorld {
 public:
 	MyGameWorld( unsigned int  x_dim, unsigned int y_dim);
 	~MyGameWorld();
 	[[nodiscard]] BaseGameObject &at(Position) ;
 	Position size();
-	BaseGameObject *player_;
+	BaseGameObject *player_{};
 private:
-    myGameWorldField field_;
+    MyGameWorldField field_;
 	friend WorldGenerator;
 	friend BaseGameObject;
+	friend CommandsProcessor;
 };
 
 

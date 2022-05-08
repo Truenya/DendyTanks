@@ -4,13 +4,12 @@
 
 #include "MoveCommand.h"
 
-MoveCommand::MoveCommand(BaseGameObject *obj, Position dPos):
-	BaseCommand(obj,Type::MoveCommand),
-	dPos_(dPos){}
+MoveCommand::MoveCommand(BaseGameObject *obj, Position d_pos):
+	BaseCommand(obj,Type::MOVE_COMMAND),
+	dPos_(d_pos){}
 
 MoveCommand::~MoveCommand() = default;
 
 SdlErrorCodeExample MoveCommand::execute() {
-
-	return obj->move(dPos_);
+	return obj_->move(dPos_);
 }
