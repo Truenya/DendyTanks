@@ -42,7 +42,6 @@ public:
 	explicit Renderer(std::atomic_bool& run);
 	bool render();
 	bool makeSomePauseIfNeeded(long int cur_time_ms);
-	std::atomic_int_fast32_t renderTime_;
 
 	void setProcessor(CommandsProcessor *processor);
 

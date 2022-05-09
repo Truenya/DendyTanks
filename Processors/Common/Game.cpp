@@ -18,10 +18,9 @@ Game::~Game() = default;
 
 void Game::mainLoop () {
 	while(work_.load()){
-		processor_.processParticles();
+//		processor_.processParticles();
 		processor_.processCommands();
 		renderer_.render();
-		// сообщение об ошибке
 		sched_yield();
 	}
 }

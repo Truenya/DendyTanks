@@ -29,36 +29,32 @@ bool Renderer::makeSomePauseIfNeeded (const long cur_time_ms)
 	// С прошлой отрисовки прошло сколько-то милисекунд
 	const long int MS_TIME_FROM_LAST_RENDER = cur_time_ms - renderData_.prevRender_;
 	// Чаще чем 30 раз в секунду рендерить не будем
-	if (MS_TIME_FROM_LAST_RENDER >= renderData_.millisecondsPerFrame_)
+	if (MS_TIME_FROM_LAST_RENDER < renderData_.millisecondsPerFrame_)
 	{
 		// Если прошлая отрисовка не была проведена позади в будущем ;D
 		if (MS_TIME_FROM_LAST_RENDER > 0)
 		{
-			const long int MILISECONDS_DELAY = MS_TIME_FROM_LAST_RENDER - renderData_.millisecondsPerFrame_;
-			renderTime_.store(MS_TIME_FROM_LAST_RENDER);
-			if (MILISECONDS_DELAY >= 0)
+			const long int MILISECONDS_DELAY = renderData_.millisecondsPerFrame_ - MS_TIME_FROM_LAST_RENDER;
+			updateFps(FpsChangeDirection::INCREMENT);
+			if (MILISECONDS_DELAY < 1000)
 			{
-				updateFps(FpsChangeDirection::INCREMENT);
-				if (MILISECONDS_DELAY < 1000)
-				{
-					SDL_Delay(MILISECONDS_DELAY);
-					return false;
-				}
-			}
-			else
-			{
-				updateFps(FpsChangeDirection::DECREMENT);
+				SDL_Delay(MILISECONDS_DELAY);
+				return false;
 			}
 		}
+	}
+	else
+	{
 		SDL_RenderPresent(renderData_.sdlRenderer_);
 		renderData_.prevRender_ = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
+		updateFps(FpsChangeDirection::DECREMENT);
 	}
 	return true;
 }
 
 void Renderer::updateFps (Renderer::FpsChangeDirection direction)
 {
-	if (renderData_.fps_ < 30)
+	if (renderData_.fps_ > 0 && renderData_.fps_ <= 30)
 	{
 		if (direction == FpsChangeDirection::INCREMENT)
 		{
@@ -302,6 +298,8 @@ void Renderer::fillMap ()
 		}
 	}
 	SDL_RenderPresent(renderData_.sdlRenderer_);
+
+	SDL_Delay(15);
 }
 
 void Renderer::fillRectByPosition (SDL_Rect &dstrect, int i, int j) const
