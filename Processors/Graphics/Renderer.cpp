@@ -101,7 +101,7 @@ Renderer::Renderer (std::atomic_bool &running) :
 }
 #else
 Renderer::Renderer (std::atomic_bool &running,std::osyncstream &logs) :
-		work_(running),
+		isCurrentlyWorking_(running),
 		processor_(nullptr),
 		logsSynchroStream_(logs)
 {

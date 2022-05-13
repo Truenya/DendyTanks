@@ -21,7 +21,7 @@ struct Game {
 	void start();
 	void stop();
 private:
-	std::atomic_bool work_;
+	std::atomic_bool isCurrentlyWorking_;
 	std::osyncstream syncStreamErrors_;
 	std::jthread thProcessingEvents_;
 	std::jthread thProcessingCommands_;

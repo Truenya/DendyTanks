@@ -46,9 +46,10 @@ bool MainProcessor::processCommands() {
 	bool status = false;
 	if (!playerMoveCommands_.empty()) {
 		std::vector<BaseCommand> empty;
-		const std::lock_guard<std::mutex> LOCK(mutexCommands_);
-		std::swap(empty, playerMoveCommands_);
-
+		{
+			const std::lock_guard<std::mutex> LOCK(mutexCommands_);
+			std::swap(empty, playerMoveCommands_);
+		}
 		// Return status tells, need or not rerender screen
 		status |= processPlayerMoveCommands(empty);
 	}else
@@ -57,8 +58,10 @@ bool MainProcessor::processCommands() {
 	}
 	if (!playerShootCommands_.empty()) {
 		std::vector<BaseCommand> empty;
-		const std::lock_guard<std::mutex> LOCK(mutexCommands_);
-		std::swap(empty, playerShootCommands_);
+		{
+			const std::lock_guard<std::mutex> LOCK(mutexCommands_);
+			std::swap(empty, playerShootCommands_);
+		}
 		status |= processPlayerShootCommands(empty);
 	}
 	return status;
@@ -66,6 +69,7 @@ bool MainProcessor::processCommands() {
 
 bool MainProcessor::processParticlesMoving() {
 	auto positions = world_.allProjectilesStep();
+	if (!positions.empty())
 	{
 		for (const auto &position: positions)
 		{
