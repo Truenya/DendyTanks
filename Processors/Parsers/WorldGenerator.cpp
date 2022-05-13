@@ -5,8 +5,8 @@
 #include "WorldGenerator.h"
 #include <iostream>
 #include "../../Entities/GameObjects/PlayerGameObject.h"
-MyGameWorld &WorldGenerator::generateWorld(const std::string& map_filepath) {
-	static MyGameWorld* ptr = nullptr;
+GameWorld &WorldGenerator::generateWorld(const std::string& map_filepath) {
+	static GameWorld* ptr = nullptr;
 	if (ptr != nullptr)
 		return *ptr;
 	std::ifstream map_file(map_filepath);
@@ -16,7 +16,7 @@ MyGameWorld &WorldGenerator::generateWorld(const std::string& map_filepath) {
 }
 
 #include <list>
-MyGameWorld &WorldGenerator::parseFromString(const std::string& raw_file, [[maybe_unused]] MyGameWorld* ptr) {
+GameWorld &WorldGenerator::parseFromString(const std::string& raw_file, [[maybe_unused]] GameWorld* ptr) {
 	int x = 0;
 	int y = 0;
 	int max_x = 0;
@@ -37,7 +37,8 @@ MyGameWorld &WorldGenerator::parseFromString(const std::string& raw_file, [[mayb
 			else if (ch == ' ') {
 				space_coordinates.emplace_back(Position{x, y,0,Position::Direction::UNDEFINED});
 				++x;
-			}else if (ch == 'A'){
+			}
+			else if (ch == 'A') {
 				player_coordinates = {x,y,0,Position::Direction::BOT};
 			}
 			else{
@@ -45,7 +46,7 @@ MyGameWorld &WorldGenerator::parseFromString(const std::string& raw_file, [[mayb
 			}
 		}
 	}
-	static auto world = MyGameWorld(max_x, y);
+	static auto world = GameWorld(max_x, y);
 	for (auto wall:wall_coordinates)
 	{
 		world.at(wall) = BaseGameObject(wall,BaseGameObject::Type::WALL,&world.field_);

@@ -4,16 +4,16 @@
 
 #ifndef SSDL_WORLDGENERATOR_H
 #define SSDL_WORLDGENERATOR_H
-#include "../../Entities/GameObjects/World/MyGameWorld.h"
+#include "../../Entities/GameObjects/World/GameWorld.h"
 #include <string>
 #include <fstream>
 #include <sstream>
 
 class WorldGenerator {
-	static MyGameWorld &parseFromString(const std::string&, [[maybe_unused]] MyGameWorld* ptr);
+	static GameWorld &parseFromString(const std::string&, [[maybe_unused]] GameWorld* ptr);
 
 public:
-	static MyGameWorld &generateWorld(const std::string& map_filepath = "labirinth.txt");
+	static GameWorld &generateWorld(const std::string& map_filepath = "labirinth.txt");
 };
 
 #endif //SSDL_WORLDGENERATOR_H

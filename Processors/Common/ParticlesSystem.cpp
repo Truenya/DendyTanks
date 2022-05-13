@@ -15,6 +15,7 @@ void ProjectileSystem::step ()
 
 void ProjectileSystem::init ()
 {
+
 	projectiles_.resize(PROJECTILE_VALUES_SIZE);
 	count_ = 0;
 }

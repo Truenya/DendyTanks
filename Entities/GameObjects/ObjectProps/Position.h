@@ -45,7 +45,7 @@ struct Position {
 		LEFT,
 		RIGHT,
 		UNDEFINED
-	} mDirection_ = Direction::UNDEFINED;
+	} direction_ = Direction::UNDEFINED;
 	void stepInDirection(bool inverse = false);
 	void reverseDirection();
 	[[nodiscard]] double calcDistance(const Position& other) const;

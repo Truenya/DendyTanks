@@ -26,7 +26,7 @@ SdlErrorCodeExample BaseGameObject::move(Position delta_pos) {
 	positions_.prevPos_ = cur_pos;
 //	cur_pos += delta_pos;
 	positions_.curPos_ = new_pos;
-	positions_.curPos_.mDirection_ = delta_pos.mDirection_;
+	positions_.curPos_.direction_ = delta_pos.direction_;
 	positions_.dPos_ = delta_pos;
 	std::swap((*field_)[cur_pos.x_][cur_pos.y_], (*field_)[new_pos.x_][new_pos.y_]);
 	(*field_)[cur_pos.x_][cur_pos.y_].positions_.prevPos_ = new_pos;
@@ -55,63 +55,19 @@ BaseGameObject::BaseGameObject(Position pos, BaseGameObject::Type typo, std::vec
 		positions_({pos, pos, {0, 0, 0, Position::Direction::BOT},pos}),
 		field_(field) {}
 
-BaseGameObject::StepReturn BaseGameObject::step() {
+void BaseGameObject::step() {
 //	TODO using step for player, not move(deltaPosition)
-//	if(type_ == BaseGameObject::Type::PLAYER)
-//	{
-//		auto next_pos = positions_.curPos_;
-//		next_pos.stepInDirection();
-//		auto next_pos_type = (*field_)[next_pos.x_][next_pos.y_].type_;
-//		if (next_pos_type == BaseGameObject::Type::WALL     ||
-//			next_pos_type == BaseGameObject::Type::PLAYER   ||
-//			next_pos_type == BaseGameObject::Type::UNDEFINED) {
-//			return StepReturn::MEET_WALL;
-//		}
-//		positions_.prevPos_ = positions_.curPos_;
-//		positions_.curPos_ = next_pos;
-//		positions_.dPos_ = next_pos-positions_.prevPos_;
-//
-//		if (next_pos_type == BaseGameObject::Type::SPACE) {
-//			(*field_)[next_pos.x_][next_pos.y_].type_ = BaseGameObject::Type::PLAYER;
-//			(*field_)[positions_.prevPos_.x_][positions_.prevPos_.y_].type_ = BaseGameObject::Type::SPACE;
-//			return StepReturn::SUCCESS;
-//		}
-//		// TODO экран поражения
-//		return StepReturn::MEET_PROJECTILE;
-//	}
-	bool proj = type_ == BaseGameObject::Type::PROJECTILE;
-	bool posvalid = positions_.curPos_.isValid();
-	bool posvalidbyworldsize = positions_.curPos_.isValidByWorldSize((*field_).size(), (*field_).at(0).size());
-
-	if (proj && posvalid  && posvalidbyworldsize)
-	{
-		auto next_pos = positions_.curPos_;
-		next_pos.stepInDirection();
-		auto next_pos_type = (*field_)[next_pos.x_][next_pos.y_].type_;
-		if (next_pos_type == BaseGameObject::Type::WALL)
-//		||next_pos_type == BaseGameObject::Type::PLAYER )
-		{
-			field_->at(next_pos.x_).at(next_pos.y_).type_ = BaseGameObject::Type::SPACE;
-			field_->at(positions_.prevPos_.x_).at(positions_.prevPos_.y_).type_ = BaseGameObject::Type::SPACE;
-			positions_.prevPos_ = positions_.curPos_;
-			positions_.curPos_ = next_pos;
-			positions_.dPos_ = next_pos - positions_.prevPos_;
-			return StepReturn::MEET_WALL;
-		}
-		positions_.prevPos_ = positions_.curPos_;
-		positions_.curPos_ = next_pos;
-		positions_.dPos_ = next_pos - positions_.prevPos_;
-
-		if (next_pos_type == BaseGameObject::Type::SPACE ) {
-			(*field_)[next_pos.x_][next_pos.y_].type_ = BaseGameObject::Type::PROJECTILE;
-			(*field_)[positions_.prevPos_.x_][positions_.prevPos_.y_].type_ = BaseGameObject::Type::SPACE;
-			return StepReturn::SUCCESS;
-		}
-		return StepReturn::MEET_PROJECTILE;
-	}
-	return StepReturn::UNDEFINED_BEHAVIOR;
+	positions_.prevPos_ = positions_.curPos_;
+	positions_.curPos_.stepInDirection();
+	positions_.dPos_ = positions_.curPos_-positions_.prevPos_;
+	return ;
 }
 
 void BaseGameObject::setDestinationPoint(const Position &pos) {
 	positions_.dstPos_ = pos;
+}
+
+void BaseGameObject::rotate (Position::Direction direction)
+{
+	positions_.curPos_.direction_ = direction;
 }

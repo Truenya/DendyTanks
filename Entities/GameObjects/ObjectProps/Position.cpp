@@ -9,7 +9,7 @@ Position& Position::operator+=(const Position &other) {
 	x_+=other.x_;
 	y_+=other.y_;
 	z_+=other.z_;
-	mDirection_=other.mDirection_;
+	direction_=other.direction_;
 	return *this;
 }
 
@@ -17,15 +17,15 @@ Position& Position::operator+=(const Position &&other) {
 	x_+=other.x_;
 	y_+=other.y_;
 	z_+=other.z_;
-	mDirection_=other.mDirection_;
+	direction_=other.direction_;
 	return *this;
 }
 
 bool Position::isValid() const {
-	if ((x_ <= -1 ) || (y_ <= -1)   ||
-		(z_ <= -1) || (x_ >= 1000)  ||
-		(y_ >= 1000) || (z_ >= 1000)||
-		mDirection_ == Direction::UNDEFINED)
+	if ((x_ <= -1 ) || (y_ <= -1) ||
+	    (z_ <= -1) || (x_ >= 1000) ||
+	    (y_ >= 1000) || (z_ >= 1000) ||
+	    direction_ == Direction::UNDEFINED)
 		return false;
 	return true;
 }
@@ -70,7 +70,7 @@ Position Position::operator+(const Position &other) const {
 	position.x_ = x_ + other.x_;
 	position.y_ = y_ + other.y_;
 	position.z_ = z_ + other.z_;
-	position.mDirection_=other.mDirection_;
+	position.direction_=other.direction_;
 	return position;
 }
 
@@ -79,7 +79,7 @@ Position Position::operator+(const Position &&other) const {
 	position.x_ = x_ + other.x_;
 	position.y_ = y_ + other.y_;
 	position.z_ = z_ + other.z_;
-	position.mDirection_=other.mDirection_;
+	position.direction_=other.direction_;
 	return position;
 }
 
@@ -88,7 +88,7 @@ Position Position::operator-(const Position &other) const {
 	position.x_ = x_ - other.x_;
 	position.y_ = y_ - other.y_;
 	position.z_ = z_ - other.z_;
-	position.mDirection_=other.mDirection_;
+	position.direction_=other.direction_;
 	return position;
 }
 
@@ -97,7 +97,7 @@ Position Position::operator-(const Position &&other) const {
 	position.x_ = x_ - other.x_;
 	position.y_ = y_ - other.y_;
 	position.z_ = z_ - other.z_;
-	position.mDirection_=other.mDirection_;
+	position.direction_=other.direction_;
 	return position;
 }
 
@@ -105,7 +105,7 @@ Position& Position::operator-=(const Position &other) {
 	x_-=other.x_;
 	y_-=other.y_;
 	z_-=other.z_;
-	mDirection_=other.mDirection_;
+	direction_=other.direction_;
 	return *this;
 }
 
@@ -113,7 +113,7 @@ Position& Position::operator-=(const Position &&other) {
 	x_-=other.x_;
 	y_-=other.y_;
 	z_-=other.z_;
-	mDirection_=other.mDirection_;
+	direction_=other.direction_;
 	return *this;
 }
 
@@ -126,17 +126,17 @@ Position Position::operator-() const {
 	minus.x_ = -minus.x_;
 	minus.y_ = -minus.y_;
 	minus.z_ = -minus.z_;
-	if (mDirection_ == Direction::TOP){
-		minus.mDirection_ = Direction::BOT;
+	if (direction_ == Direction::TOP){
+		minus.direction_ = Direction::BOT;
 	}
-	if (mDirection_ == Direction::BOT){
-		minus.mDirection_ = Direction::TOP;
+	if (direction_ == Direction::BOT){
+		minus.direction_ = Direction::TOP;
 	}
-	if (mDirection_ == Direction::LEFT){
-		minus.mDirection_ = Direction::RIGHT;
+	if (direction_ == Direction::LEFT){
+		minus.direction_ = Direction::RIGHT;
 	}
-	if (mDirection_ == Direction::LEFT){
-		minus.mDirection_ = Direction::RIGHT;
+	if (direction_ == Direction::LEFT){
+		minus.direction_ = Direction::RIGHT;
 	}
 	return minus;
 }
@@ -144,7 +144,7 @@ Position Position::operator-() const {
 void Position::stepInDirection(bool inverse) {
 	if (inverse)
 		reverseDirection();
-	switch (mDirection_) {
+	switch (direction_) {
 		case Direction::TOP:{
 			this->operator+=(Position{0,-1,0,Direction::TOP});
 			break;
@@ -154,11 +154,11 @@ void Position::stepInDirection(bool inverse) {
 			break;
 		}
 		case Direction::LEFT:{
-			this->operator+=(Position{-1,0,0,Direction::BOT});
+			this->operator+=(Position{-1,0,0,Direction::LEFT});
 			break;
 		}
 		case Direction::RIGHT:{
-			this->operator+=(Position{1,0,0,Direction::BOT});
+			this->operator+=(Position{1,0,0,Direction::RIGHT});
 			break;
 		}
 		case Direction::UNDEFINED:{
@@ -169,21 +169,21 @@ void Position::stepInDirection(bool inverse) {
 
 void Position::reverseDirection() {
 
-	switch (mDirection_) {
+	switch (direction_) {
 		case Direction::TOP:{
-			mDirection_ = Direction::BOT;
+			direction_ = Direction::BOT;
 			break;
 		}
 		case Direction::BOT:{
-			mDirection_ = Direction::TOP;
+			direction_ = Direction::TOP;
 			break;
 		}
 		case Direction::LEFT:{
-			mDirection_ = Direction::RIGHT;
+			direction_ = Direction::RIGHT;
 			break;
 		}
 		case Direction::RIGHT:{
-			mDirection_ = Direction::LEFT;
+			direction_ = Direction::LEFT;
 			break;
 		}
 		case Direction::UNDEFINED:{

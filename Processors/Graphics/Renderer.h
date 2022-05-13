@@ -9,7 +9,7 @@
 #include <iostream>
 #include <chrono>
 #include <atomic>
-#include "../Common/CommandsProcessor.h"
+#include "../Common/MainProcessor.h"
 #include "../../Entities/Commands/BaseCommand.h"
 #include "../Parsers/WorldGenerator.h"
 #include "../Common/ParticlesSystem.h"
@@ -35,15 +35,24 @@ class Renderer {
 	void updateFps(FpsChangeDirection direction);
 	void prepareTextures();
 	std::atomic_bool &work_;
-	CommandsProcessor *processor_;
+	MainProcessor *processor_;
+
+#ifdef MAKE_LOG
+	std::osyncstream &logsSynchroStream_;
+#endif
 public:
 	void prepare();
     void processingEventsLoop();
+
+#ifndef MAKE_LOG
 	explicit Renderer(std::atomic_bool& run);
-	bool render();
+#else
+	explicit Renderer(std::atomic_bool& run,std::osyncstream &);
+#endif
+bool render();
 	bool makeSomePauseIfNeeded(long int cur_time_ms);
 
-	void setProcessor(CommandsProcessor *processor);
+	void setProcessor(MainProcessor *processor);
 
 	void renderPlayerMove();
 

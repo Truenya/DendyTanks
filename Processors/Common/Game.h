@@ -4,13 +4,16 @@
 
 #ifndef SSDL_GAME_H
 #define SSDL_GAME_H
+
+#include <syncstream>
+#include <fstream>
 #include "SDL2/SDL.h"
 #include <queue>
 #include <thread>
 #include <functional>
-#include <syncstream>
 #include "../Graphics/Renderer.h"
-#include "CommandsProcessor.h"
+#include "MainProcessor.h"
+
 
 struct Game {
 	Game();
@@ -20,11 +23,15 @@ struct Game {
 private:
 	std::atomic_bool work_;
 	std::osyncstream syncStreamErrors_;
-	Renderer renderer_;
-	CommandsProcessor processor_;
-//	std::jthread th_ProcessingCommands_;
 	std::jthread thProcessingEvents_;
+	std::jthread thProcessingCommands_;
 	void mainLoop () ;
+#ifdef MAKE_LOG
+	std::ofstream logFileForEverything_;
+	std::osyncstream logsSynchroStream_;
+#endif
+	Renderer renderer_;
+	MainProcessor processor_;
 };
 
 

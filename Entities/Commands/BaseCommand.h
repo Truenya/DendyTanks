@@ -6,7 +6,7 @@
 #define SSDL_BASECOMMAND_H
 #include "../GameObjects/BaseGameObject.h"
 #include "../Errors/ErrorCode.h"
-#include "../GameObjects/World/MyGameWorld.h"
+#include "../GameObjects/World/GameWorld.h"
 
 struct BaseCommand {
 	enum class Type{
@@ -14,13 +14,14 @@ struct BaseCommand {
 		MOVE_COMMAND,
 		SHOOT_COMMAND
 	};
-	BaseCommand() ;
-    BaseCommand(BaseGameObject*, Type) ;
-	virtual ~BaseCommand();
+//	BaseCommand() ;
+//    BaseCommand(BaseGameObject*, Type) ;
+//	virtual ~BaseCommand();
 
-	virtual SdlErrorCodeExample execute() = 0;
+//	virtual SdlErrorCodeExample execute() = 0;
 	BaseGameObject *obj_;
 	Type type_;
+	Position position_;
 };
 
 

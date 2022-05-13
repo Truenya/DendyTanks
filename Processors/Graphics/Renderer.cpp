@@ -3,8 +3,7 @@
 //
 #include "Renderer.h"
 #include <SDL2/SDL_image.h>
-#include "../../Entities/Commands/MoveCommand.h"
-#include "../../Entities/Commands/ShootCommand.h"
+#include "../../Entities/Commands/BaseCommand.h"
 
 void Renderer::processingEventsLoop ()
 {
@@ -54,7 +53,7 @@ bool Renderer::makeSomePauseIfNeeded (const long cur_time_ms)
 
 void Renderer::updateFps (Renderer::FpsChangeDirection direction)
 {
-	if (renderData_.fps_ > 0 && renderData_.fps_ <= 30)
+	if (renderData_.fps_ > 0 && renderData_.fps_ <= 120)
 	{
 		if (direction == FpsChangeDirection::INCREMENT)
 		{
@@ -72,34 +71,43 @@ void Renderer::processEvents ()
 {
 	while (SDL_PollEvent(&renderData_.sdlEvent_))
 	{
-		if (renderData_.sdlEvent_.type == SDL_QUIT)	work_.store(false);
+		if (renderData_.sdlEvent_.type == SDL_QUIT) { work_.store(false);  return;}
 		if (renderData_.sdlEvent_.type != SDL_KEYDOWN)	continue;
 		const auto PRESSED_KEY = renderData_.sdlEvent_.key.keysym.sym;
 		switch (PRESSED_KEY)
 		{
-			case SDLK_UP: processor_->addPlayerCommand(new MoveCommand(processor_->getPlayer(),
-					{0, -1, 0, Position::Direction::TOP})); break;
-			case SDLK_DOWN: processor_->addPlayerCommand(new MoveCommand(processor_->getPlayer(),
-					{0, 1, 0, Position::Direction::BOT})); break;
-			case SDLK_RIGHT: processor_->addPlayerCommand(new MoveCommand(processor_->getPlayer(),
-					{1, 0, 0, Position::Direction::RIGHT})); break;
-			case SDLK_LEFT: processor_->addPlayerCommand(new MoveCommand(processor_->getPlayer(),
-					{-1, 0, 0, Position::Direction::LEFT})); break;
-			case SDLK_SPACE: processor_->addPlayerCommand(new ShootCommand(processor_->getPlayer(),
-					BaseCommand::Type::SHOOT_COMMAND)); break;
+			case SDLK_UP: processor_->addPlayerCommand({processor_->getPlayer(),BaseCommand::Type::MOVE_COMMAND,
+					{0, -1, 0, Position::Direction::TOP}}); break;
+			case SDLK_DOWN: processor_->addPlayerCommand({processor_->getPlayer(), BaseCommand::Type::MOVE_COMMAND,
+					{0, 1, 0, Position::Direction::BOT}}); break;
+			case SDLK_RIGHT: processor_->addPlayerCommand({processor_->getPlayer(),BaseCommand::Type::MOVE_COMMAND,
+					{1, 0, 0, Position::Direction::RIGHT}}); break;
+			case SDLK_LEFT: processor_->addPlayerCommand({processor_->getPlayer(), BaseCommand::Type::MOVE_COMMAND,
+					{-1, 0, 0, Position::Direction::LEFT}}); break;
+			case SDLK_SPACE: processor_->addPlayerCommand({processor_->getPlayer(), BaseCommand::Type::SHOOT_COMMAND,{}});
+				break;
 			default:
 				continue;
 		}
 	}
 }
 
+#ifndef MAKE_LOG
 Renderer::Renderer (std::atomic_bool &running) :
 	work_(running),
 	processor_(nullptr)
 {
 	renderData_.prevRender_ = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
 }
-
+#else
+Renderer::Renderer (std::atomic_bool &running,std::osyncstream &logs) :
+		work_(running),
+		processor_(nullptr),
+		logsSynchroStream_(logs)
+{
+	renderData_.prevRender_ = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
+}
+#endif
 
 bool Renderer::init ()
 {
@@ -388,7 +396,7 @@ void Renderer::renderPlayerMove ()
 		dstrect.x = positions.second.x_ * renderData_.rectSize_;
 		dstrect.y = positions.second.y_ * renderData_.rectSize_;
 		dstrect.w = dstrect.h = prevrect.w = prevrect.h = renderData_.rectSize_;
-		switch (positions.second.mDirection_)
+		switch (positions.second.direction_)
 		{
 			case Position::Direction::BOT:
 			{
@@ -443,7 +451,7 @@ void Renderer::renderPlayerMove ()
 	}
 }
 
-void Renderer::setProcessor (CommandsProcessor *processor)
+void Renderer::setProcessor (MainProcessor *processor)
 {
 	processor_ = processor;
 }
