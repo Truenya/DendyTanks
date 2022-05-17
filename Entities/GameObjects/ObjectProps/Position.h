@@ -16,7 +16,7 @@ struct Position {
 //    void move(int x,int y,int z = 0);
 	explicit operator bool() const;
 	[[nodiscard]] bool isValid() const;
-	[[nodiscard]] bool isValidByWorldSize(size_t width, size_t height) const;
+	[[nodiscard]] bool isValidByWorldSize(Position world_size) const;
 	Position& operator+=(const Position &other);
 	Position& operator+=(const Position &&other);
 	Position operator+(const Position &other) const;
@@ -46,7 +46,7 @@ struct Position {
 		RIGHT,
 		UNDEFINED
 	} direction_ = Direction::UNDEFINED;
-	void stepInDirection(bool inverse = false);
+	bool stepInDirection(bool inverse = false);
 	void reverseDirection();
 	[[nodiscard]] double calcDistance(const Position& other) const;
 };

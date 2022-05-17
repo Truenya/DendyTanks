@@ -27,8 +27,10 @@ struct MainProcessor {
 	[[nodiscard]] RenderMoveInfo getShoots();
 	BaseGameObject *getPlayer() const;
 	[[nodiscard]]Position worldSize() const;
+	void processingLoop();
 	// Используется для заполнения мира, до начала поступления команд, соответственно не страшно.
-	const BaseGameObject &at(const Position&) const;
+	BaseGameObject::Type typeAt(const Position&) const;
+	ManagedVector<Position> projectiles_;
 private:
 	RenderMoveInfo playerMoveChangedPositions_;
 	RenderShootInfo projectilePositions_;
@@ -48,5 +50,7 @@ private:
 	bool processPlayerMoveCommands(std::vector<BaseCommand> &commands);
 	bool processPlayerShootCommands(std::vector<BaseCommand> &commands);
 	ParticlesSystem particlesSystem_;
+	static StepReturn projectileStepSecond (const Position &prev_pos, BaseGameObject::Type dst_type, const Position &dst_pos);
+	std::vector<Positions> allProjectilesStepSecond ();
 };
 #endif //SSDL_MAINPROCESSOR_H

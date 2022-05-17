@@ -28,7 +28,7 @@ SdlErrorCodeExample BaseGameObject::move(Position delta_pos) {
 	positions_.curPos_ = new_pos;
 	positions_.curPos_.direction_ = delta_pos.direction_;
 	positions_.dPos_ = delta_pos;
-	std::swap((*field_)[cur_pos.x_][cur_pos.y_], (*field_)[new_pos.x_][new_pos.y_]);
+//	std::swap((*field_)[cur_pos.x_][cur_pos.y_], (*field_)[new_pos.x_][new_pos.y_]);
 	(*field_)[cur_pos.x_][cur_pos.y_].positions_.prevPos_ = new_pos;
 	(*field_)[cur_pos.x_][cur_pos.y_].positions_.dPos_ = delta_pos;
 	(*field_)[cur_pos.x_][cur_pos.y_].positions_.curPos_ = cur_pos;
@@ -60,7 +60,6 @@ void BaseGameObject::step() {
 	positions_.prevPos_ = positions_.curPos_;
 	positions_.curPos_.stepInDirection();
 	positions_.dPos_ = positions_.curPos_-positions_.prevPos_;
-	return ;
 }
 
 void BaseGameObject::setDestinationPoint(const Position &pos) {

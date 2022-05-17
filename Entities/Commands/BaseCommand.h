@@ -19,7 +19,7 @@ struct BaseCommand {
 //	virtual ~BaseCommand();
 
 //	virtual SdlErrorCodeExample execute() = 0;
-	BaseGameObject *obj_;
+//	BaseGameObject *obj_;
 	Type type_;
 	Position position_;
 };

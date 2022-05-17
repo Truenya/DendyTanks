@@ -26,6 +26,7 @@ private:
 	std::jthread thProcessingEvents_;
 	std::jthread thProcessingCommands_;
 	void mainLoop () ;
+	void update();
 #ifdef MAKE_LOG
 	std::ofstream logFileForEverything_;
 	std::osyncstream logsSynchroStream_;

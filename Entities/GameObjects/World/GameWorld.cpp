@@ -20,6 +20,7 @@ GameWorld::GameWorld(unsigned int x_dim, unsigned int y_dim)
 		}
 		++x;
 	}
+	projectiles_.init(100);
 }
 
 GameWorld::~GameWorld() = default;
@@ -32,19 +33,30 @@ BaseGameObject &GameWorld::at(Position pos) {
  	return field_[pos.x_][pos.y_];
 }
 
-StepReturn GameWorld::playerStep (const Position &prev_pos, BaseGameObject::Type dst_type,const Position &dst_pos)
+StepReturn GameWorld::playerStep (const Position &prev_pos, BaseGameObject::Type dst_type, Position &dst_pos)
 {
+	if (!dst_pos)
+		return {StepReturn::UNDEFINED_BEHAVIOR,prev_pos};
 	switch (dst_type)
 	{
 		case BaseGameObject::Type::SPACE:
 		{
 			// Дадим объекту знать свои координаты
 			at(prev_pos).step();
-			// Скажем миру, что в мире объекты поменялись местами
-			swapTypes(prev_pos, dst_pos);
 			at(dst_pos).rotate(prev_pos.direction_);
+			dst_pos.reverseDirection();
+			at(dst_pos).step();
+			assert(at(dst_pos).type_ == BaseGameObject::Type::SPACE);
+			assert(at(prev_pos).type_ == BaseGameObject::Type::PLAYER);
+			// Скажем миру, что в мире объекты поменялись местами
+			std::swap(at(prev_pos), at(dst_pos));
+			assert(at(dst_pos).type_ == BaseGameObject::Type::PLAYER);
+			assert(at(prev_pos).type_ == BaseGameObject::Type::SPACE);
+			at(dst_pos).rotate(prev_pos.direction_);
+			assert(at(dst_pos).type_ == BaseGameObject::Type::PLAYER);
 			// И обновим указатель на игрока
 			player_ = &at(dst_pos);
+			assert(at(dst_pos).type_ == BaseGameObject::Type::PLAYER);
 			return {StepReturn::SUCCESS, dst_pos};
 		}
 			break;
@@ -63,19 +75,27 @@ StepReturn GameWorld::playerStep (const Position &prev_pos, BaseGameObject::Type
 	}
 }
 
-StepReturn GameWorld::projectileStep (const Position &prev_pos, BaseGameObject::Type dst_type,const  Position &dst_pos)
+StepReturn GameWorld::projectileStep (const Position &prev_pos, BaseGameObject::Type dst_type, Position &dst_pos)
 {
+	const auto PREV_TYPE = typeAt(prev_pos);
+	assert(PREV_TYPE == BaseGameObject::Type::PROJECTILE);
 	switch (dst_type)
 	{
 		case BaseGameObject::Type::SPACE:
 		{
 			at(prev_pos).rotate(prev_pos.direction_);
+			const auto TYPE = typeAt(prev_pos);
+			assert(TYPE != BaseGameObject::Type::PLAYER);
+			assert(TYPE != BaseGameObject::Type::SPACE);
+			assert(typeAt(dst_pos) != BaseGameObject::Type::PLAYER);
 			// Дадим объекту знать свои координаты
 			at(prev_pos).step();
+			at(dst_pos).rotate(prev_pos.direction_);
+			dst_pos.reverseDirection();
+			at(dst_pos).step();
+			std::swap(at(prev_pos), at(dst_pos));
 			// Скажем миру, что в мире объекты поменялись местами
-			swapTypes(prev_pos,dst_pos);
-			// И обновим указатель на игрока
-			player_ = &at(dst_pos);
+			assert(typeAt(dst_pos) == BaseGameObject::Type::PROJECTILE);
 			return {StepReturn::SUCCESS, dst_pos};
 		}
 			break;
@@ -104,6 +124,8 @@ StepReturn GameWorld::projectileStep (const Position &prev_pos, BaseGameObject::
 
 void GameWorld::swapTypes (const Position &pos, const Position &dst_pos)
 {
+	const auto first_type = at(pos).type_;
+	const auto second_type = at(dst_pos).type_;
 	std::swap(at(pos).type_,at(dst_pos).type_);
 }
 
@@ -112,36 +134,45 @@ StepReturn GameWorld::playerStep ()
 	// Check is new pos valid
 	auto dst_pos = player_->getPositions().curPos_;
 	const auto POS = dst_pos;
-	assert(at(POS).type_ == BaseGameObject::Type::PLAYER);
+	const auto PREV_TYPE = typeAt(POS);
+	assert(PREV_TYPE == BaseGameObject::Type::PLAYER);
 	dst_pos.stepInDirection();
-	if (!dst_pos)
+	if (!dst_pos || !dst_pos.isValidByWorldSize(size()))
 		return {StepReturn::OUT_OF_FIELD,{}};
-	const auto DST_TYPE = at(dst_pos).type_;
+	const auto DST_TYPE = typeAt(dst_pos);
 
 	dst_pos.direction_ = POS.direction_;
 	return playerStep(POS,DST_TYPE,dst_pos);
 }
-
+#include <unordered_set>
 std::vector<Positions> GameWorld::allProjectilesStep ()
 {
 	std::vector<Positions> output{};
-	size_t count_of_explosed_projectiles = 0;
-	for (size_t i = 0; i < projectiles_.count; ++i)
+	std::unordered_set<size_t> explosed;
+	for (size_t i = 0; i < projectiles_.count(); ++i)
 	{
-		auto pos = projectiles_.c[i];
-		const auto PREV_POS = pos;
-		pos.stepInDirection();
-		auto s_r = projectileStep(projectiles_.c[i], at(pos).type_,pos);
-		if(s_r.ret_ == StepReturn::MEET_WALL || s_r.ret_ == StepReturn::MEET_PLAYER || s_r.ret_ == StepReturn::MEET_PROJECTILE)
+		auto pos = projectiles_[i];
+		const Position PREV_POS = pos;
+		if (pos.stepInDirection() && pos.isValidByWorldSize(size()))
 		{
-			count_of_explosed_projectiles++;
-			continue;
+			const auto D_POS = pos - PREV_POS;
+			auto s_r = projectileStep(PREV_POS, typeAt(pos), pos);
+			if (s_r.ret_ == StepReturn::MEET_WALL       || s_r.ret_ == StepReturn::MEET_PLAYER
+	         || s_r.ret_ == StepReturn::MEET_PROJECTILE || s_r.ret_ == StepReturn::OUT_OF_FIELD)
+				explosed.insert(i);
+			else
+				projectiles_[i].stepInDirection();
+			output.emplace_back(Positions{PREV_POS, pos, D_POS, {}});
 		}
-		const auto D_POS = pos - PREV_POS;
-		projectiles_.c[i].stepInDirection();
-		output.emplace_back(Positions{pos,PREV_POS,D_POS,{}});
+		else{
+			explosed.insert(i);
+			at(PREV_POS).type_ = BaseGameObject::Type::SPACE;
+		}
 	}
-	projectiles_.count -= count_of_explosed_projectiles;
+	for (const auto EXPLOSE: explosed)
+	{
+		projectiles_.remove(EXPLOSE);
+	}
 	return output;
 }
 
@@ -149,9 +180,13 @@ bool GameWorld::addProjectile (Position pos)
 {
 	if (pos)
 	{
+		assert(at(pos).type_ != BaseGameObject::Type::PLAYER);
 		at(pos).type_ = BaseGameObject::Type::PROJECTILE;
-		projectiles_.count++;
-		projectiles_.c.emplace_back(pos);
+		projectiles_.add(pos);
+//		if (projectiles_.c_.size() < (projectiles_.count_ + 1))
+//			projectiles_.c_.resize(projectiles_.count_+1);
+//		projectiles_.c_[projectiles_.count_] = pos;
+//		projectiles_.count_++;
 		return true;
 	}
 	return false;
@@ -162,7 +197,7 @@ std::vector<Positions> GameWorld::update ()
 	// Изменения проходят на каждой итерации цикла (mainLoop).
 	// Накидывается в список для изменений в других потоках.
 	auto changed_positions = allProjectilesStep();
-	const auto LAST_MOVE_COMMAND = playerPosChanges_.c[playerPosChanges_.count];
+	const auto LAST_MOVE_COMMAND = playerPosChanges_[playerPosChanges_.count() - 1];
 
 	const auto PREV_POS = player_->getPositions().curPos_;
 	assert(PREV_POS == LAST_MOVE_COMMAND.prevPos_);
@@ -184,10 +219,10 @@ void GameWorld::addPlayerPosChange (Position::Direction direction)
 	pos.stepInDirection();
 	if (pos && at(pos).type_ == BaseGameObject::Type::SPACE)
 	{
-
 		const std::lock_guard<std::mutex> LOCK(changesMutex_);
-		playerPosChanges_.count++;
-		playerPosChanges_.c.emplace_back(Positions{PREV_POS,pos, pos - PREV_POS,{}});
+		playerPosChanges_.add(Positions{PREV_POS,pos, pos - PREV_POS,{}});
+//		playerPosChanges_.count_++;
+//		playerPosChanges_.c_.emplace_back(Positions{PREV_POS,pos, pos - PREV_POS,{}});
 	}
 }
 
@@ -200,8 +235,15 @@ void GameWorld::addProjectile (Position::Direction direction)
 	if (pos && at(pos).type_ != BaseGameObject::Type::UNDEFINED)
 	{
 		const std::lock_guard<std::mutex> LOCK(changesMutex_);
-		newProjectiles_.count++;
-		newProjectiles_.c.emplace_back(pos);
+		newProjectiles_.add(pos);
+//		newProjectiles_.count_++;
+//		newProjectiles_.c_.emplace_back(pos);
 	}
 
+}
+
+const BaseGameObject::Type GameWorld::typeAt (Position pos)
+{
+	assert((pos.x_ >= 0) && (pos.y_ >= 0));
+	return at(pos).type_;
 }

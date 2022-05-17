@@ -53,7 +53,7 @@ bool Renderer::makeSomePauseIfNeeded (const long cur_time_ms)
 
 void Renderer::updateFps (Renderer::FpsChangeDirection direction)
 {
-	if (renderData_.fps_ > 0 && renderData_.fps_ <= 120)
+	if (renderData_.fps_ > 0 && renderData_.fps_ <= 15)
 	{
 		if (direction == FpsChangeDirection::INCREMENT)
 		{
@@ -76,15 +76,25 @@ void Renderer::processEvents ()
 		const auto PRESSED_KEY = renderData_.sdlEvent_.key.keysym.sym;
 		switch (PRESSED_KEY)
 		{
-			case SDLK_UP: processor_->addPlayerCommand({processor_->getPlayer(),BaseCommand::Type::MOVE_COMMAND,
-					{0, -1, 0, Position::Direction::TOP}}); break;
-			case SDLK_DOWN: processor_->addPlayerCommand({processor_->getPlayer(), BaseCommand::Type::MOVE_COMMAND,
-					{0, 1, 0, Position::Direction::BOT}}); break;
-			case SDLK_RIGHT: processor_->addPlayerCommand({processor_->getPlayer(),BaseCommand::Type::MOVE_COMMAND,
-					{1, 0, 0, Position::Direction::RIGHT}}); break;
-			case SDLK_LEFT: processor_->addPlayerCommand({processor_->getPlayer(), BaseCommand::Type::MOVE_COMMAND,
-					{-1, 0, 0, Position::Direction::LEFT}}); break;
-			case SDLK_SPACE: processor_->addPlayerCommand({processor_->getPlayer(), BaseCommand::Type::SHOOT_COMMAND,{}});
+//			case SDLK_UP: processor_->addPlayerCommand({processor_->getPlayer(),BaseCommand::Type::MOVE_COMMAND,
+//					{0, -1, 0, Position::Direction::TOP}}); break;
+//			case SDLK_DOWN: processor_->addPlayerCommand({processor_->getPlayer(), BaseCommand::Type::MOVE_COMMAND,
+//					{0, 1, 0, Position::Direction::BOT}}); break;
+//			case SDLK_RIGHT: processor_->addPlayerCommand({processor_->getPlayer(),BaseCommand::Type::MOVE_COMMAND,
+//					{1, 0, 0, Position::Direction::RIGHT}}); break;
+//			case SDLK_LEFT: processor_->addPlayerCommand({processor_->getPlayer(), BaseCommand::Type::MOVE_COMMAND,
+//					{-1, 0, 0, Position::Direction::LEFT}}); break;
+//			case SDLK_SPACE: processor_->addPlayerCommand({processor_->getPlayer(), BaseCommand::Type::SHOOT_COMMAND,{}});
+//				break;
+			case SDLK_UP: processor_->addPlayerCommand({BaseCommand::Type::MOVE_COMMAND,
+						{0, -1, 0, Position::Direction::TOP}}); break;
+			case SDLK_DOWN: processor_->addPlayerCommand({ BaseCommand::Type::MOVE_COMMAND,
+						{0, 1, 0, Position::Direction::BOT}}); break;
+			case SDLK_RIGHT: processor_->addPlayerCommand({BaseCommand::Type::MOVE_COMMAND,
+						{1, 0, 0, Position::Direction::RIGHT}}); break;
+			case SDLK_LEFT: processor_->addPlayerCommand({BaseCommand::Type::MOVE_COMMAND,
+						{-1, 0, 0, Position::Direction::LEFT}}); break;
+			case SDLK_SPACE: processor_->addPlayerCommand({ BaseCommand::Type::SHOOT_COMMAND,{}});
 				break;
 			default:
 				continue;
@@ -105,7 +115,7 @@ Renderer::Renderer (std::atomic_bool &running,std::osyncstream &logs) :
 		processor_(nullptr),
 		logsSynchroStream_(logs)
 {
-	renderData_.prevRender_ = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
+	renderData_.prevRender_ = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count_();
 }
 #endif
 
@@ -312,7 +322,7 @@ void Renderer::fillMap ()
 
 void Renderer::fillRectByPosition (SDL_Rect &dstrect, int i, int j) const
 {
-	auto type = processor_->at({i, j}).type_;
+	auto type = processor_->typeAt({i, j});
 	if (type == BaseGameObject::Type::UNDEFINED)
 		throw std::logic_error ("Trying to render unknown object");
 	setScreenPosition(dstrect, i, j);
@@ -352,6 +362,7 @@ void Renderer::prepareTextures ()
 void Renderer::renderPlayerShoots ()
 {
 	auto shoots = processor_->getShoots();
+	if(!shoots.size()) return;
 	SDL_Point explosion_texture_size;
 	SDL_QueryTexture(renderData_.sdlExplosionTextures_, NULL, NULL, &explosion_texture_size.x, &explosion_texture_size.y);
 

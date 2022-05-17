@@ -89,19 +89,20 @@ bool MainProcessor::processPlayerShootCommands(std::vector<BaseCommand> &command
 }
 
 bool MainProcessor::processPlayerMoveCommands(std::vector<BaseCommand> &commands) {
-	bool status = false;
-	for (const auto &command: commands) {
-		processObjectMove(command);
-	}
-	return status;
+	if (commands.empty())
+		return false;
+//	for (const auto &command: commands) {
+		processObjectMove(commands.back());
+//	}
+	return true;
 }
 
 
 // For other commands please create new methods
 void MainProcessor::processObjectMove(const BaseCommand &command) {
 	world_.player_->rotate(command.position_.direction_);
-	auto positions = command.obj_->getPositions();
 	auto s_r = world_.playerStep();
+	const auto POSITIONS = world_.player_->getPositions();
 #ifdef DEBUG
 	// TODO добавить опцию в cmakelist и в зависимости от нее выставлять define
 	// Управление потоком выполнения препятствуют предсказанию потока выполнения в процессоре
@@ -119,20 +120,20 @@ void MainProcessor::processObjectMove(const BaseCommand &command) {
 	}
 #endif
 	if (s_r.ret_ == StepReturn::SUCCESS)
-		playerMoveChangedPositions_.emplace_back(positions.curPos_, s_r.pos_);
+		playerMoveChangedPositions_.emplace_back(POSITIONS.prevPos_, POSITIONS.curPos_);
 }
 // If player press SPACE - lets shoot
 bool MainProcessor::processPlayerShoot(const BaseCommand &command) {
 	// take position of player
-	auto first_shoot_render_place = command.obj_->getPositions().curPos_;
+	auto first_shoot_render_place = world_.player_->getPositions().curPos_;
 	first_shoot_render_place.stepInDirection();
 	if (world_.addProjectile(first_shoot_render_place))
 	{
 		projectilePositions_.emplace_back(std::pair{
-			command.obj_->getPositions().curPos_,command.obj_->getPositions().curPos_});
+				first_shoot_render_place,first_shoot_render_place});
 		return true;
 	}
-	return false;
+return false;
 }
 
 
@@ -151,8 +152,8 @@ Position MainProcessor::worldSize() const {
 	return world_.size();
 }
 
-const BaseGameObject &MainProcessor::at(const Position &pos) const {
-	return world_.at(pos);
+BaseGameObject::Type MainProcessor::typeAt(const Position &pos) const {
+	return world_.typeAt(pos);
 }
 
 RenderShootInfo MainProcessor::getShoots()
@@ -161,4 +162,50 @@ RenderShootInfo MainProcessor::getShoots()
 	const std::lock_guard<std::mutex> LOCK(mutexCommands_);
 	std::swap (empty, projectilePositions_);
 	return empty;
+}
+
+void MainProcessor::processingLoop ()
+{
+	// обработать все и передать конкретные координаты для обмена в мир для обновления
+	auto positions = allProjectilesStepSecond();
+}
+
+
+#include <unordered_set>
+std::vector<Positions> MainProcessor::allProjectilesStepSecond ()
+{
+	std::vector<Positions> output{};
+	std::unordered_set<size_t> explosed;
+	for (size_t i = 0; i < projectiles_.count(); ++i)
+	{
+		auto pos = projectiles_[i];
+		const auto PREV_POS = pos;
+		pos.stepInDirection();
+		const auto D_POS = pos - PREV_POS;
+		auto s_r = projectileStepSecond(projectiles_[i], typeAt(pos),pos);
+		if(s_r.ret_ == StepReturn::MEET_WALL        || s_r.ret_ == StepReturn::MEET_PLAYER
+		|| s_r.ret_ == StepReturn::MEET_PROJECTILE  || s_r.ret_ == StepReturn::OUT_OF_FIELD)
+			explosed.insert(i);
+		else
+			projectiles_[i].stepInDirection();
+		output.emplace_back(Positions{PREV_POS,pos,D_POS,{}});
+	}
+	for (const auto EXPLOSE: explosed)
+	{
+		projectiles_.remove(EXPLOSE);
+	}
+	return output;
+}
+
+StepReturn
+MainProcessor::projectileStepSecond (const Position &prev_pos, BaseGameObject::Type dst_type, const Position &dst_pos)
+{
+	switch (dst_type)
+	{
+		case BaseGameObject::Type::SPACE:	return {StepReturn::SUCCESS, dst_pos};
+		case BaseGameObject::Type::PROJECTILE:	return {StepReturn::MEET_PROJECTILE, dst_pos};
+		case BaseGameObject::Type::WALL: return {StepReturn::MEET_WALL, dst_pos};
+		case BaseGameObject::Type::PLAYER:	return {StepReturn::MEET_PLAYER, dst_pos};
+		default: return {StepReturn::UNDEFINED_BEHAVIOR,{}};
+	}
 }

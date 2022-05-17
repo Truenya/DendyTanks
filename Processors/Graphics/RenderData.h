@@ -13,7 +13,7 @@ struct RenderData{
 	ssize_t screenHeight_ = 1000;
 	Position worldSize_ {0,0,0};
 	ssize_t rectSize_ = 25;
-	int fps_ = 30;
+	int fps_ = 15;
 	int millisecondsPerFrame_ = MS_IN_SECOND / fps_;
 	SDL_Window *sdlWindowTest_ = nullptr;
 	SDL_Renderer *sdlRenderer_ = nullptr;

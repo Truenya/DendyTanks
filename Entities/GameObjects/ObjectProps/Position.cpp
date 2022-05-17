@@ -141,7 +141,7 @@ Position Position::operator-() const {
 	return minus;
 }
 
-void Position::stepInDirection(bool inverse) {
+bool Position::stepInDirection(bool inverse) {
 	if (inverse)
 		reverseDirection();
 	switch (direction_) {
@@ -165,6 +165,7 @@ void Position::stepInDirection(bool inverse) {
 			throw std::logic_error("Move in unknown direction");
 		}
 	}
+	return isValid();
 }
 
 void Position::reverseDirection() {
@@ -198,8 +199,9 @@ double Position::calcDistance(const Position &other) const {
 	(z_ - other.z_) * (z_ - other.z_));
 }
 
-bool Position::isValidByWorldSize(size_t width, size_t height) const {
-	if (x_ >= static_cast<ssize_t>(width) || y_ >= static_cast<ssize_t>(height))
+bool Position::isValidByWorldSize (Position world_size) const
+{
+	if (x_ >= world_size.x_ || y_ >= world_size.y_)
 		return false;
 	return true;
 }

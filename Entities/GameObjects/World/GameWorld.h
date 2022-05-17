@@ -29,21 +29,22 @@ struct GameWorld {
 	GameWorld( unsigned int  x_dim, unsigned int y_dim);
 	~GameWorld();
 	std::vector<Positions> update();
-	[[nodiscard]] BaseGameObject &at(Position);
 	Position size();
 	BaseGameObject *player_{nullptr};
 	StepReturn playerStep();
 	bool addProjectile(Position);
 	std::vector<Positions> allProjectilesStep();
+	[[nodiscard]] const BaseGameObject::Type typeAt(Position);
 	void addPlayerPosChange(Position::Direction direction);
 	void addProjectile(Position::Direction direction);
 private:
+	[[nodiscard]] BaseGameObject &at(Position);
 	std::mutex changesMutex_;
 	ManagedVector<Positions> playerPosChanges_;
 	ManagedVector<Position> newProjectiles_;
 	// TODO то что ниже объединить в структурку
-	StepReturn playerStep(const Position &prev_pos, BaseGameObject::Type dst_type,const Position &dst_pos);
-	StepReturn projectileStep(const Position &prev_pos, BaseGameObject::Type dst_type,const Position &dst_pos);
+	StepReturn playerStep(const Position &prev_pos, BaseGameObject::Type dst_type, Position &dst_pos);
+	StepReturn projectileStep(const Position &prev_pos, BaseGameObject::Type dst_type, Position &dst_pos);
 	void swapTypes(const Position &, const Position &);
     MyGameWorldField field_;
 	ManagedVector<Position> projectiles_;
