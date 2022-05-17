@@ -45,4 +45,4 @@ endif (logging_game)
 add_executable(ssdl ${mIncludes} ${mSources} ${mEntityIncludes} ${mEntitySources} ${mProcessorsIncludes} ${mProcessorsSources})
 
 #linking
-target_link_libraries(ssdl tcmalloc SDL2 SDL2_image gtest)
+target_link_libraries(ssdl tcmalloc SDL2 SDL2_test SDL2_image gtest)

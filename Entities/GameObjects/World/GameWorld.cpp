@@ -102,7 +102,6 @@ StepReturn GameWorld::projectileStep (const Position &prev_pos, BaseGameObject::
 			assert(typeAt(dst_pos) == BaseGameObject::Type::PROJECTILE);
 			return {StepReturn::SUCCESS, dst_pos};
 		}
-			break;
 		case BaseGameObject::Type::PROJECTILE:
 		{
 //          FIXME после взрыва не уничтожаются в мире оба снаряда, один из них повисает навсегда
@@ -153,6 +152,7 @@ StepReturn GameWorld::playerStep ()
 std::vector<Positions> GameWorld::allProjectilesStep ()
 {
 	std::vector<Positions> output{};
+	output.reserve(projectiles_.count()*2);
 	std::unordered_set<size_t> explosed;
 	for (size_t i = 0; i < projectiles_.count(); ++i)
 	{
@@ -165,6 +165,7 @@ std::vector<Positions> GameWorld::allProjectilesStep ()
 			if (s_r.ret_ == StepReturn::MEET_WALL       || s_r.ret_ == StepReturn::MEET_PLAYER
 	                                                    || s_r.ret_ == StepReturn::OUT_OF_FIELD) // FIXME MEET_PROJECTILE
 			{
+				projectiles_[i].stepInDirection();
 				explosed.insert(i);
 			}
 			else
@@ -176,7 +177,12 @@ std::vector<Positions> GameWorld::allProjectilesStep ()
 			at(PREV_POS).type_ = BaseGameObject::Type::SPACE;
 		}
 	}
-	for (const auto EXPLOSE: explosed) projectiles_.remove(EXPLOSE);
+	// TODO некрасиво, поправить
+	for (const auto EXPLOSE: explosed) {
+		const Position EXPL = projectiles_[EXPLOSE];
+		output.emplace_back(Positions{EXPL,EXPL,{},{}});
+		projectiles_.remove(EXPLOSE);
+	}
 
 
 //	for(size_t i = 0; i < explosedByT.count();i++) projectiles_.remove(explosedByT[i]);

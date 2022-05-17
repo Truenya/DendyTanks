@@ -100,7 +100,7 @@ bool MainProcessor::processPlayerMoveCommands(std::vector<BaseCommand> &commands
 
 // For other commands please create new methods
 void MainProcessor::processObjectMove(const BaseCommand &command) {
-	world_.player_->rotate(command.position_.direction_);
+	world_.player_->rotate(command.positions_.curPos_.direction_);
 	auto s_r = world_.playerStep();
 	const auto POSITIONS = world_.player_->getPositions();
 #ifdef DEBUG

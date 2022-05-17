@@ -11,7 +11,6 @@ void Renderer::processingEventsLoop ()
 	{
 		processEvents();
 	}
-	quit();
 }
 
 bool Renderer::render ()
@@ -33,8 +32,11 @@ bool Renderer::makeSomePauseIfNeeded (const long cur_time_ms)
 		// Если прошлая отрисовка не была проведена позади в будущем ;D
 		if (MS_TIME_FROM_LAST_RENDER > 0)
 		{
+			auto fps = std::to_string(renderData_.fps_).c_str();
+			SDLTest_DrawString(renderData_.sdlRenderer_,renderData_.screenWidth_-100,20, fps);
 			const long int MILISECONDS_DELAY = renderData_.millisecondsPerFrame_ - MS_TIME_FROM_LAST_RENDER;
 			updateFps(FpsChangeDirection::INCREMENT);
+			rendered_ = false;
 			if (MILISECONDS_DELAY < 1000)
 			{
 				SDL_Delay(MILISECONDS_DELAY);
@@ -47,16 +49,18 @@ bool Renderer::makeSomePauseIfNeeded (const long cur_time_ms)
 		SDL_RenderPresent(renderData_.sdlRenderer_);
 		renderData_.prevRender_ = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
 		updateFps(FpsChangeDirection::DECREMENT);
+		rendered_ = true;
 	}
 	return true;
 }
 
 void Renderer::updateFps (Renderer::FpsChangeDirection direction)
 {
-	if (renderData_.fps_ > 0 && renderData_.fps_ <= 15)
+	if (renderData_.fps_ > 0 && renderData_.fps_ < 55)
 	{
 		if (direction == FpsChangeDirection::INCREMENT)
 		{
+			renderData_.fps_++;
 			renderData_.fps_++;
 		}
 		if (direction == FpsChangeDirection::DECREMENT)
@@ -76,24 +80,24 @@ void Renderer::processEvents ()
 		const auto PRESSED_KEY = renderData_.sdlEvent_.key.keysym.sym;
 		switch (PRESSED_KEY)
 		{
-//			case SDLK_UP: processor_->addPlayerCommand({processor_->getPlayer(),BaseCommand::Type::MOVE_COMMAND,
+//			case SDLK_UP: processor_->addPlayerCommand({processor_->getPlayer(),BaseCommand::Type::PLAYER_MOVE_COMMAND,
 //					{0, -1, 0, Position::Direction::TOP}}); break;
-//			case SDLK_DOWN: processor_->addPlayerCommand({processor_->getPlayer(), BaseCommand::Type::MOVE_COMMAND,
+//			case SDLK_DOWN: processor_->addPlayerCommand({processor_->getPlayer(), BaseCommand::Type::PLAYER_MOVE_COMMAND,
 //					{0, 1, 0, Position::Direction::BOT}}); break;
-//			case SDLK_RIGHT: processor_->addPlayerCommand({processor_->getPlayer(),BaseCommand::Type::MOVE_COMMAND,
+//			case SDLK_RIGHT: processor_->addPlayerCommand({processor_->getPlayer(),BaseCommand::Type::PLAYER_MOVE_COMMAND,
 //					{1, 0, 0, Position::Direction::RIGHT}}); break;
-//			case SDLK_LEFT: processor_->addPlayerCommand({processor_->getPlayer(), BaseCommand::Type::MOVE_COMMAND,
+//			case SDLK_LEFT: processor_->addPlayerCommand({processor_->getPlayer(), BaseCommand::Type::PLAYER_MOVE_COMMAND,
 //					{-1, 0, 0, Position::Direction::LEFT}}); break;
 //			case SDLK_SPACE: processor_->addPlayerCommand({processor_->getPlayer(), BaseCommand::Type::SHOOT_COMMAND,{}});
 //				break;
-			case SDLK_UP: processor_->addPlayerCommand({BaseCommand::Type::MOVE_COMMAND,
-						{0, -1, 0, Position::Direction::TOP}}); break;
-			case SDLK_DOWN: processor_->addPlayerCommand({ BaseCommand::Type::MOVE_COMMAND,
-						{0, 1, 0, Position::Direction::BOT}}); break;
-			case SDLK_RIGHT: processor_->addPlayerCommand({BaseCommand::Type::MOVE_COMMAND,
-						{1, 0, 0, Position::Direction::RIGHT}}); break;
-			case SDLK_LEFT: processor_->addPlayerCommand({BaseCommand::Type::MOVE_COMMAND,
-						{-1, 0, 0, Position::Direction::LEFT}}); break;
+			case SDLK_UP: processor_->addPlayerCommand({BaseCommand::Type::PLAYER_MOVE_COMMAND,
+						{{},{0, -1, 0, Position::Direction::TOP},{},{}}}); break;
+			case SDLK_DOWN: processor_->addPlayerCommand({ BaseCommand::Type::PLAYER_MOVE_COMMAND,
+						{{},{0, 1, 0, Position::Direction::BOT}}}); break;
+			case SDLK_RIGHT: processor_->addPlayerCommand({BaseCommand::Type::PLAYER_MOVE_COMMAND,
+						{{},{1, 0, 0, Position::Direction::RIGHT}}}); break;
+			case SDLK_LEFT: processor_->addPlayerCommand({BaseCommand::Type::PLAYER_MOVE_COMMAND,\
+						{{},{-1, 0, 0, Position::Direction::LEFT}}}); break;
 			case SDLK_SPACE: processor_->addPlayerCommand({ BaseCommand::Type::SHOOT_COMMAND,{}});
 				break;
 			default:
@@ -280,7 +284,6 @@ bool Renderer::load ()
 //		isLoadedIncorrectly |= true;
 		exit(-1);
 	}
-
 	fillMap();
 
 
@@ -298,8 +301,11 @@ int Renderer::quit ()
 
 	SDL_DestroyTexture(renderData_.sdlWallTexture_);
 
+	SDL_Delay(1);
 	SDL_Quit();
+	SDL_Delay(1);
 	IMG_Quit();
+	SDL_Delay(1);
 	return 0;
 }
 
@@ -358,9 +364,30 @@ void Renderer::prepareTextures ()
 	renderData_.playerRect_.w = player_texture_size.x / 3 - 1;
 	renderData_.playerRect_.h = player_texture_size.y / 3 - 1;
 }
-
+#include <list>
 void Renderer::renderPlayerShoots ()
 {
+	SDL_Rect fillrect;
+	SDL_Rect dstrect;
+	dstrect.w = dstrect.h = fillrect.w = fillrect.h = renderData_.rectSize_;
+	// TODO некрасиво, поправить
+	for (size_t i = 0; i < explosed_.count() ; ++i)
+	{
+		if (!explosed_[i].second)
+		{
+			const Position pos = explosed_[i].first;
+			fillrect.x = pos.x_ * renderData_.rectSize_;
+			fillrect.y = pos.y_ * renderData_.rectSize_;
+			SDL_RenderCopy(renderData_.sdlRenderer_, renderData_.sdlFillTexture_, nullptr, &fillrect);
+			explosed_.remove(i);
+		}
+		else{
+			if (rendered_)
+				explosed_[i].second--;
+			else
+				std::cout << "smth\n";
+		}
+	}
 	auto shoots = processor_->getShoots();
 	if(!shoots.size()) return;
 	SDL_Point explosion_texture_size;
@@ -374,9 +401,6 @@ void Renderer::renderPlayerShoots ()
 	explosion_rect.y = projectile_rect.y = projectile_rect.x = 0;
 
 
-	SDL_Rect dstrect;
-	SDL_Rect fillrect;
-	dstrect.w = dstrect.h = fillrect.w = fillrect.h = renderData_.rectSize_;
 	for (const auto &shoot: shoots)
 	{
 		dstrect.x = shoot.second.x_ * renderData_.rectSize_;
@@ -385,6 +409,7 @@ void Renderer::renderPlayerShoots ()
 		fillrect.y = shoot.first.y_ * renderData_.rectSize_;
 		if (shoot.first == shoot.second)
 		{
+			explosed_.add({shoot.first,renderData_.fps_});
 			SDL_RenderCopy(renderData_.sdlRenderer_, renderData_.sdlExplosionTextures_, &explosion_rect, &dstrect);
 		}
 		else
@@ -393,6 +418,7 @@ void Renderer::renderPlayerShoots ()
 			SDL_RenderCopy(renderData_.sdlRenderer_, renderData_.sdlExplosionTextures_, &explosion_rect, &dstrect);
 		}
 	}
+
 }
 
 void Renderer::renderPlayerMove ()
@@ -471,6 +497,8 @@ void Renderer::prepare ()
 {
 	init();
 	load();
+	// Синхронизация с тем, чтобы быть уверенным, что все корректно прогрузилось перед отрисовкой.
+	SDL_Delay(1);
 }
 
 Renderer::~Renderer ()

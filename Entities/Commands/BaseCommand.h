@@ -11,7 +11,7 @@
 struct BaseCommand {
 	enum class Type{
 		UNDEFINED,
-		MOVE_COMMAND,
+		PLAYER_MOVE_COMMAND,
 		SHOOT_COMMAND
 	};
 //	BaseCommand() ;
@@ -21,7 +21,7 @@ struct BaseCommand {
 //	virtual SdlErrorCodeExample execute() = 0;
 //	BaseGameObject *obj_;
 	Type type_;
-	Position position_;
+	Positions positions_;
 };
 
 

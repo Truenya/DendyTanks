@@ -14,8 +14,6 @@
 #include "../Parsers/WorldGenerator.h"
 #include "../Common/ParticlesSystem.h"
 #include "RenderData.h"
-
-
 /**
  * @brief Класс взаимодействия с SDL2 библиотекой.
  * @details Вся логика внутри, снаружи запускается только processingEventsLoop
@@ -36,7 +34,8 @@ class Renderer {
 	void prepareTextures();
 	std::atomic_bool &work_;
 	MainProcessor *processor_;
-
+	ManagedVector<std::pair<Position,int>> explosed_;
+	bool rendered_{false};
 #ifdef MAKE_LOG
 	std::osyncstream &logsSynchroStream_;
 #endif
@@ -44,7 +43,6 @@ public:
 	void prepare();
     void processingEventsLoop();
 	~Renderer();
-
 #ifndef MAKE_LOG
 	explicit Renderer(std::atomic_bool& run);
 #else
@@ -52,15 +50,10 @@ public:
 #endif
 	bool render();
 	bool makeSomePauseIfNeeded(long int cur_time_ms);
-
 	void setProcessor(MainProcessor *processor);
-
 	void renderPlayerMove();
-
 	void renderPlayerShoots();
-
 	void setScreenPosition (SDL_Rect &dstrect, int i, int j) const;
-
 	void fillRectByPosition (SDL_Rect &dstrect, int i, int j) const;
 };
 

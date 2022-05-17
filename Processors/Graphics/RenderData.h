@@ -7,6 +7,7 @@
 
 using namespace std::chrono;
 static constexpr int MS_IN_SECOND = 1000;
+#include <SDL2/SDL_test_font.h>
 
 struct RenderData{
 	ssize_t screenWidth_ = 1000;
