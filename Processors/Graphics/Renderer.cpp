@@ -472,3 +472,8 @@ void Renderer::prepare ()
 	init();
 	load();
 }
+
+Renderer::~Renderer ()
+{
+	quit();
+}

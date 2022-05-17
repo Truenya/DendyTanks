@@ -8,6 +8,7 @@
 #include <vector>
 
 template <class T>
+
 class ManagedVector{
 	std::vector<T> c_ {};
 	size_t count_ = 0;
@@ -15,7 +16,7 @@ class ManagedVector{
 public:
 	void add(const T t) {
 		if (c_.size() < (count_ + 1))
-			c_.resize(count_ + 1);
+			c_.resize(count_ * 2 + 2); // 99 -> 198 -> 200
 		c_[count_] = t;
 		count_++;
 	}
@@ -23,8 +24,28 @@ public:
 		c_.resize(count);
 	}
 	void remove(size_t pos){
-		std::swap(c_[pos],c_[count_ - 1]);
-		count_--;
+		if (count_ != 0)
+		{
+			std::swap(c_[pos], c_[count_ - 1]);
+			count_--;
+		}
+	}
+	bool remove(T t){
+		size_t pos = count_ + 1;
+		for (int i = count_; i >= 0 ; --i)
+		{
+			if (t == c_[i])
+			{
+				pos = i;
+				break;
+			}
+		}
+		if (pos != count_ + 1)
+		{
+		    remove(pos);
+			return true;
+		}
+		return false;
 	}
 	 [[nodiscard]] size_t count() const { return count_;}
 	T& operator[](size_t pos){return c_[pos];}

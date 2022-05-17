@@ -43,13 +43,14 @@ class Renderer {
 public:
 	void prepare();
     void processingEventsLoop();
+	~Renderer();
 
 #ifndef MAKE_LOG
 	explicit Renderer(std::atomic_bool& run);
 #else
 	explicit Renderer(std::atomic_bool& run,std::osyncstream &);
 #endif
-bool render();
+	bool render();
 	bool makeSomePauseIfNeeded(long int cur_time_ms);
 
 	void setProcessor(MainProcessor *processor);

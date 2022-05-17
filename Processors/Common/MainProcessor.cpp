@@ -92,7 +92,7 @@ bool MainProcessor::processPlayerMoveCommands(std::vector<BaseCommand> &commands
 	if (commands.empty())
 		return false;
 //	for (const auto &command: commands) {
-		processObjectMove(commands.back());
+	processObjectMove(commands.back());
 //	}
 	return true;
 }

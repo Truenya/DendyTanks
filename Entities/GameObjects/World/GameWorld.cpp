@@ -78,7 +78,10 @@ StepReturn GameWorld::playerStep (const Position &prev_pos, BaseGameObject::Type
 StepReturn GameWorld::projectileStep (const Position &prev_pos, BaseGameObject::Type dst_type, Position &dst_pos)
 {
 	const auto PREV_TYPE = typeAt(prev_pos);
-	assert(PREV_TYPE == BaseGameObject::Type::PROJECTILE);
+//	assert(PREV_TYPE == BaseGameObject::Type::PROJECTILE);
+	if (PREV_TYPE != BaseGameObject::Type::PROJECTILE)
+	// FIXME он сюда заходить не должен, если в мире там SPACE
+		projectiles_.remove(prev_pos);
 	switch (dst_type)
 	{
 		case BaseGameObject::Type::SPACE:
@@ -95,14 +98,16 @@ StepReturn GameWorld::projectileStep (const Position &prev_pos, BaseGameObject::
 			at(dst_pos).step();
 			std::swap(at(prev_pos), at(dst_pos));
 			// Скажем миру, что в мире объекты поменялись местами
+			assert(typeAt(prev_pos) == BaseGameObject::Type::SPACE);
 			assert(typeAt(dst_pos) == BaseGameObject::Type::PROJECTILE);
 			return {StepReturn::SUCCESS, dst_pos};
 		}
 			break;
 		case BaseGameObject::Type::PROJECTILE:
 		{
-			at(prev_pos).type_ = BaseGameObject::Type::SPACE;
-			at(dst_pos).type_ = BaseGameObject::Type::SPACE;
+//          FIXME после взрыва не уничтожаются в мире оба снаряда, один из них повисает навсегда
+//			at(prev_pos).type_ = BaseGameObject::Type::SPACE;
+//			at(dst_pos).type_ = BaseGameObject::Type::SPACE;
 			return {StepReturn::MEET_PROJECTILE, dst_pos};
 		}
 		case BaseGameObject::Type::WALL:
@@ -158,8 +163,10 @@ std::vector<Positions> GameWorld::allProjectilesStep ()
 			const auto D_POS = pos - PREV_POS;
 			auto s_r = projectileStep(PREV_POS, typeAt(pos), pos);
 			if (s_r.ret_ == StepReturn::MEET_WALL       || s_r.ret_ == StepReturn::MEET_PLAYER
-	         || s_r.ret_ == StepReturn::MEET_PROJECTILE || s_r.ret_ == StepReturn::OUT_OF_FIELD)
+	                                                    || s_r.ret_ == StepReturn::OUT_OF_FIELD) // FIXME MEET_PROJECTILE
+			{
 				explosed.insert(i);
+			}
 			else
 				projectiles_[i].stepInDirection();
 			output.emplace_back(Positions{PREV_POS, pos, D_POS, {}});
@@ -169,10 +176,10 @@ std::vector<Positions> GameWorld::allProjectilesStep ()
 			at(PREV_POS).type_ = BaseGameObject::Type::SPACE;
 		}
 	}
-	for (const auto EXPLOSE: explosed)
-	{
-		projectiles_.remove(EXPLOSE);
-	}
+	for (const auto EXPLOSE: explosed) projectiles_.remove(EXPLOSE);
+
+
+//	for(size_t i = 0; i < explosedByT.count();i++) projectiles_.remove(explosedByT[i]);
 	return output;
 }
 
