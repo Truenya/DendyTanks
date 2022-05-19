@@ -76,7 +76,7 @@ void Game::stop() {
 
 void Game::update ()
 {
-	processor_.processParticlesMoving();
+	processor_.processProjectilesMoving();
 	processor_.processCommands();
 	renderer_.render();
 	sched_yield();

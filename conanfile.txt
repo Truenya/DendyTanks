@@ -1,0 +1,7 @@
+[requires]                     # The Conan packages which are used in the application
+sdl/2.0.20
+
+[generators]
+#CMakeDeps
+#CMakeToolchain
+cmake

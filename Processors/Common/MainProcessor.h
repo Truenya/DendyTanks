@@ -22,7 +22,7 @@ struct MainProcessor {
 #endif
 	void addPlayerCommand(BaseCommand &&command);
 	bool processCommands();
-	bool processParticlesMoving();
+	bool processProjectilesMoving();
 	[[nodiscard]] RenderMoveInfo getChangedPositions();
 	[[nodiscard]] RenderMoveInfo getShoots();
 	BaseGameObject *getPlayer() const;

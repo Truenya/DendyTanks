@@ -67,7 +67,7 @@ bool MainProcessor::processCommands() {
 	return status;
 }
 
-bool MainProcessor::processParticlesMoving() {
+bool MainProcessor::processProjectilesMoving() {
 	auto positions = world_.allProjectilesStep();
 	if (!positions.empty())
 	{
