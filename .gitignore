@@ -13,3 +13,9 @@ profdata/*.profdata
 .idea
 Interface
 cmake-build-debug
+cmake-build-debug-remote-host
+build
+
+#ignore cmake things
+cmake*
+*.cmake

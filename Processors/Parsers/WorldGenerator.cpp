@@ -4,7 +4,6 @@
 
 #include "WorldGenerator.h"
 #include <iostream>
-#include "../../Entities/GameObjects/PlayerGameObject.h"
 GameWorld &WorldGenerator::generateWorld(const std::string& map_filepath) {
 	static GameWorld* ptr = nullptr;
 	if (ptr != nullptr)
@@ -23,6 +22,7 @@ GameWorld &WorldGenerator::parseFromString(const std::string& raw_file, [[maybe_
 	std::list<Position> wall_coordinates;
 	std::list<Position> space_coordinates;
 	Position player_coordinates;
+	std::list<Position> enemy_coordinates;
 	for (const char& ch: raw_file){
 		if (ch == '\n') {
 			++y;
@@ -31,15 +31,18 @@ GameWorld &WorldGenerator::parseFromString(const std::string& raw_file, [[maybe_
 		}
 		else {
 			if (ch == '#') {
-				wall_coordinates.emplace_back(Position{x, y,0,Position::Direction::UNDEFINED});
+				wall_coordinates.emplace_back(Position{x, y,0,Position::Direction::EQUAL});
 				++x;
 			}
 			else if (ch == ' ') {
-				space_coordinates.emplace_back(Position{x, y,0,Position::Direction::UNDEFINED});
+				space_coordinates.emplace_back(Position{x, y,0,Position::Direction::EQUAL});
 				++x;
 			}
 			else if (ch == 'A') {
 				player_coordinates = {x,y,0,Position::Direction::BOT};
+			}
+			else if (ch == 'B') {
+				enemy_coordinates.emplace_back(Position{x,y,0,Position::Direction::BOT});
 			}
 			else{
 				std::cerr<<"Некорректный символ:" << ch;
@@ -49,16 +52,23 @@ GameWorld &WorldGenerator::parseFromString(const std::string& raw_file, [[maybe_
 	static auto world = GameWorld(max_x, y);
 	for (auto wall:wall_coordinates)
 	{
-		world.at(wall) = BaseGameObject(wall,BaseGameObject::Type::WALL,&world.field_);
+		world.at(wall) = GameObject::Type::WALL;
 	}
 
 	for (auto space:space_coordinates)
 	{
-		world.at(space) = BaseGameObject(space,BaseGameObject::Type::SPACE,&world.field_);
+		world.at(space) = GameObject::Type::SPACE;
 	}
 
-	world.at(player_coordinates) = PlayerGameObject(player_coordinates,&world.field_);
-	world.player_ = &world.at(player_coordinates);
+	world.enemies_.init(enemy_coordinates.size());
+	for (auto enemy:enemy_coordinates)
+	{
+		world.at(enemy) = GameObject::Type::ENEMY;
+		world.enemies_.add(enemy);
+	}
+
+	world.at(player_coordinates) = GameObject::Type::PLAYER;
+	world.player_ = GameObject(player_coordinates,GameObject::Type::PLAYER, &world.field_);
 	ptr = &world;
 	return world;
 }

@@ -36,24 +36,16 @@ void Game::mainLoop () {
 //TODO P.P.S. Проверки должны производится в месте, обрабатывающем возможность перемещения, при добавлении в очередь
 // (в отдельном потоке, при добавлении миру в очередь обновленных данных)
 	while(isCurrentlyWorking_.load()){
-		assert(processor_.typeAt(processor_.getPlayer()->getPositions().curPos_) == BaseGameObject::Type::PLAYER);
+//		assert(processor_.typeAt(processor_.getPlayer().getPositions().curPos_) == GameObject::Type::PLAYER);
 		update();
 	}
 }
 
 void Game::start() {
-//	auto cur_time = std::chrono::high_resolution_clock::now();
-//	std::time_t t = std::chrono::system_clock::to_time_t(cur_time);
-//	std::string ts = std::ctime(&t);
-//	ts.resize(ts.size()-1);
-//	logsSynchroStream_ << "Game started at: " << ts << '\n';
-//	logsSynchroStream_.emit();
 	if (!isCurrentlyWorking_.load()) {
 		isCurrentlyWorking_.store(true);
 		renderer_.prepare();
-//		thProcessingCommands_ = std::jthread([&]() { mainLoop(); });
 		thProcessingEvents_ = std::jthread([&](){ renderer_.processingEventsLoop();});
-//		sleep(2);
 		mainLoop();
 	}
 	else{
@@ -65,7 +57,6 @@ void Game::start() {
 void Game::stop() {
 	if (isCurrentlyWorking_.load()) {
 		isCurrentlyWorking_.store(false);
-//		th_ProcessingCommands_.join();
 		thProcessingEvents_.join();
 	}
 	else{
@@ -77,6 +68,7 @@ void Game::stop() {
 void Game::update ()
 {
 	processor_.processProjectilesMoving();
+	processor_.processNpc();
 	processor_.processCommands();
 	renderer_.render();
 	sched_yield();

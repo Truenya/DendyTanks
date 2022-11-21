@@ -25,15 +25,16 @@ bool Position::isValid() const {
 	if ((x_ <= -1 ) || (y_ <= -1) ||
 	    (z_ <= -1) || (x_ >= 1000) ||
 	    (y_ >= 1000) || (z_ >= 1000) ||
-	    direction_ == Direction::UNDEFINED)
+	    direction_ == Direction::EQUAL)
 		return false;
 	return true;
 }
 
 bool Position::operator==(const Position &rhs) const {
-	return x_ == rhs.x_ &&
+	return  x_ == rhs.x_ &&
 	       y_ == rhs.y_ &&
-	       z_ == rhs.z_;
+	       z_ == rhs.z_ &&
+		   direction_ == rhs.direction_;
 }
 
 bool Position::operator!=(const Position &rhs) const {
@@ -161,7 +162,7 @@ bool Position::stepInDirection(bool inverse) {
 			this->operator+=(Position{1,0,0,Direction::RIGHT});
 			break;
 		}
-		case Direction::UNDEFINED:{
+		case Direction::EQUAL:{
 			throw std::logic_error("Move in unknown direction");
 		}
 	}
@@ -187,7 +188,7 @@ void Position::reverseDirection() {
 			direction_ = Direction::LEFT;
 			break;
 		}
-		case Direction::UNDEFINED:{
+		case Direction::EQUAL:{
 			throw std::logic_error("Move in unknow direction");
 		}
 	}
@@ -204,4 +205,27 @@ bool Position::isValidByWorldSize (Position world_size) const
 	if (x_ >= world_size.x_ || y_ >= world_size.y_)
 		return false;
 	return true;
+}
+
+Position::Directions Position::directionsTo (const Position &other)
+{
+	Directions directions;
+	if (x_ == other.x_)
+		directions.first = Direction::EQUAL;
+
+	if (x_ > other.x_)
+		directions.first = Direction::LEFT;
+
+	if (x_ < other.x_)
+		directions.first = Direction::RIGHT;
+
+	if (y_ == other.y_)
+		directions.second = Direction::EQUAL;
+
+	if (y_ > other.y_)
+		directions.second = Direction::TOP;
+
+	if (y_ < other.y_)
+		directions.second = Direction::BOT;
+	return  directions;
 }

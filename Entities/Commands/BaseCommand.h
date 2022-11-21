@@ -4,23 +4,31 @@
 
 #ifndef SSDL_BASECOMMAND_H
 #define SSDL_BASECOMMAND_H
-#include "../GameObjects/BaseGameObject.h"
+#include "../GameObjects/GameObject.h"
 #include "../Errors/ErrorCode.h"
 #include "../GameObjects/World/GameWorld.h"
-
+/**
+ * @brief Команды генерируются: 1. От пользовательского ввода; 2. От ИИ
+ *
+ */
 struct BaseCommand {
 	enum class Type{
 		UNDEFINED,
+		// TODO Merge them
 		PLAYER_MOVE_COMMAND,
-		SHOOT_COMMAND
+		PLAYER_SHOOT_COMMAND,
+		NPC_MOVE_COMMAND,
+		NPC_SHOOT_COMMAND
 	};
-//	BaseCommand() ;
-//    BaseCommand(BaseGameObject*, Type) ;
-//	virtual ~BaseCommand();
-
-//	virtual SdlErrorCodeExample execute() = 0;
-//	BaseGameObject *obj_;
+/**
+ * @brief Type of command
+ *
+ */
 	Type type_;
+/**
+ * @brief Любой объект мира полностью характеризуется своими координатами.
+ * @details Аналогично любую команду можно выразить типом команды и координатами.
+ */
 	Positions positions_;
 };
 

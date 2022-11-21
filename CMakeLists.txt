@@ -1,24 +1,22 @@
 cmake_minimum_required(VERSION 3.20)
 project(ssdl)
-if(EXISTS ${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
-	include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
-	conan_basic_setup()
-else()
-	execute_process(COMMAND which conan)
-	if (WIN32)
-		message (FATAL_ERROR "в **пу винду, сами разбирайтесь")
-	elseif (UNIX)
-	elseif (${CMAKE_SYSTEM} MATCHES "Darwin")
-		execute_process(COMMAND pip install conan)
-	endif ()
-	execute_process(COMMAND conan install .. --install-folder . --build=missing)
-	message(WARNING "The file conanbuildinfo.cmake doesn't exist at ${CMAKE_BINARY_DIR}, you have to run conan install first")
-endif()
+#if(EXISTS ${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
+#	include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
+#	conan_basic_setup()
+#else()
+#	execute_process(COMMAND which conan)
+#	if (WIN32)
+#		message (FATAL_ERROR "в **пу винду, сами разбирайтесь")
+#	elseif (UNIX)
+#	elseif (${CMAKE_SYSTEM} MATCHES "Darwin")
+#		execute_process(COMMAND pip install conan)
+#	endif ()
+#	execute_process(COMMAND conan install .. --install-folder . --build=missing)
+#	message(WARNING "The file conanbuildinfo.cmake doesn't exist at ${CMAKE_BINARY_DIR}, you have to run conan install first")
+#endif()
 #libs
 INCLUDE(FindPkgConfig)
 pkg_check_modules(SDL REQUIRED sdl2)
-pkg_check_modules(tcmalloc REQUIRED libtcmalloc)
-pkg_check_modules(gtest REQUIRED gtest)
 
 
 #settings
@@ -41,6 +39,7 @@ Sources:\t${mSources};\n\t${mEntitySources};\n\t${mProcessorsSources}\n")
 
 #includes
 include_directories(${tcmalloc_INCLUDE_DIR})
+include_directories(${CMAKE_SOURCE_DIR})
 
 #options
 #currently is not implemented yet
@@ -55,7 +54,7 @@ else()
 endif (logging_game)
 
 #results
-add_executable(ssdl ${mIncludes} ${mSources} ${mEntityIncludes} ${mEntitySources} ${mProcessorsIncludes} ${mProcessorsSources})
+add_executable(ssdl ${mIncludes} ${mSources} ${mEntityIncludes} ${mEntitySources} ${mProcessorsIncludes} ${mProcessorsSources} Processors/Common/NpcProcessor.cpp Processors/Common/NpcProcessor.h)
 
 #linking
-target_link_libraries(ssdl tcmalloc SDL2 SDL2_test SDL2_image gtest)
+target_link_libraries(ssdl SDL2 SDL2_test SDL2_image)

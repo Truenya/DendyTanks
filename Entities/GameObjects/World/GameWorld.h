@@ -7,7 +7,7 @@
 
 #include "vector"
 #include "memory"
-#include "../BaseGameObject.h"
+#include "../GameObject.h"
 #include "../../Utility.h"
 
 struct StepReturn{
@@ -24,33 +24,33 @@ struct StepReturn{
 
 class WorldGenerator;
 struct MainProcessor;
-typedef std::vector<std::vector<BaseGameObject>> MyGameWorldField;
+typedef std::vector<std::vector<GameObject::Type>> MyGameWorldField;
 struct GameWorld {
 	GameWorld( unsigned int  x_dim, unsigned int y_dim);
 	~GameWorld();
-	std::vector<Positions> update();
 	Position size();
-	BaseGameObject *player_{nullptr};
+	GameObject player_;
+	ManagedVector <Position> enemies_;
 	StepReturn playerStep();
 	bool addProjectile(Position);
 	std::vector<Positions> allProjectilesStep();
-	[[nodiscard]] const BaseGameObject::Type typeAt(Position);
-	void addPlayerPosChange(Position::Direction direction);
-	void addProjectile(Position::Direction direction);
+	[[nodiscard]]  GameObject::Type typeAt(Position);
+//	void addPlayerPosChange(Position::Direction direction);
+//	void addProjectile(Position::Direction direction);
+//	std::vector<Positions> update();
 private:
-	[[nodiscard]] BaseGameObject &at(Position);
+	[[nodiscard]] GameObject::Type &at(Position);
+	// TODO то что ниже объединить в структурку
+	StepReturn playerStep(const Position &prev_pos, GameObject::Type dst_type, Position &dst_pos);
+	StepReturn projectileStep(const Position &prev_pos, GameObject::Type dst_type, Position &dst_pos);
+    MyGameWorldField field_;
+	ManagedVector<Position> projectiles_;
 	std::mutex changesMutex_;
 	ManagedVector<Positions> playerPosChanges_;
 	ManagedVector<Position> newProjectiles_;
-	// TODO то что ниже объединить в структурку
-	StepReturn playerStep(const Position &prev_pos, BaseGameObject::Type dst_type, Position &dst_pos);
-	StepReturn projectileStep(const Position &prev_pos, BaseGameObject::Type dst_type, Position &dst_pos);
-	void swapTypes(const Position &, const Position &);
-    MyGameWorldField field_;
-	ManagedVector<Position> projectiles_;
 	friend WorldGenerator;
 // TODO убираем
-	friend BaseGameObject;
+	friend GameObject;
 };
 
 
