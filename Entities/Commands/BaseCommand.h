@@ -8,9 +8,9 @@
 #include "../Errors/ErrorCode.h"
 #include "../GameObjects/World/GameWorld.h"
 /**
- * @brief Команды генерируются: 1. От пользовательского ввода; 2. От ИИ
- *
- */
+* @brief Команды генерируются: 1. От пользовательского ввода; 2. От ИИ
+*
+*/
 struct BaseCommand {
 	enum class Type{
 		UNDEFINED,
@@ -21,14 +21,14 @@ struct BaseCommand {
 		NPC_SHOOT_COMMAND
 	};
 /**
- * @brief Type of command
- *
- */
+* @brief Type of command
+*
+*/
 	Type type_{Type::UNDEFINED};
 /**
- * @brief Любой объект мира полностью характеризуется своими координатами.
- * @details Аналогично любую команду можно выразить типом команды и координатами.
- */
+* @brief Любой объект мира полностью характеризуется своими координатами.
+* @details Аналогично любую команду можно выразить типом команды и координатами.
+*/
 	Positions positions_;
 };
 

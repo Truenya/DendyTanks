@@ -187,49 +187,49 @@ RenderShootInfo MainProcessor::getShoots()
 //	auto positions = allProjectilesStepSecond();
 //}
 
-#include <unordered_set>
-std::vector<Positions> MainProcessor::allProjectilesStepSecond ()
-{
-	std::vector<Positions> output{};
-	std::unordered_set<size_t> explosed;
-	for (size_t i = 0; i < projectiles_.count(); ++i)
-	{
-		auto pos = projectiles_[i];
-		const auto PREV_POS = pos;
-		pos.stepInDirection();
-		const auto D_POS = pos - PREV_POS;
-		auto s_r = projectileStepSecond(projectiles_[i], typeAt(pos),pos);
-		if(s_r.ret_ == StepReturn::MEET_WALL        || s_r.ret_ == StepReturn::MEET_PLAYER
-		|| s_r.ret_ == StepReturn::MEET_PROJECTILE  || s_r.ret_ == StepReturn::OUT_OF_FIELD)
-			explosed.insert(i);
-		else
-			projectiles_[i].stepInDirection();
-		output.emplace_back(Positions{PREV_POS,pos});//,D_POS,{}});
-	}
-	for (const auto EXPLOSE: explosed)
-	{
-		projectiles_.remove(EXPLOSE);
-	}
-	return output;
-}
+//#include <unordered_set>
+//std::vector<Positions> MainProcessor::allProjectilesStepSecond ()
+//{
+//	std::vector<Positions> output{};
+//	std::unordered_set<size_t> explosed;
+//	for (size_t i = 0; i < projectiles_.count(); ++i)
+//	{
+//		auto pos = projectiles_[i];
+//		const auto PREV_POS = pos;
+//		pos.stepInDirection();
+//		const auto D_POS = pos - PREV_POS;
+//		auto s_r = projectileStepSecond(projectiles_[i], typeAt(pos),pos);
+//		if(s_r.ret_ == StepReturn::MEET_WALL        || s_r.ret_ == StepReturn::MEET_PLAYER
+//		|| s_r.ret_ == StepReturn::MEET_PROJECTILE  || s_r.ret_ == StepReturn::OUT_OF_FIELD)
+//			explosed.insert(i);
+//		else
+//			projectiles_[i].stepInDirection();
+//		output.emplace_back(Positions{PREV_POS,pos});//,D_POS,{}});
+//	}
+//	for (const auto EXPLOSE: explosed)
+//	{
+//		projectiles_.remove(EXPLOSE);
+//	}
+//	return output;
+//}
 
-StepReturn
-MainProcessor::projectileStepSecond (const Position &prev_pos, GameObject::Type dst_type, const Position &dst_pos)
-{
-	switch (dst_type)
-	{
-//		case GameObject::Type::SPACE:	return {StepReturn::SUCCESS, dst_pos};
-//		case GameObject::Type::PROJECTILE:	return {StepReturn::MEET_PROJECTILE, dst_pos};
-//		case GameObject::Type::WALL: return {StepReturn::MEET_WALL, dst_pos};
-//		case GameObject::Type::PLAYER:	return {StepReturn::MEET_PLAYER, dst_pos};
-//		default: return {StepReturn::UNDEFINED_BEHAVIOR,{}};
-		case GameObject::Type::SPACE:	return {StepReturn::SUCCESS};
-		case GameObject::Type::PROJECTILE:	return {StepReturn::MEET_PROJECTILE};
-		case GameObject::Type::WALL: return {StepReturn::MEET_WALL};
-		case GameObject::Type::PLAYER:	return {StepReturn::MEET_PLAYER};
-		default: return {StepReturn::UNDEFINED_BEHAVIOR};
-	}
-}
+//StepReturn
+//MainProcessor::projectileStepSecond (const Position &prev_pos, GameObject::Type dst_type, const Position &dst_pos)
+//{
+//	switch (dst_type)
+//	{
+////		case GameObject::Type::SPACE:	return {StepReturn::SUCCESS, dst_pos};
+////		case GameObject::Type::PROJECTILE:	return {StepReturn::MEET_PROJECTILE, dst_pos};
+////		case GameObject::Type::WALL: return {StepReturn::MEET_WALL, dst_pos};
+////		case GameObject::Type::PLAYER:	return {StepReturn::MEET_PLAYER, dst_pos};
+////		default: return {StepReturn::UNDEFINED_BEHAVIOR,{}};
+//		case GameObject::Type::SPACE:	return {StepReturn::SUCCESS};
+//		case GameObject::Type::PROJECTILE:	return {StepReturn::MEET_PROJECTILE};
+//		case GameObject::Type::WALL: return {StepReturn::MEET_WALL};
+//		case GameObject::Type::PLAYER:	return {StepReturn::MEET_PLAYER};
+//		default: return {StepReturn::UNDEFINED_BEHAVIOR};
+//	}
+//}
 
 bool MainProcessor::processNpc ()
 {

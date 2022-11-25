@@ -52,8 +52,8 @@ const Positions &GameObject::getPositions() const {
 	return positions_;
 }
 
-GameObject::GameObject(Position pos, GameObject::Type typo,
-		std::vector<std::vector<GameObject::Type>> *field)
+GameObject::GameObject(const Position& pos, GameObject::Type typo)//,
+		//std::vector<std::vector<GameObject::Type>> *field)
 		:
 		type_(typo),
 		positions_({pos, pos})//, {0, 0, 0, Position::Direction::BOT},pos})

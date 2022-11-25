@@ -50,25 +50,25 @@ GameWorld &WorldGenerator::parseFromString(const std::string& raw_file, [[maybe_
 		}
 	}
 	static auto world = GameWorld(max_x, y);
-	for (auto wall:wall_coordinates)
+	for (const auto &wall:wall_coordinates)
 	{
 		world.at(wall) = GameObject::Type::WALL;
 	}
 
-	for (auto space:space_coordinates)
+	for (const auto &space:space_coordinates)
 	{
 		world.at(space) = GameObject::Type::SPACE;
 	}
 
 	world.enemies_.init(enemy_coordinates.size());
-	for (auto enemy:enemy_coordinates)
+	for (const auto &enemy:enemy_coordinates)
 	{
 		world.at(enemy) = GameObject::Type::ENEMY;
 		world.enemies_.add(enemy);
 	}
 
 	world.at(player_coordinates) = GameObject::Type::PLAYER;
-	world.player_ = GameObject(player_coordinates,GameObject::Type::PLAYER, &world.field_);
+	world.player_ = GameObject(player_coordinates,GameObject::Type::PLAYER);//, &world.field_);
 	ptr = &world;
 	return world;
 }

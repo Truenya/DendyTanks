@@ -17,7 +17,6 @@ build
 builds
 build/.cmake
 cmake-build-debug-remote-host
-build
 
 #ignore cmake things
 cmake*

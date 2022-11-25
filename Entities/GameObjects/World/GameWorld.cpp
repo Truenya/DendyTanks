@@ -155,7 +155,7 @@ std::vector<Positions> GameWorld::allProjectilesStep ()
 		const Position PREV_POS = pos;
 		if (pos.stepInDirection() && pos.isValidByWorldSize(size()))
 		{
-			const auto D_POS = pos - PREV_POS;
+//			const auto D_POS = pos - PREV_POS;
 			auto s_r = projectileStep(PREV_POS, typeAt(pos), pos);
 			if (s_r.ret_ == StepReturn::MEET_WALL       || s_r.ret_ == StepReturn::MEET_PLAYER
 	                                                    || s_r.ret_ == StepReturn::OUT_OF_FIELD) // FIXME MEET_PROJECTILE

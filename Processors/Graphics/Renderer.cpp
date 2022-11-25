@@ -546,7 +546,7 @@ void Renderer::renderNpcMove ()
 			{
 				// TODO вынести их в поля класса
 				SDL_Rect enemy = renderData_.enemyRect_;
-				enemy.x += enemy.w * 2 + renderData_.rectSize_;
+				enemy.x += enemy.w * 2 + static_cast<int> (renderData_.rectSize_);
 				enemy.y += enemy.h * 2;
 				if (SDL_RenderCopy(renderData_.sdlRenderer_, renderData_.sdlTankTopTextures_, &enemy, &dstrect))
 				{

@@ -55,7 +55,7 @@ private:
 	bool processPlayerMoveCommands(std::vector<BaseCommand> &commands);
 	bool processShootCommands(std::vector<BaseCommand> &commands);
 //	ParticlesSystem particlesSystem_;
-	static StepReturn projectileStepSecond (const Position &prev_pos, GameObject::Type dst_type, const Position &dst_pos);
-	std::vector<Positions> allProjectilesStepSecond ();
+//	static StepReturn projectileStepSecond (const Position &prev_pos, GameObject::Type dst_type, const Position &dst_pos);
+//	std::vector<Positions> allProjectilesStepSecond ();
 };
 #endif //SSDL_MAINPROCESSOR_H

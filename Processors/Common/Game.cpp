@@ -14,8 +14,8 @@ Game::Game(): syncStreamErrors_(std::cerr),
 				renderer_(isCurrentlyWorking_,logsSynchroStream_),
 				processor_(WorldGenerator::generateWorld("labirinth.txt"),logsSynchroStream_)
 #else
-              renderer_(isCurrentlyWorking_),
-              processor_(WorldGenerator::generateWorld("labirinth.txt"))
+	renderer_(isCurrentlyWorking_),
+	processor_(WorldGenerator::generateWorld("labirinth.txt"))
 #endif
 {
 	isCurrentlyWorking_.store(false);

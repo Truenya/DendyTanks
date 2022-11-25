@@ -20,7 +20,7 @@ struct  GameObject {
 		PROJECTILE
 	};
 	GameObject() ;
-	GameObject(Position pos, Type typo,std::vector<std::vector<GameObject::Type>> *field);
+	GameObject(const Position &pos, Type typo);//,std::vector<std::vector<GameObject::Type>> *field);
 	~GameObject();
 	Type type_;
 	[[nodiscard]] const Positions &getPositions() const;

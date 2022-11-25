@@ -2,7 +2,6 @@
 // Created by true on 2022-04-27.
 //
 #include "Position.h"
-#include <cmath>
 #include <stdexcept>
 
 Position& Position::operator+=(const Position &other) {

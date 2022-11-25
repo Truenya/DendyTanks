@@ -1,5 +1,5 @@
 # DendyTanks
-Currently training ot this project in game propgramming patterns.
+Currently, training ot this project in game propgramming patterns.
 
 Для сборки в ubuntu
 
