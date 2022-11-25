@@ -7,7 +7,6 @@ profdata/*.profdata
 #ignore images and texts
 *.png
 *.bmp
-*.txt
 
 #ignore build_dirs
 .idea
@@ -19,5 +18,4 @@ build/.cmake
 cmake-build-debug-remote-host
 
 #ignore cmake things
-cmake*
 *.cmake
