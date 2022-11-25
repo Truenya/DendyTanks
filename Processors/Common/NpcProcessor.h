@@ -10,7 +10,7 @@
 struct NpcStepData{
 	ManagedVector <Positions> NpcShoots;
 	ManagedVector <Positions> NpcMooves;
-	NpcStepData(size_t count_of_enemies)
+	explicit NpcStepData(size_t count_of_enemies)
 	{
 		NpcShoots.init(count_of_enemies);
 		NpcMooves.init(count_of_enemies);
@@ -24,7 +24,7 @@ class NpcProcessor
 	bool canShoot(Position& pos, Position::Direction &direction);
 	bool tryShootInDirection(const Position& pos, const Position::Direction &direction);
 public:
-	NpcProcessor(GameWorld &world);
+	explicit NpcProcessor(GameWorld &world);
 	~NpcProcessor() = default;
 	NpcStepData step();
 };

@@ -18,8 +18,8 @@ struct StepReturn{
 		MEET_PROJECTILE,
 		OUT_OF_FIELD,
 		UNDEFINED_BEHAVIOR
-	} ret_;
-	Position pos_;
+	} ret_{UNDEFINED_BEHAVIOR};
+//	Position pos_;
 };
 
 class WorldGenerator;
@@ -45,7 +45,7 @@ private:
 	StepReturn projectileStep(const Position &prev_pos, GameObject::Type dst_type, Position &dst_pos);
     MyGameWorldField field_;
 	ManagedVector<Position> projectiles_;
-	std::mutex changesMutex_;
+//	std::mutex changesMutex_;
 	ManagedVector<Positions> playerPosChanges_;
 	ManagedVector<Position> newProjectiles_;
 	friend WorldGenerator;

@@ -24,7 +24,7 @@ struct BaseCommand {
  * @brief Type of command
  *
  */
-	Type type_;
+	Type type_{Type::UNDEFINED};
 /**
  * @brief Любой объект мира полностью характеризуется своими координатами.
  * @details Аналогично любую команду можно выразить типом команды и координатами.

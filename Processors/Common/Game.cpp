@@ -23,8 +23,6 @@ Game::Game(): syncStreamErrors_(std::cerr),
 }
 
 Game::~Game() = default;
-
-#include <assert.h>
 void Game::mainLoop () {
 // Преобразую
 // От SDL ивентов образуется набор команд, которые обрабатываются в потоке процессора
@@ -36,7 +34,6 @@ void Game::mainLoop () {
 //TODO P.P.S. Проверки должны производится в месте, обрабатывающем возможность перемещения, при добавлении в очередь
 // (в отдельном потоке, при добавлении миру в очередь обновленных данных)
 	while(isCurrentlyWorking_.load()){
-//		assert(processor_.typeAt(processor_.getPlayer().getPositions().curPos_) == GameObject::Type::PLAYER);
 		update();
 	}
 }

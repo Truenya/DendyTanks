@@ -43,8 +43,9 @@ GameObject::GameObject() :
 		positions_({{-1, -1, 0, Position::Direction::BOT},
 		            {-1, -1, 0, Position::Direction::BOT},
 	                    {-1, -1, 0, Position::Direction::BOT},
-						{-1, -1, 0, Position::Direction::BOT}}),
-		field_(nullptr){}
+						{-1, -1, 0, Position::Direction::BOT}})
+//		field_(nullptr)
+{}
 
 const Positions &GameObject::getPositions() const {
 	return positions_;
@@ -54,8 +55,9 @@ GameObject::GameObject(Position pos, GameObject::Type typo,
 		std::vector<std::vector<GameObject::Type>> *field)
 		:
 		type_(typo),
-		positions_({pos, pos, {0, 0, 0, Position::Direction::BOT},pos}),
-		field_(field) {}
+		positions_({pos, pos, {0, 0, 0, Position::Direction::BOT},pos})
+//		field_(field)
+{}
 
 void GameObject::step() {
 //	TODO using step for player, not move(deltaPosition)

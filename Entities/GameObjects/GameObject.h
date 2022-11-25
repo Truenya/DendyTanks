@@ -28,7 +28,7 @@ struct  GameObject {
 	void rotate(Position::Direction direction);
 protected:
 	Positions positions_;
-	std::vector<std::vector<GameObject::Type>> *field_;
+//	std::vector<std::vector<GameObject::Type>> *field_;
 //	friend struct ShootCommand;
 //	friend struct MoveCommand;
 };

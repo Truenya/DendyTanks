@@ -207,7 +207,7 @@ bool Position::isValidByWorldSize (Position world_size) const
 	return true;
 }
 
-Position::Directions Position::directionsTo (const Position &other)
+Position::Directions Position::directionsTo (const Position &other) const
 {
 	Directions directions;
 	if (x_ == other.x_)

@@ -49,7 +49,7 @@ struct Position {
 		EQUAL
 	} direction_ = Direction::EQUAL;
 	typedef std::pair<Direction, Direction> Directions;
-	Directions directionsTo (const Position &other);
+	[[nodiscard]] Directions directionsTo  (const Position &other) const;
 	bool stepInDirection (bool inverse = false);
 	void reverseDirection ();
 	[[nodiscard]] double calcDistance (const Position &other) const;

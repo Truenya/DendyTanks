@@ -8,9 +8,9 @@
 
 #ifndef MAKE_LOG
 MainProcessor::MainProcessor(GameWorld& world):
-	syncStreamErrors_(std::cerr),
 	world_(world),
-	npcProcessor_(world)
+	npcProcessor_(world),
+    syncStreamErrors_(std::cerr)
 {
 }
 #else
@@ -218,11 +218,16 @@ MainProcessor::projectileStepSecond (const Position &prev_pos, GameObject::Type 
 {
 	switch (dst_type)
 	{
-		case GameObject::Type::SPACE:	return {StepReturn::SUCCESS, dst_pos};
-		case GameObject::Type::PROJECTILE:	return {StepReturn::MEET_PROJECTILE, dst_pos};
-		case GameObject::Type::WALL: return {StepReturn::MEET_WALL, dst_pos};
-		case GameObject::Type::PLAYER:	return {StepReturn::MEET_PLAYER, dst_pos};
-		default: return {StepReturn::UNDEFINED_BEHAVIOR,{}};
+//		case GameObject::Type::SPACE:	return {StepReturn::SUCCESS, dst_pos};
+//		case GameObject::Type::PROJECTILE:	return {StepReturn::MEET_PROJECTILE, dst_pos};
+//		case GameObject::Type::WALL: return {StepReturn::MEET_WALL, dst_pos};
+//		case GameObject::Type::PLAYER:	return {StepReturn::MEET_PLAYER, dst_pos};
+//		default: return {StepReturn::UNDEFINED_BEHAVIOR,{}};
+		case GameObject::Type::SPACE:	return {StepReturn::SUCCESS};
+		case GameObject::Type::PROJECTILE:	return {StepReturn::MEET_PROJECTILE};
+		case GameObject::Type::WALL: return {StepReturn::MEET_WALL};
+		case GameObject::Type::PLAYER:	return {StepReturn::MEET_PLAYER};
+		default: return {StepReturn::UNDEFINED_BEHAVIOR};
 	}
 }
 

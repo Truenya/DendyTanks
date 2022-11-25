@@ -4,7 +4,7 @@
 
 #include "GameWorld.h"
 
-#include <assert.h>
+#include <cassert>
 GameWorld::GameWorld(unsigned int x_dim, unsigned int y_dim)
 {
 	if(x_dim > 10000 || y_dim > 10000)
@@ -38,7 +38,8 @@ GameObject::Type &GameWorld::at(Position pos) {
 StepReturn GameWorld::playerStep (const Position &prev_pos, GameObject::Type dst_type, Position &dst_pos)
 {
 	if (!dst_pos)
-		return {StepReturn::UNDEFINED_BEHAVIOR,prev_pos};
+//		return {StepReturn::UNDEFINED_BEHAVIOR,prev_pos};
+		return {StepReturn::UNDEFINED_BEHAVIOR};
 	switch (dst_type)
 	{
 		case GameObject::Type::SPACE:
@@ -51,20 +52,24 @@ StepReturn GameWorld::playerStep (const Position &prev_pos, GameObject::Type dst
 			std::swap(at(prev_pos), at(dst_pos));
 			assert(at(dst_pos) == GameObject::Type::PLAYER);
 			assert(at(prev_pos) == GameObject::Type::SPACE);
-			return {StepReturn::SUCCESS, dst_pos};
+			return {StepReturn::SUCCESS};
+//			return {StepReturn::SUCCESS, dst_pos};
 		}
 		case GameObject::Type::PROJECTILE:
 		{
 			at(prev_pos) = GameObject::Type::SPACE;
 			at(dst_pos) = GameObject::Type::SPACE;
 			// TODO projectile meets enemy
-			return {StepReturn::SUCCESS, dst_pos};
+			return {StepReturn::SUCCESS};
+//			return {StepReturn::SUCCESS, dst_pos};
 		}
 		case GameObject::Type::WALL:
 		{
-			return {StepReturn::MEET_WALL, prev_pos};
+//			return {StepReturn::MEET_WALL, prev_pos};
+			return {StepReturn::MEET_WALL};
 		}
-		default: return {StepReturn::UNDEFINED_BEHAVIOR, prev_pos};
+//		default: return {StepReturn::UNDEFINED_BEHAVIOR, prev_pos};
+		default: return {StepReturn::UNDEFINED_BEHAVIOR};
 	}
 }
 
@@ -86,29 +91,34 @@ StepReturn GameWorld::projectileStep (const Position &prev_pos, GameObject::Type
 			std::swap(at(prev_pos), at(dst_pos));
 			// Скажем миру, что в мире объекты поменялись местами
 			assert(typeAt(prev_pos) == GameObject::Type::SPACE);
-			return {StepReturn::SUCCESS, dst_pos};
+//			return {StepReturn::SUCCESS, dst_pos};
+			return {StepReturn::SUCCESS};
 		}
 		case GameObject::Type::PROJECTILE:
 		{
 //          FIXME после взрыва не уничтожаются в мире оба снаряда, один из них повисает навсегда
 			at(prev_pos) = GameObject::Type::SPACE;
 			at(dst_pos) = GameObject::Type::SPACE;
-			return {StepReturn::MEET_PROJECTILE, dst_pos};
+//			return {StepReturn::MEET_PROJECTILE, dst_pos};
+			return {StepReturn::MEET_PROJECTILE};
 		}
 		case GameObject::Type::WALL:
 		{
 			at(prev_pos) = GameObject::Type::SPACE;
 			at(dst_pos) = GameObject::Type::SPACE;
-			return {StepReturn::MEET_WALL, dst_pos};
+//			return {StepReturn::MEET_WALL, dst_pos};
+			return {StepReturn::MEET_WALL};
 		}
 		case GameObject::Type::PLAYER:
 		{
 			at(prev_pos) = GameObject::Type::SPACE;
 			at(dst_pos) = GameObject::Type::SPACE;
-			return {StepReturn::MEET_PLAYER, dst_pos};
+//			return {StepReturn::MEET_PLAYER, dst_pos};
+			return {StepReturn::MEET_PLAYER};
 		}
 		default:
-			return {StepReturn::UNDEFINED_BEHAVIOR,{}};
+//			return {StepReturn::UNDEFINED_BEHAVIOR,{}};
+			return {StepReturn::UNDEFINED_BEHAVIOR};
 	}
 }
 
@@ -128,7 +138,7 @@ StepReturn GameWorld::playerStep ()
 	assert(PREV_TYPE == GameObject::Type::PLAYER);
 	dst_pos.stepInDirection();
 	if (!dst_pos || !dst_pos.isValidByWorldSize(size()))
-		return {StepReturn::OUT_OF_FIELD,{}};
+		return {StepReturn::OUT_OF_FIELD};
 	const auto DST_TYPE = typeAt(dst_pos);
 	dst_pos.direction_ = POS.direction_;
 	return playerStep(POS,DST_TYPE,dst_pos);

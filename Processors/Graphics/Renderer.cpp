@@ -326,6 +326,7 @@ void Renderer::fillMap ()
 	prepareTextures();
 
 	SDL_Rect dstrect;
+	SDL_Delay(300);
 	for (int i = 0; i < renderData_.worldSize_.x_; ++i)
 	{
 		for (int j = 0; j < renderData_.worldSize_.y_; ++j)
@@ -333,9 +334,8 @@ void Renderer::fillMap ()
 			fillRectByPosition(dstrect, i, j);
 		}
 	}
-	SDL_RenderPresent(renderData_.sdlRenderer_);
 
-	SDL_Delay(15);
+	SDL_RenderPresent(renderData_.sdlRenderer_);
 }
 
 void Renderer::fillRectByPosition (SDL_Rect &dstrect, int i, int j) const
@@ -374,17 +374,19 @@ void Renderer::fillRectByPosition (SDL_Rect &dstrect, int i, int j) const
 
 void Renderer::setScreenPosition (SDL_Rect &dstrect, int i, int j) const
 {
-	dstrect.x = i * renderData_.rectSize_;
-	dstrect.y = j * renderData_.rectSize_;
-	dstrect.w = dstrect.h = renderData_.rectSize_;
+	dstrect.x = static_cast<int> (i * renderData_.rectSize_);
+	dstrect.y = static_cast<int> (j * renderData_.rectSize_);
+	dstrect.w = dstrect.h = static_cast<int> (renderData_.rectSize_);
 }
 
 void Renderer::prepareTextures ()
 {
-	SDL_RenderCopy(renderData_.sdlRenderer_, renderData_.sdlFillTexture_, nullptr, nullptr);
+	if(SDL_RenderCopy(renderData_.sdlRenderer_, renderData_.sdlFillTexture_, nullptr, nullptr))
+		throw std::runtime_error("cannot prepare texture");
 	renderData_.rectSize_ = (renderData_.screenHeight_ / renderData_.worldSize_.y_) - 1;
 	SDL_Point player_texture_size;
-	SDL_QueryTexture(renderData_.sdlTankBottomTextures_, NULL, NULL, &player_texture_size.x, &player_texture_size.y);
+	if(SDL_QueryTexture(renderData_.sdlTankBottomTextures_, nullptr, nullptr, &player_texture_size.x, &player_texture_size.y))
+		throw std::runtime_error("cannot query texture");
 	renderData_.playerRect_.w = player_texture_size.x / 3 - 1;
 	renderData_.playerRect_.h = player_texture_size.y / 3 - 1;
 	renderData_.enemyRect_.w = player_texture_size.x / 3 - 1;
@@ -395,15 +397,15 @@ void Renderer::renderShoots ()
 {
 	SDL_Rect fillrect;
 	SDL_Rect dstrect;
-	dstrect.w = dstrect.h = fillrect.w = fillrect.h = renderData_.rectSize_;
+	dstrect.w = dstrect.h = fillrect.w = fillrect.h = static_cast<int> (renderData_.rectSize_);
 	// TODO некрасиво, поправить
 	for (size_t i = 0; i < explosed_.count() ; ++i)
 	{
 		if (!explosed_[i].second)
 		{
 			const Position pos = explosed_[i].first;
-			fillrect.x = pos.x_ * renderData_.rectSize_;
-			fillrect.y = pos.y_ * renderData_.rectSize_;
+			fillrect.x = static_cast<int> ( pos.x_ * renderData_.rectSize_);
+			fillrect.y = static_cast<int> (pos.y_ * renderData_.rectSize_);
 			SDL_RenderCopy(renderData_.sdlRenderer_, renderData_.sdlFillTexture_, nullptr, &fillrect);
 			explosed_.remove(i);
 		}
@@ -427,10 +429,10 @@ void Renderer::renderShoots ()
 
 	for (const auto &shoot: shoots)
 	{
-		dstrect.x = shoot.second.x_ * renderData_.rectSize_;
-		dstrect.y = shoot.second.y_ * renderData_.rectSize_;
-		fillrect.x = shoot.first.x_ * renderData_.rectSize_;
-		fillrect.y = shoot.first.y_ * renderData_.rectSize_;
+		dstrect.x = static_cast<int> (shoot.second.x_ * renderData_.rectSize_);
+		dstrect.y = static_cast<int> (shoot.second.y_ * renderData_.rectSize_);
+		fillrect.x = static_cast<int> (shoot.first.x_ * renderData_.rectSize_);
+		fillrect.y = static_cast<int> (shoot.first.y_ * renderData_.rectSize_);
 		if (shoot.first == shoot.second)
 		{
 			explosed_.add({shoot.first,renderData_.fps_});
@@ -452,11 +454,11 @@ void Renderer::renderPlayerMove ()
 	SDL_Rect prevrect;
 	for (const auto &positions: changed_positions)
 	{
-		prevrect.x = positions.first.x_ * renderData_.rectSize_;
-		prevrect.y = positions.first.y_ * renderData_.rectSize_;
-		dstrect.x = positions.second.x_ * renderData_.rectSize_;
-		dstrect.y = positions.second.y_ * renderData_.rectSize_;
-		dstrect.w = dstrect.h = prevrect.w = prevrect.h = renderData_.rectSize_;
+		prevrect.x = static_cast<int> (positions.first.x_ * renderData_.rectSize_);
+		prevrect.y = static_cast<int> (positions.first.y_ * renderData_.rectSize_);
+		dstrect.x = static_cast<int> (positions.second.x_ * renderData_.rectSize_);
+		dstrect.y = static_cast<int> (positions.second.y_ * renderData_.rectSize_);
+		dstrect.w = dstrect.h = prevrect.w = prevrect.h = static_cast<int> (renderData_.rectSize_);
 		switch (positions.second.direction_)
 		{
 			case Position::Direction::BOT:
@@ -473,7 +475,7 @@ void Renderer::renderPlayerMove ()
 			{
 				// TODO вынести их в поля класса
 				SDL_Rect top_player_rect = renderData_.playerRect_;
-				top_player_rect.x += top_player_rect.w * 2 + renderData_.rectSize_;
+				top_player_rect.x += top_player_rect.w * 2 + static_cast<int> (renderData_.rectSize_);
 				top_player_rect.y += top_player_rect.h * 2;
 				top_player_rect.w = static_cast<int> (top_player_rect.w * 1.1);
 				if (SDL_RenderCopy(renderData_.sdlRenderer_, renderData_.sdlTankTopTextures_, &top_player_rect, &dstrect))
@@ -485,9 +487,9 @@ void Renderer::renderPlayerMove ()
 			case Position::Direction::LEFT:
 			{
 				SDL_Rect left_player_rect = renderData_.playerRect_;
-				left_player_rect.x += left_player_rect.w + left_player_rect.w + renderData_.rectSize_ +
+				left_player_rect.x += left_player_rect.w + left_player_rect.w + static_cast<int> (renderData_.rectSize_) +
 						static_cast<int>(static_cast<double>(renderData_.rectSize_) * 1.5);
-				left_player_rect.y += left_player_rect.h + left_player_rect.h - renderData_.rectSize_;
+				left_player_rect.y += left_player_rect.h + left_player_rect.h - static_cast<int> (renderData_.rectSize_);
 				if (SDL_RenderCopy(renderData_.sdlRenderer_, renderData_.sdlTankLeftTextures_, &left_player_rect, &dstrect))
 				{
 					std::cout << "Can't render left direction: " << SDL_GetError() << std::endl;
@@ -591,8 +593,6 @@ void Renderer::prepare ()
 {
 	init();
 	load();
-	// Синхронизация с тем, чтобы быть уверенным, что все корректно прогрузилось перед отрисовкой.
-	SDL_Delay(2000);
 }
 
 Renderer::~Renderer ()
