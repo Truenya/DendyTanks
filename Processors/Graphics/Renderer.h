@@ -12,7 +12,6 @@
 #include "../Common/MainProcessor.h"
 #include "../../Entities/Commands/BaseCommand.h"
 #include "../Parsers/WorldGenerator.h"
-#include "../Common/ParticlesSystem.h"
 #include "RenderData.h"
 /**
  * @brief Класс взаимодействия с SDL2 библиотекой.
@@ -52,7 +51,8 @@ public:
 	bool makeSomePauseIfNeeded(long int cur_time_ms);
 	void setProcessor(MainProcessor *processor);
 	void renderPlayerMove();
-	void renderPlayerShoots();
+	void renderNpcMove();
+	void renderShoots();
 	void setScreenPosition (SDL_Rect &dstrect, int i, int j) const;
 	void fillRectByPosition (SDL_Rect &dstrect, int i, int j) const;
 };

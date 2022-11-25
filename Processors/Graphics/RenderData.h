@@ -27,6 +27,7 @@ struct RenderData{
 	SDL_Texture *sdlFillTexture_ = nullptr;
 	SDL_Event sdlEvent_;
 	SDL_Rect playerRect_{0,0,0,0};
+	SDL_Rect enemyRect_{0,0,0,0};
 	time_t prevRender_ = 0;
 };
 #endif //SSDL_RENDERDATA_H
