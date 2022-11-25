@@ -161,9 +161,9 @@ RenderMoveInfo MainProcessor::getNpcChangedPositions ()
 	return out;
 }
 
-GameObject MainProcessor::getPlayer() const {
-	return world_.player_;
-}
+//GameObject MainProcessor::getPlayer() const {
+//	return world_.player_;
+//}
 
 Position MainProcessor::worldSize() const {
 	return world_.size();
@@ -181,11 +181,11 @@ RenderShootInfo MainProcessor::getShoots()
 	return empty;
 }
 
-void MainProcessor::processingLoop ()
-{
-	// обработать все и передать конкретные координаты для обмена в мир для обновления
-	auto positions = allProjectilesStepSecond();
-}
+//void MainProcessor::processingLoop ()
+//{
+//	// обработать все и передать конкретные координаты для обмена в мир для обновления
+//	auto positions = allProjectilesStepSecond();
+//}
 
 #include <unordered_set>
 std::vector<Positions> MainProcessor::allProjectilesStepSecond ()
@@ -204,7 +204,7 @@ std::vector<Positions> MainProcessor::allProjectilesStepSecond ()
 			explosed.insert(i);
 		else
 			projectiles_[i].stepInDirection();
-		output.emplace_back(Positions{PREV_POS,pos,D_POS,{}});
+		output.emplace_back(Positions{PREV_POS,pos});//,D_POS,{}});
 	}
 	for (const auto EXPLOSE: explosed)
 	{

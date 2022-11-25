@@ -165,7 +165,7 @@ std::vector<Positions> GameWorld::allProjectilesStep ()
 			}
 			else
 				projectiles_[i].stepInDirection();
-			output.emplace_back(Positions{PREV_POS, pos, D_POS, {}});
+			output.emplace_back(Positions{PREV_POS, pos});//, D_POS, {}});
 		}
 		else{
 			explosed.insert(i);
@@ -175,7 +175,7 @@ std::vector<Positions> GameWorld::allProjectilesStep ()
 	// TODO некрасиво, поправить
 	for (const auto EXPLOSE: explosed) {
 		const Position EXPL = projectiles_[EXPLOSE];
-		output.emplace_back(Positions{EXPL,EXPL,{},{}});
+		output.emplace_back(Positions{EXPL,EXPL});//,{},{}});
 		projectiles_.remove(EXPLOSE);
 	}
 	return output;

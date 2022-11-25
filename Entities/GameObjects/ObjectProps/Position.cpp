@@ -193,12 +193,12 @@ void Position::reverseDirection() {
 		}
 	}
 }
-
-double Position::calcDistance(const Position &other) const {
-	return std::sqrt((x_ - other.x_) * (x_ - other.x_) +
-	(y_ - other.y_) * (y_ - other.y_) +
-	(z_ - other.z_) * (z_ - other.z_));
-}
+//
+//double Position::calcDistance(const Position &other) const {
+//	return std::sqrt((x_ - other.x_) * (x_ - other.x_) +
+//	(y_ - other.y_) * (y_ - other.y_) +
+//	(z_ - other.z_) * (z_ - other.z_));
+//}
 
 bool Position::isValidByWorldSize (Position world_size) const
 {

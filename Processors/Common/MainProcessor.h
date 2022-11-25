@@ -27,9 +27,9 @@ struct MainProcessor {
 	[[nodiscard]] RenderMoveInfo getPlayerChangedPositions();
 	[[nodiscard]] RenderMoveInfo getNpcChangedPositions();
 	[[nodiscard]] RenderMoveInfo getShoots();
-	GameObject getPlayer() const;
-	[[nodiscard]]Position worldSize() const;
-	void processingLoop();
+//	GameObject getPlayer() const;
+	[[nodiscard]] Position worldSize() const;
+//	void processingLoop();
 	// Используется для заполнения мира, до начала поступления команд, соответственно не страшно.
 	GameObject::Type typeAt(const Position&) const;
 	ManagedVector<Position> projectiles_;

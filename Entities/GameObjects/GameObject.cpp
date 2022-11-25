@@ -41,9 +41,10 @@ GameObject::~GameObject() = default;
 GameObject::GameObject() :
 		type_(GameObject::Type::UNDEFINED),
 		positions_({{-1, -1, 0, Position::Direction::BOT},
-		            {-1, -1, 0, Position::Direction::BOT},
-	                    {-1, -1, 0, Position::Direction::BOT},
-						{-1, -1, 0, Position::Direction::BOT}})
+		            {-1, -1, 0, Position::Direction::BOT}})
+//                 ,
+//	                    {-1, -1, 0, Position::Direction::BOT},
+//						{-1, -1, 0, Position::Direction::BOT}})
 //		field_(nullptr)
 {}
 
@@ -55,7 +56,7 @@ GameObject::GameObject(Position pos, GameObject::Type typo,
 		std::vector<std::vector<GameObject::Type>> *field)
 		:
 		type_(typo),
-		positions_({pos, pos, {0, 0, 0, Position::Direction::BOT},pos})
+		positions_({pos, pos})//, {0, 0, 0, Position::Direction::BOT},pos})
 //		field_(field)
 {}
 
@@ -63,7 +64,7 @@ void GameObject::step() {
 //	TODO using step for player, not move(deltaPosition)
 	positions_.prevPos_ = positions_.curPos_;
 	positions_.curPos_.stepInDirection();
-	positions_.dPos_ = positions_.curPos_-positions_.prevPos_;
+//	positions_.dPos_ = positions_.curPos_-positions_.prevPos_;
 }
 
 void GameObject::rotate (Position::Direction direction)

@@ -52,15 +52,15 @@ struct Position {
 	[[nodiscard]] Directions directionsTo  (const Position &other) const;
 	bool stepInDirection (bool inverse = false);
 	void reverseDirection ();
-	[[nodiscard]] double calcDistance (const Position &other) const;
+//	[[nodiscard]] double calcDistance (const Position &other) const;
 };
 
 
 struct Positions {
 	Position prevPos_;
 	Position curPos_;
-	Position dPos_;
-	Position dstPos_;
+//	Position dPos_;
+//	Position dstPos_;
 };
 
 

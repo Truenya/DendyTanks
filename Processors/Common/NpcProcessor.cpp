@@ -25,7 +25,7 @@ NpcStepData NpcProcessor::step ()
 			if (world_.typeAt(enemy) != GameObject::Type::UNDEFINED)
 			{
 				// сходили - оставили выстрел, вернулись и развернулись  =В
-				step_data.NpcShoots.add({enemy, enemy, {}, {}});
+				step_data.NpcShoots.add({enemy, enemy});//, {}, {}});
 				enemy.reverseDirection();
 				enemy.stepInDirection();
 				enemy.reverseDirection();
@@ -39,7 +39,7 @@ NpcStepData NpcProcessor::step ()
 			enemy.stepInDirection();
 			if (world_.typeAt(enemy) == GameObject::Type::SPACE)
 			{
-				step_data.NpcMooves.add({PREV_POS, enemy, {}, {}});
+				step_data.NpcMooves.add({PREV_POS, enemy});//, {}, {}});
 			}
 			else{
 				enemy.reverseDirection();
@@ -48,7 +48,7 @@ NpcStepData NpcProcessor::step ()
 				enemy.stepInDirection();
 				if (world_.typeAt(enemy) == GameObject::Type::SPACE)
 				{
-					step_data.NpcMooves.add({PREV_POS, enemy, {}, {}});
+					step_data.NpcMooves.add({PREV_POS, enemy});//, {}, {}});
 				}
 				else{
 					enemy.reverseDirection();
