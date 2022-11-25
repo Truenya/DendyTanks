@@ -2,9 +2,10 @@
 // Created by true on 2022-04-29.
 //
 
+
 #include <iostream>
 #include "Game.h"
-
+//#define MAKE_LOG
 
 // Движение на стрелки, стрелять на пробел
 Game::Game(): syncStreamErrors_(std::cerr),
@@ -13,16 +14,19 @@ Game::Game(): syncStreamErrors_(std::cerr),
 				, logsSynchroStream_(logFileForEverything_),
 				renderer_(isCurrentlyWorking_,logsSynchroStream_),
 				processor_(WorldGenerator::generateWorld("labirinth.txt"),logsSynchroStream_)
+				
 #else
-	renderer_(isCurrentlyWorking_),
-	processor_(WorldGenerator::generateWorld("labirinth.txt"))
+              renderer_(fabric_renderer(CONSOLE,isCurrentlyWorking_)),
+              processor_(WorldGenerator::generateWorld("/root/DandyTanks/build/labirinth.txt"))
 #endif
 {
 	isCurrentlyWorking_.store(false);
-	renderer_.setProcessor(&processor_);
+	renderer_->setProcessor(&processor_);
 }
 
 Game::~Game() = default;
+
+#include <assert.h>
 void Game::mainLoop () {
 // Преобразую
 // От SDL ивентов образуется набор команд, которые обрабатываются в потоке процессора
@@ -34,15 +38,24 @@ void Game::mainLoop () {
 //TODO P.P.S. Проверки должны производится в месте, обрабатывающем возможность перемещения, при добавлении в очередь
 // (в отдельном потоке, при добавлении миру в очередь обновленных данных)
 	while(isCurrentlyWorking_.load()){
+		assert(processor_.typeAt(processor_.getPlayer()->getPositions().curPos_) == BaseGameObject::Type::PLAYER);
 		update();
 	}
 }
 
 void Game::start() {
+//	auto cur_time = std::chrono::high_resolution_clock::now();
+//	std::time_t t = std::chrono::system_clock::to_time_t(cur_time);
+//	std::string ts = std::ctime(&t);
+//	ts.resize(ts.size()-1);
+//	logsSynchroStream_ << "Game started at: " << ts << '\n';
+//	logsSynchroStream_.emit();
 	if (!isCurrentlyWorking_.load()) {
 		isCurrentlyWorking_.store(true);
-		renderer_.prepare();
-		thProcessingEvents_ = std::jthread([&](){ renderer_.processingEventsLoop();});
+		renderer_->prepare();
+//		thProcessingCommands_ = std::jthread([&]() { mainLoop(); });
+		thProcessingEvents_ = std::jthread([&](){ renderer_->processingEventsLoop();});
+//		sleep(2);
 		mainLoop();
 	}
 	else{
@@ -54,6 +67,7 @@ void Game::start() {
 void Game::stop() {
 	if (isCurrentlyWorking_.load()) {
 		isCurrentlyWorking_.store(false);
+//		th_ProcessingCommands_.join();
 		thProcessingEvents_.join();
 	}
 	else{
@@ -65,8 +79,7 @@ void Game::stop() {
 void Game::update ()
 {
 	processor_.processProjectilesMoving();
-	processor_.processNpc();
 	processor_.processCommands();
-	renderer_.render();
+	renderer_->render();
 	sched_yield();
 }

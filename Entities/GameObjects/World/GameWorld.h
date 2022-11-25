@@ -7,7 +7,7 @@
 
 #include "vector"
 #include "memory"
-#include "../GameObject.h"
+#include "../BaseGameObject.h"
 #include "../../Utility.h"
 
 struct StepReturn{
@@ -18,39 +18,38 @@ struct StepReturn{
 		MEET_PROJECTILE,
 		OUT_OF_FIELD,
 		UNDEFINED_BEHAVIOR
-	} ret_{UNDEFINED_BEHAVIOR};
-//	Position pos_;
+	} ret_;
+	Position pos_;
 };
 
 class WorldGenerator;
 struct MainProcessor;
-typedef std::vector<std::vector<GameObject::Type>> MyGameWorldField;
+typedef std::vector<std::vector<BaseGameObject>> MyGameWorldField;
 struct GameWorld {
-	GameWorld( unsigned int  x_dim, unsigned int y_dim);
-	~GameWorld();
+	void init(unsigned int x_dim, unsigned int y_dim);
+	std::vector<Positions> update();
 	Position size();
-	GameObject player_;
-	ManagedVector <Position> enemies_;
+	BaseGameObject *player_{nullptr};
 	StepReturn playerStep();
 	bool addProjectile(Position);
 	std::vector<Positions> allProjectilesStep();
-	[[nodiscard]]  GameObject::Type typeAt(Position);
-//	void addPlayerPosChange(Position::Direction direction);
-//	void addProjectile(Position::Direction direction);
-//	std::vector<Positions> update();
+	[[nodiscard]] BaseGameObject::Type typeAt(Position);
+	void addPlayerPosChange(Position::Direction direction);
+	void addProjectile(Position::Direction direction);
 private:
-	[[nodiscard]] GameObject::Type &at(Position);
-	// TODO то что ниже объединить в структурку
-	StepReturn playerStep(const Position &prev_pos, GameObject::Type dst_type, Position &dst_pos);
-	StepReturn projectileStep(const Position &prev_pos, GameObject::Type dst_type, Position &dst_pos);
-    MyGameWorldField field_;
-	ManagedVector<Position> projectiles_;
-//	std::mutex changesMutex_;
+	[[nodiscard]] BaseGameObject &at(Position);
+	std::mutex changesMutex_;
 	ManagedVector<Positions> playerPosChanges_;
 	ManagedVector<Position> newProjectiles_;
+	// TODO то что ниже объединить в структурку
+	StepReturn playerStep(const Position &prev_pos, BaseGameObject::Type dst_type, Position &dst_pos);
+	StepReturn projectileStep(const Position &prev_pos, BaseGameObject::Type dst_type, Position &dst_pos);
+	void swapTypes(const Position &, const Position &);
+    MyGameWorldField field_;
+	ManagedVector<Position> projectiles_;
 	friend WorldGenerator;
 // TODO убираем
-	friend GameObject;
+	friend BaseGameObject;
 };
 
 

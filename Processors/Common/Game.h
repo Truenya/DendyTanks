@@ -11,8 +11,10 @@
 #include <queue>
 #include <thread>
 #include <functional>
-#include "../Graphics/Renderer.h"
+#include "../Graphics/RendererFabric.h"
 #include "MainProcessor.h"
+
+
 
 
 struct Game {
@@ -31,7 +33,7 @@ private:
 	std::ofstream logFileForEverything_;
 	std::osyncstream logsSynchroStream_;
 #endif
-	Renderer renderer_;
+	IRenderer* renderer_;
 	MainProcessor processor_;
 };
 

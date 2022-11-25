@@ -10,8 +10,9 @@
 #include <sstream>
 
 class WorldGenerator {
-	static GameWorld &parseFromString(const std::string&, [[maybe_unused]] GameWorld* ptr);
-
+	//static bool existance;
+	static GameWorld &parseFromString(const std::string& );
+	//static GameWorld world;
 public:
 	static GameWorld &generateWorld(const std::string& map_filepath = "labirinth.txt");
 };
