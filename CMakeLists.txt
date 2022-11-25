@@ -17,6 +17,8 @@ project(ssdl)
 #libs
 INCLUDE(FindPkgConfig)
 pkg_check_modules(SDL REQUIRED sdl2)
+#pkg_check_modules(tcmalloc REQUIRED libtcmalloc)
+#pkg_check_modules(gtest REQUIRED gtest)
 
 
 #settings
@@ -57,4 +59,4 @@ endif (logging_game)
 add_executable(ssdl ${mIncludes} ${mSources} ${mEntityIncludes} ${mEntitySources} ${mProcessorsIncludes} ${mProcessorsSources} Processors/Common/NpcProcessor.cpp Processors/Common/NpcProcessor.h)
 
 #linking
-target_link_libraries(ssdl SDL2 SDL2_test SDL2_image)
+target_link_libraries(ssdl  SDL2 SDL2_test SDL2_image)# tcmalloc gtest)

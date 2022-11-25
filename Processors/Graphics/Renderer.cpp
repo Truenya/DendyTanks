@@ -347,22 +347,25 @@ void Renderer::fillRectByPosition (SDL_Rect &dstrect, int i, int j) const
 	switch (type)
 	{
 		case GameObject::Type::WALL:
-			SDL_RenderCopy(renderData_.sdlRenderer_, renderData_.sdlWallTexture_, nullptr, &dstrect);
+			if( SDL_RenderCopy(renderData_.sdlRenderer_, renderData_.sdlWallTexture_, nullptr, &dstrect))
+				throw std::runtime_error("Cannot render wall");
 			break;
 		case GameObject::Type::PLAYER:
-			SDL_RenderCopy(renderData_.sdlRenderer_, renderData_.sdlTankBottomTextures_, &renderData_.playerRect_, &dstrect);
+			if(SDL_RenderCopy(renderData_.sdlRenderer_, renderData_.sdlTankBottomTextures_, &renderData_.playerRect_, &dstrect))
+				throw std::runtime_error("Cannot render player");
 			break;
 		case GameObject::Type::ENEMY:
 		{
 			SDL_Rect enemy = renderData_.enemyRect_;
 			enemy.x += enemy.w;
 			enemy.y += enemy.h;
-			SDL_RenderCopy(renderData_.sdlRenderer_, renderData_.sdlTankBottomTextures_, &enemy,
-					&dstrect);
+			if(SDL_RenderCopy(renderData_.sdlRenderer_, renderData_.sdlTankBottomTextures_, &enemy, &dstrect))
+				throw std::runtime_error("Cannot render enemy");
 			break;
 		}
 		case GameObject::Type::SPACE:
-			SDL_RenderCopy(renderData_.sdlRenderer_, renderData_.sdlFillTexture_, nullptr, &dstrect);
+			if(SDL_RenderCopy(renderData_.sdlRenderer_, renderData_.sdlFillTexture_, nullptr, &dstrect))
+				throw std::runtime_error("Cannot render space");
 			break;
 		default:
 			throw std::logic_error ("Trying to render unknown object");
@@ -589,7 +592,7 @@ void Renderer::prepare ()
 	init();
 	load();
 	// Синхронизация с тем, чтобы быть уверенным, что все корректно прогрузилось перед отрисовкой.
-	SDL_Delay(1);
+	SDL_Delay(2000);
 }
 
 Renderer::~Renderer ()
