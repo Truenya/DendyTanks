@@ -7,7 +7,7 @@
 
 #include "vector"
 #include "memory"
-#include "../BaseGameObject.h"
+#include "../GameObject.h"
 #include "../../Utility.h"
 
 struct StepReturn{
@@ -18,38 +18,39 @@ struct StepReturn{
 		MEET_PROJECTILE,
 		OUT_OF_FIELD,
 		UNDEFINED_BEHAVIOR
-	} ret_;
-	Position pos_;
+	} ret_{UNDEFINED_BEHAVIOR};
+//	Position pos_;
 };
 
 class WorldGenerator;
 struct MainProcessor;
-typedef std::vector<std::vector<BaseGameObject>> MyGameWorldField;
+typedef std::vector<std::vector<GameObject::Type>> MyGameWorldField;
 struct GameWorld {
-	void init(unsigned int x_dim, unsigned int y_dim);
-	std::vector<Positions> update();
+	GameWorld( unsigned int  x_dim, unsigned int y_dim);
+	~GameWorld();
 	Position size();
-	BaseGameObject *player_{nullptr};
+	GameObject player_;
+	ManagedVector <Position> enemies_;
 	StepReturn playerStep();
 	bool addProjectile(Position);
 	std::vector<Positions> allProjectilesStep();
-	[[nodiscard]] BaseGameObject::Type typeAt(Position);
-	void addPlayerPosChange(Position::Direction direction);
-	void addProjectile(Position::Direction direction);
+	[[nodiscard]]  GameObject::Type typeAt(Position);
+//	void addPlayerPosChange(Position::Direction direction);
+//	void addProjectile(Position::Direction direction);
+//	std::vector<Positions> update();
 private:
-	[[nodiscard]] BaseGameObject &at(Position);
-	std::mutex changesMutex_;
-	ManagedVector<Positions> playerPosChanges_;
-	ManagedVector<Position> newProjectiles_;
+	[[nodiscard]] GameObject::Type &at(Position);
 	// TODO то что ниже объединить в структурку
-	StepReturn playerStep(const Position &prev_pos, BaseGameObject::Type dst_type, Position &dst_pos);
-	StepReturn projectileStep(const Position &prev_pos, BaseGameObject::Type dst_type, Position &dst_pos);
-	void swapTypes(const Position &, const Position &);
+	StepReturn playerStep(const Position &prev_pos, GameObject::Type dst_type, Position &dst_pos);
+	StepReturn projectileStep(const Position &prev_pos, GameObject::Type dst_type, Position &dst_pos);
     MyGameWorldField field_;
 	ManagedVector<Position> projectiles_;
+//	std::mutex changesMutex_;
+	ManagedVector<Positions> playerPosChanges_;
+	ManagedVector<Position> newProjectiles_;
 	friend WorldGenerator;
 // TODO убираем
-	friend BaseGameObject;
+	friend GameObject;
 };
 
 

@@ -3,23 +3,25 @@
 //
 #include "Renderer.h"
 #include <SDL2/SDL_image.h>
-#include "../../Entities/Commands/BaseCommand.h"
+#include <thread>
 
 void Renderer::processingEventsLoop ()
 {
 	while (work_.load())
 	{
 		processEvents();
+		std::this_thread::yield();
 	}
 }
 
 bool Renderer::render ()
 {
 	// Замерим время выполнения
-	const long int cur_time_ms = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
+	const long int CUR_TIME_MS = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
+	renderNpcMove();
 	renderPlayerMove();
-	renderPlayerShoots();
-	return makeSomePauseIfNeeded(cur_time_ms);
+	renderShoots();
+	return makeSomePauseIfNeeded(CUR_TIME_MS);
 }
 
 bool Renderer::makeSomePauseIfNeeded (const long cur_time_ms)
@@ -31,10 +33,9 @@ bool Renderer::makeSomePauseIfNeeded (const long cur_time_ms)
 	{
 		// Если прошлая отрисовка не была проведена позади в будущем ;D
 		if (MS_TIME_FROM_LAST_RENDER > 0)
-		{	
-			std::string frame(std::to_string (renderData_.fps_));
-			auto fps = frame.c_str();
-			SDLTest_DrawString(renderData_.sdlRenderer_,renderData_.screenWidth_-100,20, fps);
+		{
+//			const char* fps = std::to_string(renderData_.fps_).c_str();
+//			SDLTest_DrawString(renderData_.sdlRenderer_,static_cast<int>(renderData_.screenWidth_)-100,20, fps);
 			const long int MILISECONDS_DELAY = renderData_.millisecondsPerFrame_ - MS_TIME_FROM_LAST_RENDER;
 			updateFps(FpsChangeDirection::INCREMENT);
 			rendered_ = false;
@@ -79,28 +80,38 @@ void Renderer::processEvents ()
 		if (renderData_.sdlEvent_.type == SDL_QUIT) { work_.store(false);  return;}
 		if (renderData_.sdlEvent_.type != SDL_KEYDOWN)	continue;
 		const auto PRESSED_KEY = renderData_.sdlEvent_.key.keysym.sym;
+		Positions positions;
 		switch (PRESSED_KEY)
 		{
-//			case SDLK_UP: processor_->addPlayerCommand({processor_->getPlayer(),BaseCommand::Type::PLAYER_MOVE_COMMAND,
-//					{0, -1, 0, Position::Direction::TOP}}); break;
-//			case SDLK_DOWN: processor_->addPlayerCommand({processor_->getPlayer(), BaseCommand::Type::PLAYER_MOVE_COMMAND,
-//					{0, 1, 0, Position::Direction::BOT}}); break;
-//			case SDLK_RIGHT: processor_->addPlayerCommand({processor_->getPlayer(),BaseCommand::Type::PLAYER_MOVE_COMMAND,
-//					{1, 0, 0, Position::Direction::RIGHT}}); break;
-//			case SDLK_LEFT: processor_->addPlayerCommand({processor_->getPlayer(), BaseCommand::Type::PLAYER_MOVE_COMMAND,
-//					{-1, 0, 0, Position::Direction::LEFT}}); break;
-//			case SDLK_SPACE: processor_->addPlayerCommand({processor_->getPlayer(), BaseCommand::Type::SHOOT_COMMAND,{}});
-//				break;
-			case SDLK_UP: processor_->addPlayerCommand({BaseCommand::Type::PLAYER_MOVE_COMMAND,
-						{{},{0, -1, 0, Position::Direction::TOP},{},{}}}); break;
-			case SDLK_DOWN: processor_->addPlayerCommand({ BaseCommand::Type::PLAYER_MOVE_COMMAND,
-						{{},{0, 1, 0, Position::Direction::BOT},{}, {}}}); break;
-			case SDLK_RIGHT: processor_->addPlayerCommand({BaseCommand::Type::PLAYER_MOVE_COMMAND,
-						{{},{1, 0, 0, Position::Direction::RIGHT},{},{}}}); break;
-			case SDLK_LEFT: processor_->addPlayerCommand({BaseCommand::Type::PLAYER_MOVE_COMMAND,\
-						{{},{-1, 0, 0, Position::Direction::LEFT},{},{}}}); break;
-			case SDLK_SPACE: processor_->addPlayerCommand({ BaseCommand::Type::SHOOT_COMMAND,{}});
+			case SDLK_UP:
+			{
+				positions.curPos_ = {0, -1, 0, Position::Direction::TOP};
+				processor_->addCommand({BaseCommand::Type::PLAYER_MOVE_COMMAND, positions});
 				break;
+			}
+			case SDLK_DOWN:
+			{
+				positions.curPos_ = {0, 1, 0, Position::Direction::BOT};
+				processor_->addCommand({BaseCommand::Type::PLAYER_MOVE_COMMAND, positions});
+				break;
+			}
+			case SDLK_RIGHT:
+			{
+				positions.curPos_ = {1, 0, 0, Position::Direction::RIGHT};
+				processor_->addCommand({BaseCommand::Type::PLAYER_MOVE_COMMAND, positions});
+				break;
+			}
+			case SDLK_LEFT:
+			{
+				positions.curPos_ = {-1, 0, 0, Position::Direction::LEFT};
+				processor_->addCommand({BaseCommand::Type::PLAYER_MOVE_COMMAND, positions});
+				break;
+			}
+			case SDLK_SPACE:
+			{
+				processor_->addCommand({BaseCommand::Type::PLAYER_SHOOT_COMMAND, {}});
+				break;
+			}
 			default:
 				continue;
 		}
@@ -315,6 +326,7 @@ void Renderer::fillMap ()
 	prepareTextures();
 
 	SDL_Rect dstrect;
+	SDL_Delay(300);
 	for (int i = 0; i < renderData_.worldSize_.x_; ++i)
 	{
 		for (int j = 0; j < renderData_.worldSize_.y_; ++j)
@@ -322,27 +334,38 @@ void Renderer::fillMap ()
 			fillRectByPosition(dstrect, i, j);
 		}
 	}
-	SDL_RenderPresent(renderData_.sdlRenderer_);
 
-	SDL_Delay(15);
+	SDL_RenderPresent(renderData_.sdlRenderer_);
 }
 
 void Renderer::fillRectByPosition (SDL_Rect &dstrect, int i, int j) const
 {
 	auto type = processor_->typeAt({i, j});
-	if (type == BaseGameObject::Type::UNDEFINED)
+	if (type == GameObject::Type::UNDEFINED)
 		throw std::logic_error ("Trying to render unknown object");
 	setScreenPosition(dstrect, i, j);
 	switch (type)
 	{
-		case BaseGameObject::Type::WALL:
-			SDL_RenderCopy(renderData_.sdlRenderer_, renderData_.sdlWallTexture_, nullptr, &dstrect);
+		case GameObject::Type::WALL:
+			if( SDL_RenderCopy(renderData_.sdlRenderer_, renderData_.sdlWallTexture_, nullptr, &dstrect))
+				throw std::runtime_error("Cannot render wall");
 			break;
-		case BaseGameObject::Type::PLAYER:
-			SDL_RenderCopy(renderData_.sdlRenderer_, renderData_.sdlTankBottomTextures_, &renderData_.playerRect_, &dstrect);
+		case GameObject::Type::PLAYER:
+			if(SDL_RenderCopy(renderData_.sdlRenderer_, renderData_.sdlTankBottomTextures_, &renderData_.playerRect_, &dstrect))
+				throw std::runtime_error("Cannot render player");
 			break;
-		case BaseGameObject::Type::SPACE:
-			SDL_RenderCopy(renderData_.sdlRenderer_, renderData_.sdlFillTexture_, nullptr, &dstrect);
+		case GameObject::Type::ENEMY:
+		{
+			SDL_Rect enemy = renderData_.enemyRect_;
+			enemy.x += enemy.w;
+			enemy.y += enemy.h;
+			if(SDL_RenderCopy(renderData_.sdlRenderer_, renderData_.sdlTankBottomTextures_, &enemy, &dstrect))
+				throw std::runtime_error("Cannot render enemy");
+			break;
+		}
+		case GameObject::Type::SPACE:
+			if(SDL_RenderCopy(renderData_.sdlRenderer_, renderData_.sdlFillTexture_, nullptr, &dstrect))
+				throw std::runtime_error("Cannot render space");
 			break;
 		default:
 			throw std::logic_error ("Trying to render unknown object");
@@ -351,48 +374,50 @@ void Renderer::fillRectByPosition (SDL_Rect &dstrect, int i, int j) const
 
 void Renderer::setScreenPosition (SDL_Rect &dstrect, int i, int j) const
 {
-	dstrect.x = i * renderData_.rectSize_;
-	dstrect.y = j * renderData_.rectSize_;
-	dstrect.w = dstrect.h = renderData_.rectSize_;
+	dstrect.x = static_cast<int> (i * renderData_.rectSize_);
+	dstrect.y = static_cast<int> (j * renderData_.rectSize_);
+	dstrect.w = dstrect.h = static_cast<int> (renderData_.rectSize_);
 }
 
 void Renderer::prepareTextures ()
 {
-	SDL_RenderCopy(renderData_.sdlRenderer_, renderData_.sdlFillTexture_, nullptr, nullptr);
+	if(SDL_RenderCopy(renderData_.sdlRenderer_, renderData_.sdlFillTexture_, nullptr, nullptr))
+		throw std::runtime_error("cannot prepare texture");
 	renderData_.rectSize_ = (renderData_.screenHeight_ / renderData_.worldSize_.y_) - 1;
 	SDL_Point player_texture_size;
-	SDL_QueryTexture(renderData_.sdlTankBottomTextures_, NULL, NULL, &player_texture_size.x, &player_texture_size.y);
+	if(SDL_QueryTexture(renderData_.sdlTankBottomTextures_, nullptr, nullptr, &player_texture_size.x, &player_texture_size.y))
+		throw std::runtime_error("cannot query texture");
 	renderData_.playerRect_.w = player_texture_size.x / 3 - 1;
 	renderData_.playerRect_.h = player_texture_size.y / 3 - 1;
+	renderData_.enemyRect_.w = player_texture_size.x / 3 - 1;
+	renderData_.enemyRect_.h = player_texture_size.y / 3 - 1;
 }
-#include <list>
-void Renderer::renderPlayerShoots ()
+
+void Renderer::renderShoots ()
 {
 	SDL_Rect fillrect;
 	SDL_Rect dstrect;
-	dstrect.w = dstrect.h = fillrect.w = fillrect.h = renderData_.rectSize_;
+	dstrect.w = dstrect.h = fillrect.w = fillrect.h = static_cast<int> (renderData_.rectSize_);
 	// TODO некрасиво, поправить
 	for (size_t i = 0; i < explosed_.count() ; ++i)
 	{
 		if (!explosed_[i].second)
 		{
 			const Position pos = explosed_[i].first;
-			fillrect.x = pos.x_ * renderData_.rectSize_;
-			fillrect.y = pos.y_ * renderData_.rectSize_;
+			fillrect.x = static_cast<int> ( pos.x_ * renderData_.rectSize_);
+			fillrect.y = static_cast<int> (pos.y_ * renderData_.rectSize_);
 			SDL_RenderCopy(renderData_.sdlRenderer_, renderData_.sdlFillTexture_, nullptr, &fillrect);
 			explosed_.remove(i);
 		}
 		else{
 			if (rendered_)
 				explosed_[i].second--;
-			else
-				std::cout << "smth\n";
 		}
 	}
 	auto shoots = processor_->getShoots();
-	if(!shoots.size()) return;
+	if(shoots.empty()) return;
 	SDL_Point explosion_texture_size;
-	SDL_QueryTexture(renderData_.sdlExplosionTextures_, NULL, NULL, &explosion_texture_size.x, &explosion_texture_size.y);
+	SDL_QueryTexture(renderData_.sdlExplosionTextures_, nullptr, nullptr, &explosion_texture_size.x, &explosion_texture_size.y);
 
 	SDL_Rect explosion_rect;
 	SDL_Rect projectile_rect;
@@ -404,10 +429,10 @@ void Renderer::renderPlayerShoots ()
 
 	for (const auto &shoot: shoots)
 	{
-		dstrect.x = shoot.second.x_ * renderData_.rectSize_;
-		dstrect.y = shoot.second.y_ * renderData_.rectSize_;
-		fillrect.x = shoot.first.x_ * renderData_.rectSize_;
-		fillrect.y = shoot.first.y_ * renderData_.rectSize_;
+		dstrect.x = static_cast<int> (shoot.second.x_ * renderData_.rectSize_);
+		dstrect.y = static_cast<int> (shoot.second.y_ * renderData_.rectSize_);
+		fillrect.x = static_cast<int> (shoot.first.x_ * renderData_.rectSize_);
+		fillrect.y = static_cast<int> (shoot.first.y_ * renderData_.rectSize_);
 		if (shoot.first == shoot.second)
 		{
 			explosed_.add({shoot.first,renderData_.fps_});
@@ -424,16 +449,16 @@ void Renderer::renderPlayerShoots ()
 
 void Renderer::renderPlayerMove ()
 {
-	auto changed_positions = processor_->getChangedPositions();
+	auto changed_positions = processor_->getPlayerChangedPositions();
 	SDL_Rect dstrect;
 	SDL_Rect prevrect;
 	for (const auto &positions: changed_positions)
 	{
-		prevrect.x = positions.first.x_ * renderData_.rectSize_;
-		prevrect.y = positions.first.y_ * renderData_.rectSize_;
-		dstrect.x = positions.second.x_ * renderData_.rectSize_;
-		dstrect.y = positions.second.y_ * renderData_.rectSize_;
-		dstrect.w = dstrect.h = prevrect.w = prevrect.h = renderData_.rectSize_;
+		prevrect.x = static_cast<int> (positions.first.x_ * renderData_.rectSize_);
+		prevrect.y = static_cast<int> (positions.first.y_ * renderData_.rectSize_);
+		dstrect.x = static_cast<int> (positions.second.x_ * renderData_.rectSize_);
+		dstrect.y = static_cast<int> (positions.second.y_ * renderData_.rectSize_);
+		dstrect.w = dstrect.h = prevrect.w = prevrect.h = static_cast<int> (renderData_.rectSize_);
 		switch (positions.second.direction_)
 		{
 			case Position::Direction::BOT:
@@ -450,8 +475,8 @@ void Renderer::renderPlayerMove ()
 			{
 				// TODO вынести их в поля класса
 				SDL_Rect top_player_rect = renderData_.playerRect_;
-				top_player_rect.x += top_player_rect.w + top_player_rect.w + renderData_.rectSize_;
-				top_player_rect.y += top_player_rect.h + top_player_rect.h;
+				top_player_rect.x += top_player_rect.w * 2 + static_cast<int> (renderData_.rectSize_);
+				top_player_rect.y += top_player_rect.h * 2;
 				top_player_rect.w = static_cast<int> (top_player_rect.w * 1.1);
 				if (SDL_RenderCopy(renderData_.sdlRenderer_, renderData_.sdlTankTopTextures_, &top_player_rect, &dstrect))
 				{
@@ -462,9 +487,9 @@ void Renderer::renderPlayerMove ()
 			case Position::Direction::LEFT:
 			{
 				SDL_Rect left_player_rect = renderData_.playerRect_;
-				left_player_rect.x += left_player_rect.w + left_player_rect.w + renderData_.rectSize_ +
-						static_cast<int>(renderData_.rectSize_ * 1.5);
-				left_player_rect.y += left_player_rect.h + left_player_rect.h - renderData_.rectSize_;
+				left_player_rect.x += left_player_rect.w + left_player_rect.w + static_cast<int> (renderData_.rectSize_) +
+						static_cast<int>(static_cast<double>(renderData_.rectSize_) * 1.5);
+				left_player_rect.y += left_player_rect.h + left_player_rect.h - static_cast<int> (renderData_.rectSize_);
 				if (SDL_RenderCopy(renderData_.sdlRenderer_, renderData_.sdlTankLeftTextures_, &left_player_rect, &dstrect))
 				{
 					std::cout << "Can't render left direction: " << SDL_GetError() << std::endl;
@@ -481,11 +506,81 @@ void Renderer::renderPlayerMove ()
 				}
 				break;
 			}
-			case Position::Direction::UNDEFINED:{
-				throw std::logic_error("Move in unknow direction");
+			case Position::Direction::EQUAL:{
+				throw std::logic_error("Move in unknown direction");
 			}
 		}
-		SDL_RenderCopy(renderData_.sdlRenderer_, renderData_.sdlFillTexture_, nullptr, &prevrect);
+		if ((dstrect.x != prevrect.x) || (dstrect.y != prevrect.y))
+			SDL_RenderCopy(renderData_.sdlRenderer_, renderData_.sdlFillTexture_, nullptr, &prevrect);
+	}
+}
+
+void Renderer::renderNpcMove ()
+{
+	auto changed_positions = processor_->getNpcChangedPositions();
+	SDL_Rect dstrect;
+	SDL_Rect prevrect;
+	for (const auto &positions: changed_positions)
+	{
+		prevrect.x = static_cast<int> (positions.first.x_  * renderData_.rectSize_);
+		prevrect.y = static_cast<int> (positions.first.y_  * renderData_.rectSize_);
+		dstrect.x  = static_cast<int> (positions.second.x_ * renderData_.rectSize_);
+		dstrect.y  = static_cast<int> (positions.second.y_ * renderData_.rectSize_);
+		dstrect.w  = dstrect.h = prevrect.w = prevrect.h = static_cast<int> (renderData_.rectSize_);
+		switch (positions.second.direction_)
+		{
+			case Position::Direction::BOT:
+			{
+				SDL_Rect enemy = renderData_.enemyRect_;
+				enemy.x += enemy.w;
+				enemy.y += enemy.h;
+				if (SDL_RenderCopy(renderData_.sdlRenderer_, renderData_.sdlTankBottomTextures_,
+						&enemy, &dstrect))
+				{
+					std::cout << "Can't render bottom direction: " << SDL_GetError() << std::endl;
+				}
+				break;
+			}
+				// FIXME не понимаю как я квадраты тут настраивал, надо отладиться получше с этими квадратами
+			case Position::Direction::TOP:
+			{
+				// TODO вынести их в поля класса
+				SDL_Rect enemy = renderData_.enemyRect_;
+				enemy.x += enemy.w * 2 + static_cast<int> (renderData_.rectSize_);
+				enemy.y += enemy.h * 2;
+				if (SDL_RenderCopy(renderData_.sdlRenderer_, renderData_.sdlTankTopTextures_, &enemy, &dstrect))
+				{
+					std::cout << "Can't render top direction: " << SDL_GetError() << std::endl;
+				}
+				break;
+			}
+			case Position::Direction::LEFT:
+			{
+				SDL_Rect enemy = renderData_.enemyRect_;
+				enemy.x += enemy.w * 2 + static_cast<int> (renderData_.rectSize_);
+				enemy.y += enemy.h ;
+				if (SDL_RenderCopy(renderData_.sdlRenderer_, renderData_.sdlTankLeftTextures_, &enemy, &dstrect))
+				{
+					std::cout << "Can't render left direction: " << SDL_GetError() << std::endl;
+				}
+				break;
+			}
+			case Position::Direction::RIGHT:
+			{
+				SDL_Rect enemy = renderData_.enemyRect_;
+				enemy.h = static_cast<int>(enemy.h * 0.8);
+				if (SDL_RenderCopy(renderData_.sdlRenderer_, renderData_.sdlTankRightTextures_, &enemy, &dstrect))
+				{
+					std::cout << "Can't render bottom direction: " << SDL_GetError() << std::endl;
+				}
+				break;
+			}
+			case Position::Direction::EQUAL:{
+				throw std::logic_error("Move in unknown direction");
+			}
+		}
+		if ((dstrect.x != prevrect.x) || (dstrect.y != prevrect.y))
+			SDL_RenderCopy(renderData_.sdlRenderer_, renderData_.sdlFillTexture_, nullptr, &prevrect);
 	}
 }
 
@@ -498,8 +593,6 @@ void Renderer::prepare ()
 {
 	init();
 	load();
-	// Синхронизация с тем, чтобы быть уверенным, что все корректно прогрузилось перед отрисовкой.
-	SDL_Delay(1);
 }
 
 Renderer::~Renderer ()
