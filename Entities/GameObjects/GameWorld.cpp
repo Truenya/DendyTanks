@@ -10,15 +10,15 @@ GameWorld::GameWorld(unsigned int x_dim, unsigned int y_dim)
 	if(x_dim > 10000 || y_dim > 10000)
 		throw std::logic_error ("trying to construct too big world");
 	field_.resize(x_dim);
-	int x = 0;
+//	int x = 0;
 	for (auto &row: field_) {
 		row.resize(y_dim);
-		int y = 0;
+//		int y = 0;
 		for (auto &point: row) {
 			point = GameObject::Type::UNDEFINED;
-			++y;
+//			++y;
 		}
-		++x;
+//		++x;
 	}
 	projectiles_.init(100);
 }
@@ -35,7 +35,7 @@ GameObject::Type &GameWorld::at(Position pos) {
  	return field_[pos.x_][pos.y_];
 }
 
-StepReturn GameWorld::playerStep (const Position &prev_pos, GameObject::Type dst_type, Position &dst_pos)
+StepReturn GameWorld::tankStep (const Position &prev_pos, GameObject::Type dst_type, Position &dst_pos)
 {
 	if (!dst_pos)
 //		return {StepReturn::UNDEFINED_BEHAVIOR,prev_pos};
@@ -44,13 +44,15 @@ StepReturn GameWorld::playerStep (const Position &prev_pos, GameObject::Type dst
 	{
 		case GameObject::Type::SPACE:
 		{
+			const auto TYPE = field_[prev_pos.x_][prev_pos.y_];
+			auto tank =  GameObject(prev_pos, TYPE);
 			// Дадим объекту знать свои координаты
-			player_.step();
+			tank.step();
 			assert(at(dst_pos) == GameObject::Type::SPACE);
-			assert(at(prev_pos) == GameObject::Type::PLAYER);
+			assert(at(prev_pos) == TYPE);
 			// Скажем миру, что в мире объекты поменялись местами
 			std::swap(at(prev_pos), at(dst_pos));
-			assert(at(dst_pos) == GameObject::Type::PLAYER);
+			assert(at(dst_pos) == TYPE);
 			assert(at(prev_pos) == GameObject::Type::SPACE);
 			return {StepReturn::SUCCESS};
 //			return {StepReturn::SUCCESS, dst_pos};
@@ -59,10 +61,11 @@ StepReturn GameWorld::playerStep (const Position &prev_pos, GameObject::Type dst
 		{
 			at(prev_pos) = GameObject::Type::SPACE;
 			at(dst_pos) = GameObject::Type::SPACE;
-			// TODO projectile meets enemy
 			return {StepReturn::SUCCESS};
 //			return {StepReturn::SUCCESS, dst_pos};
 		}
+		case GameObject::Type::ENEMY:
+			[[fallthrough]];
 		case GameObject::Type::WALL:
 		{
 //			return {StepReturn::MEET_WALL, prev_pos};
@@ -76,8 +79,9 @@ StepReturn GameWorld::playerStep (const Position &prev_pos, GameObject::Type dst
 StepReturn GameWorld::projectileStep (const Position &prev_pos, GameObject::Type dst_type, Position &dst_pos)
 {
 	const auto PREV_TYPE = typeAt(prev_pos);
-	if (PREV_TYPE != GameObject::Type::PROJECTILE)
 	// FIXME он сюда заходить не должен, если в мире там SPACE
+	// скорее всего проблема в том, что один выстрел взорвал другого
+	if (PREV_TYPE != GameObject::Type::PROJECTILE)
 		projectiles_.remove(prev_pos);
 	switch (dst_type)
 	{
@@ -85,7 +89,7 @@ StepReturn GameWorld::projectileStep (const Position &prev_pos, GameObject::Type
 		{
 			const auto TYPE = typeAt(prev_pos);
 			assert(TYPE != GameObject::Type::PLAYER);
-			assert(typeAt(dst_pos) != GameObject::Type::PLAYER);
+			assert(typeAt(dst_pos) != GameObject::Type::PLAYER); // В смысле мы в другого игрока выстрелить не можем?
 			// Дадим объекту знать свои координаты
 			dst_pos.reverseDirection();
 			std::swap(at(prev_pos), at(dst_pos));
@@ -96,6 +100,8 @@ StepReturn GameWorld::projectileStep (const Position &prev_pos, GameObject::Type
 		}
 		case GameObject::Type::PROJECTILE:
 		{
+			if (dst_pos.direction_ == prev_pos.direction_)
+				return {StepReturn::SUCCESS};
 //          FIXME после взрыва не уничтожаются в мире оба снаряда, один из них повисает навсегда
 			at(prev_pos) = GameObject::Type::SPACE;
 			at(dst_pos) = GameObject::Type::SPACE;
@@ -129,20 +135,35 @@ StepReturn GameWorld::projectileStep (const Position &prev_pos, GameObject::Type
 //	std::swap(at(pos).type_,at(dst_pos).type_);
 //}
 
-StepReturn GameWorld::playerStep ()
+StepReturn GameWorld::step (Positions pos)
 {
-	// Check is new pos valid
-	auto dst_pos = player_.getPositions().curPos_;
-	const auto POS = dst_pos;
-	const auto PREV_TYPE = typeAt(POS);
-	assert(PREV_TYPE == GameObject::Type::PLAYER);
+	auto dst_pos = pos.curPos_;
+	const auto PREV_POS = dst_pos;
+	const auto PREV_TYPE = typeAt(PREV_POS);
+	assert((PREV_TYPE == GameObject::Type::PLAYER)||(PREV_TYPE == GameObject::Type::ENEMY));
 	dst_pos.stepInDirection();
+	// Check is new pos valid
 	if (!dst_pos || !dst_pos.isValidByWorldSize(size()))
 		return {StepReturn::OUT_OF_FIELD};
 	const auto DST_TYPE = typeAt(dst_pos);
-	dst_pos.direction_ = POS.direction_;
-	return playerStep(POS,DST_TYPE,dst_pos);
+	dst_pos.direction_ = PREV_POS.direction_;
+	return tankStep (PREV_POS, DST_TYPE, dst_pos);
 }
+
+//StepReturn GameWorld::playerStep ()
+//{
+//	auto dst_pos = player_.getPositions().curPos_;
+//	const auto PREV_POS = dst_pos;
+//	const auto PREV_TYPE = typeAt(PREV_POS);
+//	assert(PREV_TYPE == GameObject::Type::PLAYER);
+//	dst_pos.stepInDirection();
+//	// Check is new pos valid
+//	if (!dst_pos || !dst_pos.isValidByWorldSize(size()))
+//		return {StepReturn::OUT_OF_FIELD};
+//	const auto DST_TYPE = typeAt(dst_pos);
+//	dst_pos.direction_ = PREV_POS.direction_;
+//	return tankStep (PREV_POS, DST_TYPE, dst_pos);
+//}
 #include <unordered_set>
 std::vector<Positions> GameWorld::allProjectilesStep ()
 {
@@ -153,7 +174,7 @@ std::vector<Positions> GameWorld::allProjectilesStep ()
 	{
 		auto pos = projectiles_[i];
 		const Position PREV_POS = pos;
-		if (pos.stepInDirection() && pos.isValidByWorldSize(size()))
+		if (pos.stepInDirection() && pos.isValidByWorldSize(size()) && pos.isValid())
 		{
 //			const auto D_POS = pos - PREV_POS;
 			auto s_r = projectileStep(PREV_POS, typeAt(pos), pos);
@@ -193,6 +214,14 @@ bool GameWorld::addProjectile (Position pos)
 	return false;
 }
 
+#include "Processors/Utils.h"
+std::string GameWorld::addTank(const GameObject& tank){
+	std::string uid = uuid::generate_uuid_v4();
+	tanks_[uid] = tank;
+	if(tank.type_ == GameObject::Type::PLAYER) my_uuid() = uid;
+	return uid;
+}
+
 //std::vector<Positions> GameWorld::update ()
 //{
 //	// Изменения проходят на каждой итерации цикла (mainLoop).
@@ -203,7 +232,7 @@ bool GameWorld::addProjectile (Position pos)
 //	const auto PREV_POS = player_->getPositions().curPos_;
 //	assert(PREV_POS == LAST_MOVE_COMMAND.prevPos_);
 //
-//	auto ret = playerStep();
+//	auto ret = tankStep();
 //	if (ret.ret_ == StepReturn::SUCCESS)
 //	{
 //		assert(PREV_POS == player_->getPositions().prevPos_);

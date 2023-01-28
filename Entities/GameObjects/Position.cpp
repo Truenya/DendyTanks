@@ -192,6 +192,30 @@ void Position::reverseDirection() {
 		}
 	}
 }
+
+void Position::rotateDirection() {
+	switch (direction_) {
+		case Direction::TOP:{
+			direction_ = Direction::RIGHT;
+			break;
+		}
+		case Direction::BOT:{
+			direction_ = Direction::LEFT;
+			break;
+		}
+		case Direction::LEFT:{
+			direction_ = Direction::TOP;
+			break;
+		}
+		case Direction::RIGHT:{
+			direction_ = Direction::BOT;
+			break;
+		}
+		case Direction::EQUAL:{
+			throw std::logic_error("Move in unknow direction");
+		}
+	}
+}
 //
 //double Position::calcDistance(const Position &other) const {
 //	return std::sqrt((x_ - other.x_) * (x_ - other.x_) +

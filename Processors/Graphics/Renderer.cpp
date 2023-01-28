@@ -10,67 +10,22 @@ void Renderer::processingEventsLoop ()
 	while (work_.load())
 	{
 		processEvents();
-		std::this_thread::yield();
+		std::this_thread::sleep_for(std::chrono::milliseconds(1000/15)); // 15 действий в секунду норм наверное
 	}
 }
 
 bool Renderer::render ()
 {
+	typedef std::chrono::high_resolution_clock Clock;
 	// Замерим время выполнения
 	const long int CUR_TIME_MS = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
+	rendered_ = fps_.makeSomePauseIfNeeded (CUR_TIME_MS);
 	renderNpcMove();
 	renderPlayerMove();
 	renderShoots();
-	return makeSomePauseIfNeeded(CUR_TIME_MS);
-}
-
-bool Renderer::makeSomePauseIfNeeded (const long cur_time_ms)
-{
-	// С прошлой отрисовки прошло сколько-то милисекунд
-	const long int MS_TIME_FROM_LAST_RENDER = cur_time_ms - renderData_.prevRender_;
-	// Чаще чем 30 раз в секунду рендерить не будем
-	if (MS_TIME_FROM_LAST_RENDER < renderData_.millisecondsPerFrame_)
-	{
-		// Если прошлая отрисовка не была проведена позади в будущем ;D
-		if (MS_TIME_FROM_LAST_RENDER > 0)
-		{
-//			const char* fps = std::to_string(renderData_.fps_).c_str();
-//			SDLTest_DrawString(renderData_.sdlRenderer_,static_cast<int>(renderData_.screenWidth_)-100,20, fps);
-			const long int MILISECONDS_DELAY = renderData_.millisecondsPerFrame_ - MS_TIME_FROM_LAST_RENDER;
-			updateFps(FpsChangeDirection::INCREMENT);
-			rendered_ = false;
-			if (MILISECONDS_DELAY < 1000)
-			{
-				SDL_Delay(MILISECONDS_DELAY);
-				return false;
-			}
-		}
-	}
-	else
-	{
-		SDL_RenderPresent(renderData_.sdlRenderer_);
-		renderData_.prevRender_ = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
-		updateFps(FpsChangeDirection::DECREMENT);
-		rendered_ = true;
-	}
-	return true;
-}
-
-void Renderer::updateFps (Renderer::FpsChangeDirection direction)
-{
-	if (renderData_.fps_ > 0 && renderData_.fps_ < 55)
-	{
-		if (direction == FpsChangeDirection::INCREMENT)
-		{
-			renderData_.fps_++;
-			renderData_.fps_++;
-		}
-		if (direction == FpsChangeDirection::DECREMENT)
-		{
-			renderData_.fps_--;
-		}
-		renderData_.millisecondsPerFrame_ = MS_IN_SECOND / (renderData_.fps_ > 0 ? renderData_.fps_ : 1);
-	}
+	if (rendered_) SDL_RenderPresent(renderData_.sdlRenderer_);
+	renderData_.fps_ = fps_.fps_;
+	return rendered_;
 }
 
 void Renderer::processEvents ()
@@ -86,30 +41,30 @@ void Renderer::processEvents ()
 			case SDLK_UP:
 			{
 				positions.curPos_ = {0, -1, 0, Position::Direction::TOP};
-				processor_->addCommand({BaseCommand::Type::PLAYER_MOVE_COMMAND, positions});
+				processor_->addCommand({BaseCommand::Type::MOVE_COMMAND, positions, GameWorld::my_uuid()});
 				break;
 			}
 			case SDLK_DOWN:
 			{
 				positions.curPos_ = {0, 1, 0, Position::Direction::BOT};
-				processor_->addCommand({BaseCommand::Type::PLAYER_MOVE_COMMAND, positions});
+				processor_->addCommand({BaseCommand::Type::MOVE_COMMAND, positions, GameWorld::my_uuid()});
 				break;
 			}
 			case SDLK_RIGHT:
 			{
 				positions.curPos_ = {1, 0, 0, Position::Direction::RIGHT};
-				processor_->addCommand({BaseCommand::Type::PLAYER_MOVE_COMMAND, positions});
+				processor_->addCommand({BaseCommand::Type::MOVE_COMMAND, positions, GameWorld::my_uuid()});
 				break;
 			}
 			case SDLK_LEFT:
 			{
 				positions.curPos_ = {-1, 0, 0, Position::Direction::LEFT};
-				processor_->addCommand({BaseCommand::Type::PLAYER_MOVE_COMMAND, positions});
+				processor_->addCommand({BaseCommand::Type::MOVE_COMMAND, positions, GameWorld::my_uuid()});
 				break;
 			}
 			case SDLK_SPACE:
 			{
-				processor_->addCommand({BaseCommand::Type::PLAYER_SHOOT_COMMAND, {}});
+				processor_->addCommand({BaseCommand::Type::SHOOT_COMMAND, {}, GameWorld::my_uuid()});
 				break;
 			}
 			default:
@@ -122,9 +77,7 @@ void Renderer::processEvents ()
 Renderer::Renderer (std::atomic_bool &running) :
 	work_(running),
 	processor_(nullptr)
-{
-	renderData_.prevRender_ = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
-}
+{}
 #else
 Renderer::Renderer (std::atomic_bool &running,std::osyncstream &logs) :
 		isCurrentlyWorking_(running),
@@ -151,7 +104,7 @@ bool Renderer::init ()
 	renderData_.screenHeight_ = dm.h - 80;
 
 
-	renderData_.sdlWindowTest_ = SDL_CreateWindow("Пробное окно SDL2", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
+	renderData_.sdlWindowTest_ = SDL_CreateWindow("Пробное окно SDL2", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
 			static_cast<int>(renderData_.screenWidth_), static_cast<int>(renderData_.screenHeight_), SDL_WINDOW_SHOWN);
 	if (renderData_.sdlWindowTest_ == nullptr)
 	{
@@ -305,19 +258,9 @@ bool Renderer::load ()
 int Renderer::quit ()
 {
 	work_.store(false);
-	SDL_DestroyWindow(renderData_.sdlWindowTest_);
-	renderData_.sdlWindowTest_ = nullptr;
-
 	SDL_DestroyRenderer(renderData_.sdlRenderer_);
-	renderData_.sdlRenderer_ = nullptr;
-
+	SDL_DestroyWindow(renderData_.sdlWindowTest_);
 	SDL_DestroyTexture(renderData_.sdlWallTexture_);
-
-	SDL_Delay(1);
-	SDL_Quit();
-	SDL_Delay(1);
-	IMG_Quit();
-	SDL_Delay(1);
 	return 0;
 }
 

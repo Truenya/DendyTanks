@@ -5,6 +5,12 @@
 #include <iostream>
 #include "Game.h"
 
+std::atomic_bool Game::isCurrentlyWorking_;
+
+void Game::sigHandler (int signal)
+{
+	isCurrentlyWorking_.store (false);
+}
 
 // Движение на стрелки, стрелять на пробел
 Game::Game(): syncStreamErrors_(std::cerr),
@@ -23,6 +29,7 @@ Game::Game(): syncStreamErrors_(std::cerr),
 }
 
 Game::~Game() = default;
+
 void Game::mainLoop () {
 // Преобразую
 // От SDL ивентов образуется набор команд, которые обрабатываются в потоке процессора
@@ -51,22 +58,27 @@ void Game::start() {
 	}
 }
 
-void Game::stop() {
-	if (isCurrentlyWorking_.load()) {
-		isCurrentlyWorking_.store(false);
-		thProcessingEvents_.join();
-	}
-	else{
-		syncStreamErrors_ << "Trying to stop working, when already not such busy.";
-		syncStreamErrors_.emit();
-	}
-}
-
 void Game::update ()
 {
+	static long long unsigned i{0};
+
+	typedef std::chrono::high_resolution_clock Clock;
+
+	auto t1 = Clock::now();
 	processor_.processProjectilesMoving();
+	auto t2 = Clock::now();
 	processor_.processNpc();
+	auto t3 = Clock::now();
 	processor_.processCommands();
+	auto t4 = Clock::now();
 	renderer_.render();
+	auto t5 = Clock::now();
+	if (i % 10000 == 0) {
+		std::cout << "shoots: " << t2 - t1 << '\n';
+		std::cout << "moves: " << t3 - t2 << '\n';
+		std::cout << "npc: " << t4 - t3 << '\n';
+		std::cout << "render: " << t5 - t4 << '\n';
+	}
+	i++;
 	sched_yield();
 }

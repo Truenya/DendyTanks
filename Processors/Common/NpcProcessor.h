@@ -4,12 +4,13 @@
 
 #ifndef SSDL_NPCPROCESSOR_H
 #define SSDL_NPCPROCESSOR_H
-#include "Entities/GameObjects/World/GameWorld.h"
+#include "Entities/Commands/BaseCommand.h"
+#include "Entities/GameObjects/GameWorld.h"
 #include "Entities/Utility.h"
 
 struct NpcStepData{
-	ManagedVector <Positions> NpcShoots;
-	ManagedVector <Positions> NpcMooves;
+	ManagedVector <BaseCommand> NpcShoots; // BaseCommand
+	ManagedVector <BaseCommand> NpcMooves; // BaseCommand
 	explicit NpcStepData(size_t count_of_enemies)
 	{
 		NpcShoots.init(count_of_enemies);
@@ -17,10 +18,11 @@ struct NpcStepData{
 	}
 };
 
+// TODO прикрутить нейронки, пусть сами с собой играют учатся
 class NpcProcessor
 {
 	GameWorld &world_;
-	ManagedVector <Position> enemies_;
+	std::unordered_map <std::string, GameObject> &enemies_;
 	bool canShoot(Position& pos, Position::Direction &direction);
 	bool tryShootInDirection(const Position& pos, const Position::Direction &direction);
 public:

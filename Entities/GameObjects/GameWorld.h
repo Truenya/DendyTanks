@@ -5,10 +5,11 @@
 #ifndef SSDL_GAMEWORLD_H
 #define SSDL_GAMEWORLD_H
 
-#include "vector"
+#include "Entities/Utility.h"
+#include "GameObject.h"
 #include "memory"
-#include "../GameObject.h"
-#include "../../Utility.h"
+#include "vector"
+#include <unordered_map>
 
 struct StepReturn{
 	enum {
@@ -30,18 +31,22 @@ struct GameWorld {
 	~GameWorld();
 	Position size();
 	GameObject player_;
-	ManagedVector <Position> enemies_;
-	StepReturn playerStep();
+	std::unordered_map <std::string, GameObject> tanks_;
+	StepReturn step(Positions pos);
+	std::string addTank(const GameObject&);
+//	StepReturn playerStep();
 	bool addProjectile(Position);
 	std::vector<Positions> allProjectilesStep();
 	[[nodiscard]]  GameObject::Type typeAt(Position);
-//	void addPlayerPosChange(Position::Direction direction);
-//	void addProjectile(Position::Direction direction);
-//	std::vector<Positions> update();
+	static std::string& my_uuid()
+	{
+		static std::string my_uuid;
+		return my_uuid;
+	}
 private:
 	[[nodiscard]] GameObject::Type &at(Position);
 	// TODO то что ниже объединить в структурку
-	StepReturn playerStep(const Position &prev_pos, GameObject::Type dst_type, Position &dst_pos);
+	StepReturn tankStep (const Position &prev_pos, GameObject::Type dst_type, Position &dst_pos);
 	StepReturn projectileStep(const Position &prev_pos, GameObject::Type dst_type, Position &dst_pos);
     MyGameWorldField field_;
 	ManagedVector<Position> projectiles_;

@@ -17,12 +17,13 @@ project(ssdl)
 #libs
 INCLUDE(FindPkgConfig)
 pkg_check_modules(SDL REQUIRED sdl2)
+pkg_check_modules(uuid REQUIRED uuid)
 #pkg_check_modules(tcmalloc REQUIRED libtcmalloc)
 #pkg_check_modules(gtest REQUIRED gtest)
 
 
 #settings
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_FLAGS "-g -O0 -std=c++2a -fsized-deallocation -Wall -Wextra -Wpedantic")
 #set(CMAKE_CXX_FLAGS "-g -O0 -std=c_++2a -fsized-deallocation -fprofile-use="1.profraw" -Wall -Wextra -Wpedantic")
@@ -59,4 +60,4 @@ endif (logging_game)
 add_executable(ssdl ${mIncludes} ${mSources} ${mEntityIncludes} ${mEntitySources} ${mProcessorsIncludes} ${mProcessorsSources} Processors/Common/NpcProcessor.cpp Processors/Common/NpcProcessor.h)
 
 #linking
-target_link_libraries(ssdl  SDL2 SDL2_test SDL2_image)# tcmalloc gtest)
+target_link_libraries(ssdl  SDL2 SDL2_test SDL2_image uuid)# tcmalloc gtest)

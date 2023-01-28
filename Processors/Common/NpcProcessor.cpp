@@ -6,64 +6,46 @@
 
 NpcProcessor::NpcProcessor (GameWorld &world) :
 		world_(world),
-		enemies_(world.enemies_)
+		enemies_(world.tanks_)
 {
 
 }
+#include <experimental/random>
 
 NpcStepData NpcProcessor::step ()
 {
-	NpcStepData step_data(enemies_.count());
-	for (size_t i = 0; i < enemies_.count(); ++i)
+	NpcStepData step_data(enemies_.size());
+	for (auto &[k, _enemy]: enemies_)
 	{
-		Position enemy = enemies_[i];
+		if (k == GameWorld::my_uuid()) continue;
+		Position enemy = _enemy.getPositions().curPos_;
 		Position::Direction direction;
-		if (canShoot(enemy,direction)){
+		if (canShoot(enemy, direction)){ // direction передается по ссылке и изменяется
 			// СТРЕЛЯЕМ
 			enemy.direction_ = direction;
 			enemy.stepInDirection();
 			if (world_.typeAt(enemy) != GameObject::Type::UNDEFINED)
-			{
-				// сходили - оставили выстрел, вернулись и развернулись  =В
-				step_data.NpcShoots.add({enemy, enemy});//, {}, {}});
-				enemy.reverseDirection();
-				enemy.stepInDirection();
-				enemy.reverseDirection();
-			}
-		}
-		else
-		{
+				step_data.NpcShoots.add({BaseCommand::Type::SHOOT_COMMAND, {enemy, enemy}, k});
+		} else {
 			auto directions = enemy.directionsTo(world_.player_.getPositions().curPos_);
-			enemy.direction_ = directions.first;
+			enemy.direction_ = std::experimental::randint(0, 1) ? directions.first : directions.second ;
 			const Position PREV_POS = enemy;
 			enemy.stepInDirection();
 			if (world_.typeAt(enemy) == GameObject::Type::SPACE)
 			{
-				step_data.NpcMooves.add({PREV_POS, enemy});//, {}, {}});
+				step_data.NpcMooves.add({BaseCommand::Type::MOVE_COMMAND,{PREV_POS, enemy}, k});//, {}, {}});
 			}
 			else{
-				enemy.reverseDirection();
-				enemy.stepInDirection();
-				enemy.direction_ = directions.second;
-				enemy.stepInDirection();
-				if (world_.typeAt(enemy) == GameObject::Type::SPACE)
-				{
-					step_data.NpcMooves.add({PREV_POS, enemy});//, {}, {}});
-				}
-				else{
-					enemy.reverseDirection();
-					enemy.stepInDirection();
-					enemy.reverseDirection();
-				}
+				step_data.NpcShoots.add ({BaseCommand::Type::SHOOT_COMMAND, {enemy, enemy}, k});
 			}
 		}
 	}
 	return  step_data;
 }
 
-bool NpcProcessor::canShoot (Position &pos,Position::Direction &direction)
+bool NpcProcessor::canShoot (Position &pos, Position::Direction &direction)
 {
-	Position::Directions player_directions = pos.directionsTo(world_.player_.getPositions().curPos_);
+	Position::Directions player_directions = pos.directionsTo(world_.tanks_[GameWorld::my_uuid()].getPositions().curPos_);
 	direction = player_directions.first;
 	if (tryShootInDirection(pos,direction)) return true;
 	direction = player_directions.second;
@@ -73,6 +55,7 @@ bool NpcProcessor::canShoot (Position &pos,Position::Direction &direction)
 
 bool NpcProcessor::tryShootInDirection (const Position &pos, const Position::Direction &direction)
 {
+	if (direction == Position::Direction::EQUAL) return false;
 	Position tmp = pos;
 	tmp.direction_ = direction;
 	while (true)

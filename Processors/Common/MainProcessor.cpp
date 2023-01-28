@@ -3,106 +3,140 @@
 //
 
 
-#include <iostream>
 #include "MainProcessor.h"
+#include <iostream>
+#include <mutex>
 
 #ifndef MAKE_LOG
-MainProcessor::MainProcessor(GameWorld& world):
-	world_(world),
-	npcProcessor_(world),
-    syncStreamErrors_(std::cerr)
+MainProcessor::MainProcessor (GameWorld &world) :
+    world_ (world),
+    npcProcessor_ (world),
+    syncStreamErrors_ (std::cerr)
 {
 }
 #else
-MainProcessor::MainProcessor(GameWorld& world,std::osyncstream &logs):
-		syncStreamErrors_(std::cerr),
-		logsSynchroStream_(logs),
-		world_(world)
+MainProcessor::MainProcessor (GameWorld &world, std::osyncstream &logs) :
+    syncStreamErrors_ (std::cerr),
+    logsSynchroStream_ (logs),
+    world_ (world)
 {
-	particlesSystem_.init();
-	for (auto &item: particlesSystem_.projectilesByDistances_) {
-		item.init();
+	particlesSystem_.init ();
+	for (auto &item : particlesSystem_.projectilesByDistances_) {
+		item.init ();
 	}
 }
 #endif
 
 
-void MainProcessor::addCommand(BaseCommand &&command) {
-	const std::lock_guard<std::mutex> LOCK(mutexCommands_);
-	if (command.type_ == BaseCommand::Type::PLAYER_SHOOT_COMMAND || command.type_ == BaseCommand::Type::NPC_SHOOT_COMMAND)
+void MainProcessor::addCommand (BaseCommand command)
+{
+	using enum BaseCommand::Type;
+	if (command.type_ == SHOOT_COMMAND)
 	{
-		shootCommands_.emplace_back(command);
+		if (command.uid == world_.my_uuid())
+			command.positions_ = world_.tanks_[command.uid].getPositions();
+		const std::scoped_lock LOCK (mutexShoots_);
+		shootCommands_.emplace_back (command);
 	}
-	else if (command.type_ == BaseCommand::Type::PLAYER_MOVE_COMMAND)
+	else if (command.type_ == MOVE_COMMAND)
 	{
-		playerMoveCommands_.emplace_back(command);
-	}
-	else{
-		npcMoveCommands_.emplace_back(command);
+		const std::scoped_lock LOCK (mutexMoves_);
+		moveCommands_.emplace_back (command);
 	}
 }
 
-bool MainProcessor::processCommands() {
-	bool status = false;
-	if (!playerMoveCommands_.empty()) {
+void MainProcessor::processCommands ()
+{
+	if (!moveCommands_.empty ()) {
 		std::vector<BaseCommand> empty;
-		{
-			const std::lock_guard<std::mutex> LOCK(mutexCommands_);
-			std::swap(empty, playerMoveCommands_);
-		}
-		// Return status tells, need or not rerender screen
-		status |= processPlayerMoveCommands(empty);
-	}else
-	{
-		status |= false;
+		prepareCommands (empty);
+		processMoveCommands (empty);
 	}
-	if (!shootCommands_.empty()) {
+	if (!shootCommands_.empty ()) {
 		std::vector<BaseCommand> empty;
-		{
-			const std::lock_guard<std::mutex> LOCK(mutexCommands_);
-			std::swap(empty, shootCommands_);
-		}
-		status |= processShootCommands(empty);
+		prepareShoots (empty);
+		processShootCommands (empty);
 	}
-	return status;
+
+}
+void MainProcessor::prepareShoots (std::vector<BaseCommand> &empty)
+{
+	const std::scoped_lock LOCK (mutexShoots_);
+	std::swap (empty, shootCommands_);
+}
+void MainProcessor::prepareCommands (std::vector<BaseCommand> &empty)
+{
+	const std::scoped_lock LOCK (mutexMoves_);
+	std::swap (empty, moveCommands_);
 }
 
-bool MainProcessor::processProjectilesMoving() {
-	auto positions = world_.allProjectilesStep();
-	if (!positions.empty())
+bool MainProcessor::processProjectilesMoving ()
+{
+	if (auto positions = world_.allProjectilesStep (); !positions.empty ())
 	{
-		for (const auto &position: positions)
+		for (const auto &position : positions)
 		{
-			projectilePositions_.emplace_back(position.prevPos_,position.curPos_);
+			projectilePositions_.emplace_back (position.prevPos_, position.curPos_);
 		}
-
 	}
 	return true;
 }
 
-bool MainProcessor::processShootCommands(std::vector<BaseCommand> &commands) {
+bool MainProcessor::processShootCommands (std::vector<BaseCommand> &commands)
+{
 	bool status = false;
-	for (const auto &command: commands) {
-		status |= processShoot(command);
+	for (const auto &command : commands) {
+		status |= processShoot (command);
 	}
 	return status;
 }
 
-bool MainProcessor::processPlayerMoveCommands(std::vector<BaseCommand> &commands) {
-	if (commands.empty())
+bool MainProcessor::processMoveCommands (std::vector<BaseCommand> &commands)
+{
+	if (commands.empty ())
 		return false;
-	processPlayerMove(commands.back());
+	processTankMove (commands.back ());
 	return true;
 }
+
+//bool MainProcessor::processNpcMoveCommands (std::vector<BaseCommand> &commands)
+//{
+//	if (commands.empty ())
+//		return false;
+//	processTankMove (commands.back ());
+//	return true;
+//}
 
 // For other commands please create new methods
-void MainProcessor::processPlayerMove(const BaseCommand &command) {
-	world_.player_.rotate(command.positions_.curPos_.direction_);
-	auto s_r = world_.playerStep();
+//void MainProcessor::processNpcMove (const BaseCommand &command)
+//{
+//	const size_t size = world_.tanks_.count();
+//	for (size_t i = 0; i < size; i++) {
+//		auto s_r = world_.step({world_.tanks_[i]});
+//		if (s_r.ret_ == StepReturn::UNDEFINED_BEHAVIOR)
+//			throw std::runtime_error("[UB] processNpcMove");
+//		const auto POSITIONS = world_.player_.getPositions ();
+//		if (s_r.ret_ == StepReturn::SUCCESS)
+//		{
+//			playerChangedPositions_.emplace_back (POSITIONS.prevPos_, POSITIONS.curPos_);
+//		} else
+//		{
+//			// обработка вращения на танка на месте.
+//			// отрисовщик не поймет, что надо перерисовать
+//			playerChangedPositions_.emplace_back (POSITIONS.curPos_, POSITIONS.curPos_);
+//		}
+//	}
+//}
+
+// For other commands please create new methods
+void MainProcessor::processTankMove (const BaseCommand &command)
+{
+	auto &tank = world_.tanks_[command.uid];
+	tank.rotate (command.positions_.curPos_.direction_);
+//	world_.player_.rotate (command.positions_.curPos_.direction_);
+	auto s_r = world_.step(tank.getPositions());
 	if (s_r.ret_ == StepReturn::UNDEFINED_BEHAVIOR)
 		return;
-	Positions POSITIONS;
-	POSITIONS = world_.player_.getPositions();
 #ifdef DEBUG
 	// TODO добавить опцию в cmakelist и в зависимости от нее выставлять define
 	// Управление потоком выполнения препятствуют предсказанию потока выполнения в процессоре
@@ -110,54 +144,59 @@ void MainProcessor::processPlayerMove(const BaseCommand &command) {
 	// К скорости выполнения участках.
 	if (command.obj_->type_ != GameObject::Type::PLAYER) {
 		syncStreamErrors_ << "Try to stepInDirection non player object\n";
-		syncStreamErrors_.emit();
+		syncStreamErrors_.emit ();
 		return false;
 	}
-	if (command.obj_->getPositions().curPos_ != world_.player_->getPositions().curPos_) {
+	if (command.obj_->getPositions ().curPos_ != world_.player_->getPositions ().curPos_) {
 		syncStreamErrors_ << "Position of player in object is not matching to world->player position\n";
-		syncStreamErrors_.emit();
+		syncStreamErrors_.emit ();
 		return false;
 	}
 #endif
 	if (s_r.ret_ == StepReturn::SUCCESS)
 	{
-		playerMoveChangedPositions_.emplace_back(POSITIONS.prevPos_, POSITIONS.curPos_);
-	}
-	else
+//		world_.player_.step();
+		tank.step();
+		playerChangedPositions_.emplace_back (tank.getPositions().prevPos_, tank.getPositions().curPos_);
+//		playerChangedPositions_.emplace_back (world_.player_.getPositions().prevPos_, world_.player_.getPositions().curPos_);
+	} else
 	{
-		playerMoveChangedPositions_.emplace_back(POSITIONS.curPos_, POSITIONS.curPos_);
+		playerChangedPositions_.emplace_back (tank.getPositions().curPos_, tank.getPositions().curPos_);
+//		playerChangedPositions_.emplace_back (world_.player_.getPositions().curPos_, world_.player_.getPositions().curPos_);
 	}
 }
 // If player press SPACE - lets shoot
-bool MainProcessor::processShoot(const BaseCommand &command) {
+bool MainProcessor::processShoot (const BaseCommand &command)
+{
 	Position first_shoot_render_place;
 	if (command.positions_.curPos_ != Position{})
 		first_shoot_render_place = command.positions_.curPos_;
 	else
-		first_shoot_render_place = world_.player_.getPositions().curPos_; // take position of player
+		first_shoot_render_place = world_.player_.getPositions ().curPos_;// take position of player
 
-	first_shoot_render_place.stepInDirection();
-	if (world_.addProjectile(first_shoot_render_place))
+	first_shoot_render_place.stepInDirection ();
+	if (world_.addProjectile (first_shoot_render_place))
 	{
-		projectilePositions_.emplace_back(std::pair{
-				first_shoot_render_place,first_shoot_render_place});
+		projectilePositions_.emplace_back (
+		        first_shoot_render_place, first_shoot_render_place);
 		return true;
 	}
 	return false;
 }
 
-RenderMoveInfo MainProcessor::getPlayerChangedPositions() {
+RenderMoveInfo MainProcessor::getPlayerChangedPositions ()
+{
 	RenderMoveInfo out;
-	const std::lock_guard<std::mutex> LOCK(mutexCommands_);
-	std::swap(out, playerMoveChangedPositions_);
+	const std::scoped_lock LOCK (mutexMoves_);
+	std::swap (out, playerChangedPositions_);
 	return out;
 }
 
 RenderMoveInfo MainProcessor::getNpcChangedPositions ()
 {
 	RenderMoveInfo out;
-	const std::lock_guard<std::mutex> LOCK(mutexCommands_);
-	std::swap(out, npcMoveChangedPositions_);
+	const std::scoped_lock LOCK (mutexMoves_);
+	std::swap (out, npcChangedPositions_);
 	return out;
 }
 
@@ -165,18 +204,20 @@ RenderMoveInfo MainProcessor::getNpcChangedPositions ()
 //	return world_.player_;
 //}
 
-Position MainProcessor::worldSize() const {
-	return world_.size();
+Position MainProcessor::worldSize () const
+{
+	return world_.size ();
 }
 
-GameObject::Type MainProcessor::typeAt(const Position &pos) const {
-	return world_.typeAt(pos);
+GameObject::Type MainProcessor::typeAt (const Position &pos) const
+{
+	return world_.typeAt (pos);
 }
 
-RenderShootInfo MainProcessor::getShoots()
+RenderShootInfo MainProcessor::getShoots ()
 {
 	RenderShootInfo empty;
-	const std::lock_guard<std::mutex> LOCK(mutexCommands_);
+	const std::scoped_lock LOCK (mutexMoves_);
 	std::swap (empty, projectilePositions_);
 	return empty;
 }
@@ -233,16 +274,16 @@ RenderShootInfo MainProcessor::getShoots()
 
 bool MainProcessor::processNpc ()
 {
-	const auto npc_data = npcProcessor_.step();
-	auto shoots = npc_data.NpcShoots;
-	for (size_t i  = 0; i < shoots.count();i++)
+	const auto NPC_DATA = npcProcessor_.step ();
+	auto shoots = NPC_DATA.NpcShoots;
+	for (size_t i = 0; i < shoots.count (); i++)
 	{
-		addCommand({BaseCommand::Type::NPC_SHOOT_COMMAND,{shoots[i]}});
+		addCommand (shoots[i]);
 	}
-	auto moves = npc_data.NpcMooves;
-	for (size_t i  = 0; i < moves.count();i++)
+	auto moves = NPC_DATA.NpcMooves;
+	for (size_t i = 0; i < moves.count (); i++)
 	{
-		addCommand({BaseCommand::Type::NPC_MOVE_COMMAND,{moves[i]}});
+		addCommand (moves[i]);
 	}
 	return true;
 }

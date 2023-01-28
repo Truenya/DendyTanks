@@ -2,8 +2,8 @@
 // Created by true on 2022-04-29.
 //
 
-#ifndef SSDL_GAME_H
-#define SSDL_GAME_H
+#ifndef GAME_H
+#define GAME_H
 
 #include <syncstream>
 #include <fstream>
@@ -19,12 +19,12 @@ struct Game {
 	Game();
 	~Game();
 	void start();
-	void stop();
+	static void sigHandler (int);
 private:
-	std::atomic_bool isCurrentlyWorking_;
 	std::osyncstream syncStreamErrors_;
 	std::jthread thProcessingEvents_;
 	std::jthread thProcessingCommands_;
+	static std::atomic_bool isCurrentlyWorking_;
 	void mainLoop () ;
 	void update();
 #ifdef MAKE_LOG
@@ -36,4 +36,4 @@ private:
 };
 
 
-#endif //SSDL_GAME_H
+#endif//GAME_H

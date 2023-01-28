@@ -4,10 +4,10 @@
 
 #ifndef SSDL_WORLDGENERATOR_H
 #define SSDL_WORLDGENERATOR_H
-#include "../../Entities/GameObjects/World/GameWorld.h"
-#include <string>
+#include "Entities/GameObjects/GameWorld.h"
 #include <fstream>
 #include <sstream>
+#include <string>
 
 class WorldGenerator {
 	static GameWorld &parseFromString(const std::string&, [[maybe_unused]] GameWorld* ptr);

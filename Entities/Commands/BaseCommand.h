@@ -4,9 +4,9 @@
 
 #ifndef SSDL_BASECOMMAND_H
 #define SSDL_BASECOMMAND_H
-#include "../GameObjects/GameObject.h"
 #include "../Errors/ErrorCode.h"
-#include "../GameObjects/World/GameWorld.h"
+#include "../GameObjects/GameObject.h"
+#include "Entities/GameObjects/GameWorld.h"
 /**
 * @brief Команды генерируются: 1. От пользовательского ввода; 2. От ИИ
 *
@@ -14,11 +14,8 @@
 struct BaseCommand {
 	enum class Type{
 		UNDEFINED,
-		// TODO Merge them
-		PLAYER_MOVE_COMMAND,
-		PLAYER_SHOOT_COMMAND,
-		NPC_MOVE_COMMAND,
-		NPC_SHOOT_COMMAND
+		MOVE_COMMAND,
+		SHOOT_COMMAND
 	};
 /**
 * @brief Type of command
@@ -30,6 +27,10 @@ struct BaseCommand {
 * @details Аналогично любую команду можно выразить типом команды и координатами.
 */
 	Positions positions_;
+	/**
+	 * @brief Но для танчиков проще использовать хэшмапу с айдишниками
+	 */
+	std::string uid;
 };
 
 

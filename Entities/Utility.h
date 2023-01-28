@@ -6,11 +6,12 @@
 #define SSDL_UTILITY_H
 
 #include <vector>
+using namespace std;
 
 template <class T>
 
 class ManagedVector{
-	std::vector<T> c_ {};
+	vector<T> c_ {};
 	size_t count_ = 0;
 
 public:
@@ -49,6 +50,6 @@ public:
 	}
 	 [[nodiscard]] size_t count() const { return count_;}
 	T& operator[](size_t pos){return c_[pos];}
+	std::vector<T> apply() {}
 };
-
 #endif //SSDL_UTILITY_H

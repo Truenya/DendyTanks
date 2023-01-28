@@ -60,15 +60,16 @@ GameWorld &WorldGenerator::parseFromString(const std::string& raw_file, [[maybe_
 		world.at(space) = GameObject::Type::SPACE;
 	}
 
-	world.enemies_.init(enemy_coordinates.size());
 	for (const auto &enemy:enemy_coordinates)
 	{
 		world.at(enemy) = GameObject::Type::ENEMY;
-		world.enemies_.add(enemy);
+		world.addTank({enemy, GameObject::Type::ENEMY});
 	}
 
 	world.at(player_coordinates) = GameObject::Type::PLAYER;
-	world.player_ = GameObject(player_coordinates,GameObject::Type::PLAYER);//, &world.field_);
+	world.addTank ({player_coordinates,GameObject::Type::PLAYER});
+	world.player_ = GameObject({player_coordinates,GameObject::Type::PLAYER});//, &world.field_);
 	ptr = &world;
 	return world;
 }
+

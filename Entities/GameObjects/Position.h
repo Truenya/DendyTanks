@@ -52,6 +52,7 @@ struct Position {
 	[[nodiscard]] Directions directionsTo  (const Position &other) const;
 	bool stepInDirection (bool inverse = false);
 	void reverseDirection ();
+	void rotateDirection ();
 //	[[nodiscard]] double calcDistance (const Position &other) const;
 };
 

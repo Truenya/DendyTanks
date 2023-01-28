@@ -6,8 +6,8 @@
 #ifndef SSDL_GAMEOBJECT_H
 #define SSDL_GAMEOBJECT_H
 
-#include "ObjectProps/Position.h"
 #include "../Errors/ErrorCode.h"
+#include "Position.h"
 #include <vector>
 
 struct  GameObject {
@@ -26,6 +26,7 @@ struct  GameObject {
 	[[nodiscard]] const Positions &getPositions() const;
 	void step();
 	void rotate(Position::Direction direction);
+	// TODO size_t uid;
 protected:
 	Positions positions_;
 //	std::vector<std::vector<GameObject::Type>> *field_;
