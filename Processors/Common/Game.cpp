@@ -21,7 +21,7 @@ Game::Game(): syncStreamErrors_(std::cerr),
 				processor_(WorldGenerator::generateWorld("labirinth.txt"),logsSynchroStream_)
 #else
 	renderer_(isCurrentlyWorking_),
-	processor_(WorldGenerator::generateWorld("labirinth.txt"))
+	processor_(WorldGenerator::generateWorld("../resources/labirinth.txt"))
 #endif
 {
 	isCurrentlyWorking_.store(false);
@@ -31,15 +31,12 @@ Game::Game(): syncStreamErrors_(std::cerr),
 Game::~Game() = default;
 
 void Game::mainLoop () {
-// Преобразую
 // От SDL ивентов образуется набор команд, которые обрабатываются в потоке процессора
-// Обработка движения снарядов происходит на каждом шагу(а неплохо бы это в потоке процессинга делать)
-// Для этого необходимо в потоке процессинга после обработки движения скидывать миру координаты новых позиций снарядов.
-// Кроме того, необходимо сделать так, чтобы обработка движения частиц происходила лишь один раз за обновление мира.
-// (обеспечение синхронизации)
+// Обработка движения снарядов происходит на каждой итерации обработки.
 //TODO P.S. Все проверки должны быть убраны из метода update, это игровой цикл, он критичен к производительности.
-//TODO P.P.S. Проверки должны производится в месте, обрабатывающем возможность перемещения, при добавлении в очередь
-// (в отдельном потоке, при добавлении миру в очередь обновленных данных)
+//TODO P.P.S. Проверки должны производится в месте, обрабатывающем возможность перемещения, при добавлении в очередь.
+//FIXME Проблемные места - processTankMove, processShoot
+// (в отдельном потоке, при добавлении процессору в очередь обновленных данных)
 	while(isCurrentlyWorking_.load()){
 		update();
 	}
@@ -47,9 +44,10 @@ void Game::mainLoop () {
 
 void Game::start() {
 	if (!isCurrentlyWorking_.load()) {
-		isCurrentlyWorking_.store(true);
 		renderer_.prepare();
+		isCurrentlyWorking_.store(true);
 		thProcessingEvents_ = std::jthread([&](){ renderer_.processingEventsLoop();});
+		thProcessingNpc = std::jthread([&]() {processor_.processingNpcLoop (isCurrentlyWorking_);});
 		mainLoop();
 	}
 	else{
@@ -67,17 +65,14 @@ void Game::update ()
 	auto t1 = Clock::now();
 	processor_.processProjectilesMoving();
 	auto t2 = Clock::now();
-	processor_.processNpc();
-	auto t3 = Clock::now();
 	processor_.processCommands();
-	auto t4 = Clock::now();
+	auto t3 = Clock::now();
 	renderer_.render();
-	auto t5 = Clock::now();
-	if (i % 10000 == 0) {
+	auto t4 = Clock::now();
+	if (i % 5000 == 1) {
 		std::cout << "shoots: " << t2 - t1 << '\n';
 		std::cout << "moves: " << t3 - t2 << '\n';
-		std::cout << "npc: " << t4 - t3 << '\n';
-		std::cout << "render: " << t5 - t4 << '\n';
+		std::cout << "render: " << t4 - t3 << '\n';
 	}
 	i++;
 	sched_yield();

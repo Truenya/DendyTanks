@@ -26,12 +26,8 @@ struct  GameObject {
 	[[nodiscard]] const Positions &getPositions() const;
 	void step();
 	void rotate(Position::Direction direction);
-	// TODO size_t uid;
 protected:
 	Positions positions_;
-//	std::vector<std::vector<GameObject::Type>> *field_;
-//	friend struct ShootCommand;
-//	friend struct MoveCommand;
 };
 
 

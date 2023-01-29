@@ -16,6 +16,7 @@ struct StepReturn{
 		SUCCESS,
 		MEET_WALL,
 		MEET_PLAYER,
+		MEET_ENEMY,
 		MEET_PROJECTILE,
 		OUT_OF_FIELD,
 		UNDEFINED_BEHAVIOR
@@ -30,11 +31,9 @@ struct GameWorld {
 	GameWorld( unsigned int  x_dim, unsigned int y_dim);
 	~GameWorld();
 	Position size();
-	GameObject player_;
 	std::unordered_map <std::string, GameObject> tanks_;
 	StepReturn step(Positions pos);
 	std::string addTank(const GameObject&);
-//	StepReturn playerStep();
 	bool addProjectile(Position);
 	std::vector<Positions> allProjectilesStep();
 	[[nodiscard]]  GameObject::Type typeAt(Position);
@@ -43,19 +42,16 @@ struct GameWorld {
 		static std::string my_uuid;
 		return my_uuid;
 	}
+	bool playerAlive = true;
 private:
 	[[nodiscard]] GameObject::Type &at(Position);
-	// TODO то что ниже объединить в структурку
 	StepReturn tankStep (const Position &prev_pos, GameObject::Type dst_type, Position &dst_pos);
 	StepReturn projectileStep(const Position &prev_pos, GameObject::Type dst_type, Position &dst_pos);
     MyGameWorldField field_;
 	ManagedVector<Position> projectiles_;
-//	std::mutex changesMutex_;
 	ManagedVector<Positions> playerPosChanges_;
 	ManagedVector<Position> newProjectiles_;
 	friend WorldGenerator;
-// TODO убираем
-	friend GameObject;
 };
 
 

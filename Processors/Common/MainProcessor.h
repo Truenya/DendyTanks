@@ -23,13 +23,12 @@ struct MainProcessor {
 	void addCommand(BaseCommand command);
 	void processCommands();
 	bool processProjectilesMoving();
-	bool processNpc();
+	void processingNpcLoop (const atomic<bool> &working);
+	bool noTankAtPos (const Position pos);
 	[[nodiscard]] RenderMoveInfo getPlayerChangedPositions();
 	[[nodiscard]] RenderMoveInfo getNpcChangedPositions();
 	[[nodiscard]] RenderMoveInfo getShoots();
-//	GameObject getPlayer() const;
 	[[nodiscard]] Position worldSize() const;
-//	void processingLoop();
 	// Используется для заполнения мира, до начала поступления команд, соответственно не страшно.
 	GameObject::Type typeAt(const Position&) const;
 	ManagedVector<Position> projectiles_;
@@ -49,11 +48,9 @@ private:
 	std::mutex mutexShoots_;
 
 	void processTankMove (const BaseCommand &command);
-	void processNpcMove (const BaseCommand &command);
 	bool processShoot(const BaseCommand &command);
 	bool processMoveCommands (std::vector<BaseCommand> &commands);
 	bool processShootCommands(std::vector<BaseCommand> &commands);
-	bool processNpcMoveCommands (std::vector<BaseCommand> &commands);
 	void prepareCommands (std::vector<BaseCommand> &empty);
 	void prepareShoots (std::vector<BaseCommand> &empty);
 };

@@ -61,10 +61,8 @@ GameObject::GameObject(const Position& pos, GameObject::Type typo)//,
 {}
 
 void GameObject::step() {
-//	TODO using step for player, not move(deltaPosition)
 	positions_.prevPos_ = positions_.curPos_;
 	positions_.curPos_.stepInDirection();
-//	positions_.dPos_ = positions_.curPos_-positions_.prevPos_;
 }
 
 void GameObject::rotate (Position::Direction direction)

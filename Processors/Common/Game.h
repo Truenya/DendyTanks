@@ -20,11 +20,12 @@ struct Game {
 	~Game();
 	void start();
 	static void sigHandler (int);
+	static std::atomic_bool isCurrentlyWorking_;
 private:
 	std::osyncstream syncStreamErrors_;
 	std::jthread thProcessingEvents_;
 	std::jthread thProcessingCommands_;
-	static std::atomic_bool isCurrentlyWorking_;
+	std::jthread thProcessingNpc;
 	void mainLoop () ;
 	void update();
 #ifdef MAKE_LOG

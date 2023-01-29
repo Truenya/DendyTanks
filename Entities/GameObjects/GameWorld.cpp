@@ -10,15 +10,11 @@ GameWorld::GameWorld(unsigned int x_dim, unsigned int y_dim)
 	if(x_dim > 10000 || y_dim > 10000)
 		throw std::logic_error ("trying to construct too big world");
 	field_.resize(x_dim);
-//	int x = 0;
 	for (auto &row: field_) {
 		row.resize(y_dim);
-//		int y = 0;
 		for (auto &point: row) {
 			point = GameObject::Type::UNDEFINED;
-//			++y;
 		}
-//		++x;
 	}
 	projectiles_.init(100);
 }
@@ -79,9 +75,9 @@ StepReturn GameWorld::tankStep (const Position &prev_pos, GameObject::Type dst_t
 StepReturn GameWorld::projectileStep (const Position &prev_pos, GameObject::Type dst_type, Position &dst_pos)
 {
 	const auto PREV_TYPE = typeAt(prev_pos);
-	// FIXME он сюда заходить не должен, если в мире там SPACE
-	// скорее всего проблема в том, что один выстрел взорвал другого
 	if (PREV_TYPE != GameObject::Type::PROJECTILE)
+		// FIXME он сюда заходить не должен, если в мире там SPACE
+		// скорее всего ситуация в том, что один выстрел взорвал другого
 		projectiles_.remove(prev_pos);
 	switch (dst_type)
 	{
@@ -89,41 +85,47 @@ StepReturn GameWorld::projectileStep (const Position &prev_pos, GameObject::Type
 		{
 			const auto TYPE = typeAt(prev_pos);
 			assert(TYPE != GameObject::Type::PLAYER);
-			assert(typeAt(dst_pos) != GameObject::Type::PLAYER); // В смысле мы в другого игрока выстрелить не можем?
-			// Дадим объекту знать свои координаты
+			if (typeAt(dst_pos) == GameObject::Type::PLAYER) throw std::runtime_error("\n\nВы убиты.\n\n");
 			dst_pos.reverseDirection();
-			std::swap(at(prev_pos), at(dst_pos));
-			// Скажем миру, что в мире объекты поменялись местами
-			assert(typeAt(prev_pos) == GameObject::Type::SPACE);
-//			return {StepReturn::SUCCESS, dst_pos};
+			std::swap(at(prev_pos), at(dst_pos)); // Скажем миру, что в мире объекты поменялись местами
+			assert(typeAt(prev_pos) == GameObject::Type::SPACE); // Мы же не могли шагнуть из другой клетки
 			return {StepReturn::SUCCESS};
 		}
 		case GameObject::Type::PROJECTILE:
 		{
 			if (dst_pos.direction_ == prev_pos.direction_)
 				return {StepReturn::SUCCESS};
-//          FIXME после взрыва не уничтожаются в мире оба снаряда, один из них повисает навсегда
 			at(prev_pos) = GameObject::Type::SPACE;
 			at(dst_pos) = GameObject::Type::SPACE;
-//			return {StepReturn::MEET_PROJECTILE, dst_pos};
 			return {StepReturn::MEET_PROJECTILE};
 		}
 		case GameObject::Type::WALL:
 		{
 			at(prev_pos) = GameObject::Type::SPACE;
 			at(dst_pos) = GameObject::Type::SPACE;
-//			return {StepReturn::MEET_WALL, dst_pos};
 			return {StepReturn::MEET_WALL};
 		}
 		case GameObject::Type::PLAYER:
 		{
 			at(prev_pos) = GameObject::Type::SPACE;
 			at(dst_pos) = GameObject::Type::SPACE;
-//			return {StepReturn::MEET_PLAYER, dst_pos};
 			return {StepReturn::MEET_PLAYER};
 		}
+		case GameObject::Type::ENEMY:
+		{
+			at(prev_pos) = GameObject::Type::SPACE;
+			at(dst_pos) = GameObject::Type::SPACE;
+			std::string destroyed;
+			for (const auto &[k, tank] : tanks_){
+				if (tank.getPositions().curPos_ == dst_pos){
+					destroyed = k;
+					break;
+				}
+			}
+			tanks_.erase (destroyed);
+			return {StepReturn::MEET_ENEMY};
+		}
 		default:
-//			return {StepReturn::UNDEFINED_BEHAVIOR,{}};
 			return {StepReturn::UNDEFINED_BEHAVIOR};
 	}
 }
@@ -140,7 +142,7 @@ StepReturn GameWorld::step (Positions pos)
 	auto dst_pos = pos.curPos_;
 	const auto PREV_POS = dst_pos;
 	const auto PREV_TYPE = typeAt(PREV_POS);
-	assert((PREV_TYPE == GameObject::Type::PLAYER)||(PREV_TYPE == GameObject::Type::ENEMY));
+//	assert((PREV_TYPE == GameObject::Type::PLAYER)||(PREV_TYPE == GameObject::Type::ENEMY)); //FIXME
 	dst_pos.stepInDirection();
 	// Check is new pos valid
 	if (!dst_pos || !dst_pos.isValidByWorldSize(size()))
@@ -164,6 +166,7 @@ StepReturn GameWorld::step (Positions pos)
 //	dst_pos.direction_ = PREV_POS.direction_;
 //	return tankStep (PREV_POS, DST_TYPE, dst_pos);
 //}
+#include <iostream>
 #include <unordered_set>
 std::vector<Positions> GameWorld::allProjectilesStep ()
 {
@@ -176,24 +179,46 @@ std::vector<Positions> GameWorld::allProjectilesStep ()
 		const Position PREV_POS = pos;
 		if (pos.stepInDirection() && pos.isValidByWorldSize(size()) && pos.isValid())
 		{
-//			const auto D_POS = pos - PREV_POS;
 			auto s_r = projectileStep(PREV_POS, typeAt(pos), pos);
-			if (s_r.ret_ == StepReturn::MEET_WALL       || s_r.ret_ == StepReturn::MEET_PLAYER
-	                                                    || s_r.ret_ == StepReturn::OUT_OF_FIELD) // FIXME MEET_PROJECTILE
-			{
-				projectiles_[i].stepInDirection();
-				explosed.insert(i);
+			switch (s_r.ret_) {
+				case StepReturn::MEET_WALL:
+					explosed.insert(i);
+					[[fallthrough]];
+				case StepReturn::SUCCESS:
+					projectiles_[i].stepInDirection();
+					break;
+				case StepReturn::UNDEFINED_BEHAVIOR:
+					throw std::runtime_error ("UB. GameWorld::allProjectilesStep");
+				case StepReturn::MEET_PLAYER:
+					std::cerr << "\n\n----Вы убиты ----\n\n\t=(\n";
+					tanks_.erase (my_uuid());
+					for (const auto &[k,_]: tanks_) {
+						my_uuid() = k;
+						break;
+					}
+					playerAlive = false;
+					break;
+				case StepReturn::MEET_PROJECTILE:
+					[[fallthrough]];
+				case StepReturn::MEET_ENEMY:
+					if (tanks_.size() == 1)
+						std::cout << "\n\n----Вы победили.----\n\n\t(-^-^-)\n";
+					[[fallthrough]];
+				case StepReturn::OUT_OF_FIELD:
+					[[fallthrough]];
+				default:
+					explosed.insert (i);
+					break;
+
 			}
-			else
-				projectiles_[i].stepInDirection();
-			output.emplace_back(Positions{PREV_POS, pos});//, D_POS, {}});
-		}
-		else{
+			output.emplace_back(Positions{PREV_POS, pos});
+		} else{
 			explosed.insert(i);
 			at(PREV_POS) = GameObject::Type::SPACE;
 		}
 	}
 	// TODO некрасиво, поправить
+	// А вроде и норм..
 	for (const auto EXPLOSE: explosed) {
 		const Position EXPL = projectiles_[EXPLOSE];
 		output.emplace_back(Positions{EXPL,EXPL});//,{},{}});
@@ -206,8 +231,17 @@ bool GameWorld::addProjectile (Position pos)
 {
 	if (pos)
 	{
-		assert(at(pos) != GameObject::Type::PLAYER);
+		if (typeAt (pos) == GameObject::Type::PLAYER) {
+			std::cerr << "\n\n----Вы убиты ----\n\n\t=(\n";
+			tanks_.erase (my_uuid());
+			for (const auto &[k,_]: tanks_) {
+				my_uuid() = k;
+				break;
+			}
+			playerAlive = false;
+		}
 		at(pos) = GameObject::Type::PROJECTILE;
+		//assert(pos.direction_ != Position::Direction::EQUAL); FIXME
 		projectiles_.add(pos);
 		return true;
 	}
@@ -276,5 +310,7 @@ GameObject::Type GameWorld::typeAt (Position pos)
 {
 	if ((pos.x_ < 0) || (pos.y_ < 0))
 		return GameObject::Type::UNDEFINED;
-	return at(pos);
+	if (pos.isValid() && pos.isValidByWorldSize ({static_cast<ssize_t>(field_.size()),static_cast<ssize_t>(field_[0].size()),0,Position::Direction::TOP}))
+		return at(pos);
+	return GameObject::Type::UNDEFINED;
 }

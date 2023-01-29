@@ -2,6 +2,7 @@
 // Created by true on 2022-04-27.
 //
 #include "Position.h"
+#include <iostream>
 #include <stdexcept>
 
 Position& Position::operator+=(const Position &other) {
@@ -23,8 +24,8 @@ Position& Position::operator+=(const Position &&other) {
 bool Position::isValid() const {
 	if ((x_ <= -1 ) || (y_ <= -1) ||
 	    (z_ <= -1) || (x_ >= 1000) ||
-	    (y_ >= 1000) || (z_ >= 1000) ||
-	    direction_ == Direction::EQUAL)
+	    (y_ >= 1000) || (z_ >= 1000))
+//||direction_ == Direction::EQUAL)
 		return false;
 	return true;
 }
@@ -32,8 +33,8 @@ bool Position::isValid() const {
 bool Position::operator==(const Position &rhs) const {
 	return  x_ == rhs.x_ &&
 	       y_ == rhs.y_ &&
-	       z_ == rhs.z_ &&
-		   direction_ == rhs.direction_;
+	       z_ == rhs.z_;
+//	       && direction_ == rhs.direction_;
 }
 
 bool Position::operator!=(const Position &rhs) const {
@@ -161,9 +162,9 @@ bool Position::stepInDirection(bool inverse) {
 			this->operator+=(Position{1,0,0,Direction::RIGHT});
 			break;
 		}
-		case Direction::EQUAL:{
-			throw std::logic_error("Move in unknown direction");
-		}
+//		case Direction::EQUAL:{
+//			throw std::logic_error("Move in unknown direction");
+//		}
 	}
 	return isValid();
 }
@@ -188,7 +189,8 @@ void Position::reverseDirection() {
 			break;
 		}
 		case Direction::EQUAL:{
-			throw std::logic_error("Move in unknow direction");
+			std::cerr << "Move in unknown direction\n";
+			//				throw std::logic_error("Move in unknown direction"); // FIXME возникает почему-то только когда из противников остается один танк, а пользователь мертв
 		}
 	}
 }
@@ -212,7 +214,8 @@ void Position::rotateDirection() {
 			break;
 		}
 		case Direction::EQUAL:{
-			throw std::logic_error("Move in unknow direction");
+			std::cerr << "Move in unknown direction\n";
+			//				throw std::logic_error("Move in unknown direction"); // FIXME возникает почему-то только когда из противников остается один танк, а пользователь мертв
 		}
 	}
 }

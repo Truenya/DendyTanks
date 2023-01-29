@@ -141,7 +141,7 @@ bool Renderer::load ()
 //    bool isLoadedIncorrectly = false;
 
 	SDL_Surface *temp_surf;
-	temp_surf = IMG_Load("cvetok.png");
+	temp_surf = IMG_Load("../resources/cvetok.png");
 	if (temp_surf == nullptr)
 	{
 		std::cout << "Can't load image: " << IMG_GetError() << std::endl;
@@ -158,7 +158,7 @@ bool Renderer::load ()
 		exit(-1);
 	}
 
-	temp_surf = IMG_Load("fill.png");
+	temp_surf = IMG_Load("../resources/fill.png");
 	if (temp_surf == nullptr)
 	{
 		std::cout << "Can't load image: " << IMG_GetError() << std::endl;
@@ -174,7 +174,7 @@ bool Renderer::load ()
 //		isLoadedIncorrectly |= true;
 		exit(-1);
 	}
-	temp_surf = IMG_Load("tank_b.png");
+	temp_surf = IMG_Load("../resources/tank_b.png");
 	if (temp_surf == nullptr)
 	{
 		std::cout << "Can't load image: " << IMG_GetError() << std::endl;
@@ -189,7 +189,7 @@ bool Renderer::load ()
 		exit(-1);
 	}
 
-	temp_surf = IMG_Load("tank_t.png");
+	temp_surf = IMG_Load("../resources/tank_t.png");
 	if (temp_surf == nullptr)
 	{
 		std::cout << "Can't load image: " << IMG_GetError() << std::endl;
@@ -205,7 +205,7 @@ bool Renderer::load ()
 	}
 
 
-	temp_surf = IMG_Load("tank_l.png");
+	temp_surf = IMG_Load("../resources/tank_l.png");
 	if (temp_surf == nullptr)
 	{
 		std::cout << "Can't load image: " << IMG_GetError() << std::endl;
@@ -220,7 +220,7 @@ bool Renderer::load ()
 		exit(-1);
 	}
 
-	temp_surf = IMG_Load("tank_r.png");
+	temp_surf = IMG_Load("../resources/tank_r.png");
 	if (temp_surf == nullptr)
 	{
 		std::cout << "Can't load image: " << IMG_GetError() << std::endl;
@@ -235,7 +235,7 @@ bool Renderer::load ()
 		exit(-1);
 	}
 
-	temp_surf = IMG_Load("explosion.png");
+	temp_surf = IMG_Load("../resources/explosion.png");
 	if (temp_surf == nullptr)
 	{
 		std::cout << "Can't load image: " << IMG_GetError() << std::endl;
@@ -349,7 +349,8 @@ void Renderer::renderShoots ()
 			const Position pos = explosed_[i].first;
 			fillrect.x = static_cast<int> ( pos.x_ * renderData_.rectSize_);
 			fillrect.y = static_cast<int> (pos.y_ * renderData_.rectSize_);
-			SDL_RenderCopy(renderData_.sdlRenderer_, renderData_.sdlFillTexture_, nullptr, &fillrect);
+			if (processor_->noTankAtPos (pos)) // FIXME не работает
+				SDL_RenderCopy(renderData_.sdlRenderer_, renderData_.sdlFillTexture_, nullptr, &fillrect);
 			explosed_.remove(i);
 		}
 		else{
@@ -413,10 +414,11 @@ void Renderer::renderPlayerMove ()
 				}
 				break;
 			}
-				// FIXME не понимаю как я квадраты тут настраивал, надо отладиться получше с этими квадратами
+			// FIXME не понимаю как я квадраты тут настраивал, надо отладиться получше с этими квадратами
+			// Тут разные размеры полей танков еще.. жесть
 			case Position::Direction::TOP:
 			{
-				// TODO вынести их в поля класса
+				// TODO вынести их в структурки
 				SDL_Rect top_player_rect = renderData_.playerRect_;
 				top_player_rect.x += top_player_rect.w * 2 + static_cast<int> (renderData_.rectSize_);
 				top_player_rect.y += top_player_rect.h * 2;
@@ -450,7 +452,8 @@ void Renderer::renderPlayerMove ()
 				break;
 			}
 			case Position::Direction::EQUAL:{
-				throw std::logic_error("Move in unknown direction");
+				std::cerr << "Move in unknown direction\n";
+//				throw std::logic_error("Move in unknown direction"); // FIXME возникает почему-то только когда танчики между собой играют без игрока
 			}
 		}
 		if ((dstrect.x != prevrect.x) || (dstrect.y != prevrect.y))
@@ -458,6 +461,7 @@ void Renderer::renderPlayerMove ()
 	}
 }
 
+// TODO использовать текстурки с другим цветом
 void Renderer::renderNpcMove ()
 {
 	auto changed_positions = processor_->getNpcChangedPositions();
@@ -485,9 +489,10 @@ void Renderer::renderNpcMove ()
 				break;
 			}
 				// FIXME не понимаю как я квадраты тут настраивал, надо отладиться получше с этими квадратами
+				// Тут разные размеры полей танков еще.. жесть
 			case Position::Direction::TOP:
 			{
-				// TODO вынести их в поля класса
+				// TODO вынести их в структурки
 				SDL_Rect enemy = renderData_.enemyRect_;
 				enemy.x += enemy.w * 2 + static_cast<int> (renderData_.rectSize_);
 				enemy.y += enemy.h * 2;
@@ -519,7 +524,8 @@ void Renderer::renderNpcMove ()
 				break;
 			}
 			case Position::Direction::EQUAL:{
-				throw std::logic_error("Move in unknown direction");
+				std::cerr << "Move in unknown direction\n";
+				//				throw std::logic_error("Move in unknown direction"); // FIXME возникает почему-то только когда танчики между собой играют без игрока
 			}
 		}
 		if ((dstrect.x != prevrect.x) || (dstrect.y != prevrect.y))

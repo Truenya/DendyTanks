@@ -4,6 +4,7 @@
 
 
 #include "MainProcessor.h"
+#include <cassert>
 #include <iostream>
 #include <mutex>
 
@@ -35,6 +36,7 @@ void MainProcessor::addCommand (BaseCommand command)
 	{
 		if (command.uid == world_.my_uuid())
 			command.positions_ = world_.tanks_[command.uid].getPositions();
+		//assert(command.positions_.curPos_.direction_ != Position::Direction::EQUAL); FIXME
 		const std::scoped_lock LOCK (mutexShoots_);
 		shootCommands_.emplace_back (command);
 	}
@@ -95,7 +97,9 @@ bool MainProcessor::processMoveCommands (std::vector<BaseCommand> &commands)
 {
 	if (commands.empty ())
 		return false;
-	processTankMove (commands.back ());
+	for (const auto &command : commands) {
+		processTankMove (command);
+	}
 	return true;
 }
 
@@ -132,6 +136,7 @@ bool MainProcessor::processMoveCommands (std::vector<BaseCommand> &commands)
 void MainProcessor::processTankMove (const BaseCommand &command)
 {
 	auto &tank = world_.tanks_[command.uid];
+	assert(command.positions_.curPos_.direction_ != Position::Direction::EQUAL);
 	tank.rotate (command.positions_.curPos_.direction_);
 //	world_.player_.rotate (command.positions_.curPos_.direction_);
 	auto s_r = world_.step(tank.getPositions());
@@ -169,10 +174,10 @@ void MainProcessor::processTankMove (const BaseCommand &command)
 bool MainProcessor::processShoot (const BaseCommand &command)
 {
 	Position first_shoot_render_place;
-	if (command.positions_.curPos_ != Position{})
-		first_shoot_render_place = command.positions_.curPos_;
+	if (command.uid == world_.my_uuid())
+		first_shoot_render_place = world_.tanks_[GameWorld::my_uuid()].getPositions ().curPos_;// take position of player
 	else
-		first_shoot_render_place = world_.player_.getPositions ().curPos_;// take position of player
+		first_shoot_render_place = command.positions_.curPos_;
 
 	first_shoot_render_place.stepInDirection ();
 	if (world_.addProjectile (first_shoot_render_place))
@@ -272,18 +277,28 @@ RenderShootInfo MainProcessor::getShoots ()
 //	}
 //}
 
-bool MainProcessor::processNpc ()
+#include <thread>
+void MainProcessor::processingNpcLoop (const atomic_bool &working)
 {
-	const auto NPC_DATA = npcProcessor_.step ();
-	auto shoots = NPC_DATA.NpcShoots;
-	for (size_t i = 0; i < shoots.count (); i++)
-	{
-		addCommand (shoots[i]);
+	while(working.load ()) {
+		std::this_thread::sleep_for (std::chrono::milliseconds (500));
+		const auto NPC_DATA = npcProcessor_.step ();
+		auto shoots = NPC_DATA.NpcShoots;
+		for (size_t i = 0; i < shoots.count (); i++)
+		{
+			addCommand (shoots[i]);
+		}
+		auto moves = NPC_DATA.NpcMooves;
+		for (size_t i = 0; i < moves.count (); i++)
+		{
+			addCommand (moves[i]);
+		}
 	}
-	auto moves = NPC_DATA.NpcMooves;
-	for (size_t i = 0; i < moves.count (); i++)
-	{
-		addCommand (moves[i]);
+}
+
+bool MainProcessor::noTankAtPos (const Position pos){
+	for (const auto&[_, tank] : world_.tanks_){
+		if (tank.getPositions().curPos_ == pos) return true;
 	}
-	return true;
+	return false;
 }

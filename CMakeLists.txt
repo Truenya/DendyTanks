@@ -1,5 +1,14 @@
 cmake_minimum_required(VERSION 3.20)
 project(ssdl)
+
+#settings
+set(CMAKE_CXX_STANDARD 23)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_FLAGS "-g -O0 -std=c++2a -fsized-deallocation -Wall -Wextra -Wpedantic")
+#set(CMAKE_CXX_FLAGS "-g -O0 -std=c_++2a -fsized-deallocation -fprofile-use="1.profraw" -Wall -Wextra -Wpedantic")
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 #if(EXISTS ${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
 #	include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
 #	conan_basic_setup()
@@ -22,13 +31,6 @@ pkg_check_modules(uuid REQUIRED uuid)
 #pkg_check_modules(gtest REQUIRED gtest)
 
 
-#settings
-set(CMAKE_CXX_STANDARD 23)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_FLAGS "-g -O0 -std=c++2a -fsized-deallocation -Wall -Wextra -Wpedantic")
-#set(CMAKE_CXX_FLAGS "-g -O0 -std=c_++2a -fsized-deallocation -fprofile-use="1.profraw" -Wall -Wextra -Wpedantic")
-set(CMAKE_POSITION_INDEPENDENT_CODE ON)
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 #let's collect files into the variables and use them instead
 file(GLOB mIncludes ./*.h )

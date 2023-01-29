@@ -15,6 +15,7 @@ GameWorld &WorldGenerator::generateWorld(const std::string& map_filepath) {
 }
 
 #include <list>
+#include <experimental/random>
 GameWorld &WorldGenerator::parseFromString(const std::string& raw_file, [[maybe_unused]] GameWorld* ptr) {
 	int x = 0;
 	int y = 0;
@@ -23,32 +24,38 @@ GameWorld &WorldGenerator::parseFromString(const std::string& raw_file, [[maybe_
 	std::list<Position> space_coordinates;
 	Position player_coordinates;
 	std::list<Position> enemy_coordinates;
+	bool player{false};
+	int enemies{5};
 	for (const char& ch: raw_file){
-		if (ch == '\n') {
-			++y;
-			if (max_x < x) max_x = x;
-			x = 0;
-		}
-		else {
-			if (ch == '#') {
-				wall_coordinates.emplace_back(Position{x, y,0,Position::Direction::EQUAL});
+		switch (ch){
+			case '\n':
+				++y;
+				if (max_x < x) max_x = x;
+				x = 0;
+				break ;
+			case '#':
+				wall_coordinates.emplace_back (Position{x, y, 0, Position::Direction::EQUAL});
 				++x;
-			}
-			else if (ch == ' ') {
-				space_coordinates.emplace_back(Position{x, y,0,Position::Direction::EQUAL});
+				break ;
+			case ' ':
+				space_coordinates.emplace_back (Position{x, y, 0, Position::Direction::EQUAL});
 				++x;
-			}
-			else if (ch == 'A') {
-				player_coordinates = {x,y,0,Position::Direction::BOT};
-			}
-			else if (ch == 'B') {
-				enemy_coordinates.emplace_back(Position{x,y,0,Position::Direction::BOT});
-			}
-			else{
-				std::cerr<<"Некорректный символ:" << ch;
-			}
+				break;
+			case 'A':
+				player = true;
+				player_coordinates = {x, y, 0, Position::Direction::BOT};
+				++x;
+				break;
+			case 'B':
+				enemies --;
+				enemy_coordinates.emplace_back (Position{x, y, 0, Position::Direction::BOT});
+				++x;
+				break;
+			default:
+				throw std::runtime_error(&"Некоректный символ: " [ ch]);
 		}
 	}
+
 	static auto world = GameWorld(max_x, y);
 	for (const auto &wall:wall_coordinates)
 	{
@@ -65,10 +72,20 @@ GameWorld &WorldGenerator::parseFromString(const std::string& raw_file, [[maybe_
 		world.at(enemy) = GameObject::Type::ENEMY;
 		world.addTank({enemy, GameObject::Type::ENEMY});
 	}
+	for (int i = 0; i < enemies; i++){
+		int x_ = std::experimental::randint(0, max_x);
+		int y_ = std::experimental::randint (0, y);
+		world.at ({x_,y_}) = GameObject::Type::ENEMY;
+		world.addTank ({{x_,y_,0,Position::Direction::TOP}, GameObject::Type::ENEMY});
+	}
 
+	if (!player) {
+		int x_ = std::experimental::randint (0, max_x);
+		int y_ = std::experimental::randint (0, y);
+		player_coordinates = {x_, y_};
+	}
 	world.at(player_coordinates) = GameObject::Type::PLAYER;
-	world.addTank ({player_coordinates,GameObject::Type::PLAYER});
-	world.player_ = GameObject({player_coordinates,GameObject::Type::PLAYER});//, &world.field_);
+	world.addTank ({player_coordinates, GameObject::Type::PLAYER});
 	ptr = &world;
 	return world;
 }
