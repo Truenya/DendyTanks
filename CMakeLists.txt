@@ -4,8 +4,15 @@ project(ssdl)
 #settings
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_FLAGS "-g -O0 -std=c++2a -fsized-deallocation -Wall -Wextra -Wpedantic")
-#set(CMAKE_CXX_FLAGS "-g -O0 -std=c_++2a -fsized-deallocation -fprofile-use="1.profraw" -Wall -Wextra -Wpedantic")
+set(CMAKE_CXX_EXTENSIONS OFF)
+
+# Debug build flags
+set(CMAKE_CXX_FLAGS_DEBUG "-g -O0 -fsized-deallocation -Wall -Wextra -Wpedantic -DDEBUG")
+
+# Release build flags
+set(CMAKE_CXX_FLAGS_RELEASE "-O3 -fsized-deallocation -Wall -Wextra -Wpedantic")
+
+# Common settings
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
@@ -20,33 +27,77 @@ if(EXISTS ${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
     include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
     conan_basic_setup()
     set(USE_CONAN TRUE)
+elseif(EXISTS ${CMAKE_BINARY_DIR}/conan_toolchain.cmake)
+    message(STATUS "Using Conan 2.x configuration")
+    set(CMAKE_TOOLCHAIN_FILE ${CMAKE_BINARY_DIR}/conan_toolchain.cmake)
+    set(USE_CONAN TRUE)
 else()
-    # Check if Conan is installed
-    execute_process(
-        COMMAND conan --version
-        RESULT_VARIABLE CONAN_RESULT
-        OUTPUT_QUIET
-        ERROR_QUIET
-    )
+    # Try to find Conan
+    find_program(CONAN_COMMAND conan)
     
-    if(CONAN_RESULT EQUAL 0)
-        message(STATUS "Conan is installed, setting up dependencies")
-        # Run conan install
+    if(CONAN_COMMAND)
+        # Platform-specific setup
+        if(WIN32)
+            message(STATUS "Windows platform detected")
+        elseif(UNIX)
+            message(STATUS "Unix platform detected")
+        elseif(${CMAKE_SYSTEM} MATCHES "Darwin")
+            message(STATUS "macOS platform detected")
+            # Install Conan if needed on macOS
+            execute_process(COMMAND pip install conan)
+        endif()
+        
+        # Get Conan version to determine which approach to use
         execute_process(
-            COMMAND conan install ${CMAKE_SOURCE_DIR} -of ${CMAKE_BINARY_DIR} --build=missing
-            RESULT_VARIABLE CONAN_INSTALL_RESULT
+            COMMAND ${CONAN_COMMAND} --version
+            RESULT_VARIABLE CONAN_RESULT
+            OUTPUT_VARIABLE CONAN_VERSION_OUTPUT
+            ERROR_QUIET
         )
         
-        if(CONAN_INSTALL_RESULT EQUAL 0 AND EXISTS ${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
-            include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
-            conan_basic_setup()
-            set(USE_CONAN TRUE)
-            message(STATUS "Conan dependencies installed successfully")
+        if(CONAN_RESULT EQUAL 0)
+            message(STATUS "Conan is installed: ${CONAN_VERSION_OUTPUT}")
+            
+            # Check if it's Conan 2.x
+            if(CONAN_VERSION_OUTPUT MATCHES "Conan version 2")
+                message(STATUS "Detected Conan 2.x, using modern generators")
+                # Run conan install with Conan 2.x
+                execute_process(
+                    COMMAND ${CONAN_COMMAND} install ${CMAKE_SOURCE_DIR} 
+                            --output-folder=${CMAKE_BINARY_DIR} 
+                            --build=missing
+                    RESULT_VARIABLE CONAN_INSTALL_RESULT
+                    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+                )
+                
+                if(CONAN_INSTALL_RESULT EQUAL 0 AND EXISTS ${CMAKE_BINARY_DIR}/conan_toolchain.cmake)
+                    set(CMAKE_TOOLCHAIN_FILE ${CMAKE_BINARY_DIR}/conan_toolchain.cmake)
+                    set(USE_CONAN TRUE)
+                    message(STATUS "Conan 2.x dependencies installed successfully")
+                else()
+                    message(WARNING "Conan 2.x install failed, will try other methods")
+                endif()
+            else()
+                # Run conan install with Conan 1.x
+                message(STATUS "Detected Conan 1.x, using legacy generators")
+                execute_process(
+                    COMMAND ${CONAN_COMMAND} install ${CMAKE_SOURCE_DIR} --install-folder=${CMAKE_BINARY_DIR} --build=missing
+                    RESULT_VARIABLE CONAN_INSTALL_RESULT
+                    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+                )
+                
+                if(CONAN_INSTALL_RESULT EQUAL 0 AND EXISTS ${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
+                    include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
+                    conan_basic_setup()
+                    set(USE_CONAN TRUE)
+                    message(STATUS "Conan 1.x dependencies installed successfully")
+                else()
+                    message(WARNING "Conan 1.x install failed, will try other methods")
+                endif()
+            endif()
         else()
-            message(WARNING "Conan install failed, will try other methods")
+            message(STATUS "Conan not found or not working, will try other methods")
         endif()
-    else()
-        message(STATUS "Conan not found, will try other methods")
     endif()
 endif()
 
@@ -59,10 +110,13 @@ if(NOT USE_CONAN)
         set(VCPKG_TOOLCHAIN_FILE "${CMAKE_SOURCE_DIR}/vcpkg/scripts/buildsystems/vcpkg.cmake")
     elseif(EXISTS "${CMAKE_CURRENT_BINARY_DIR}/vcpkg/scripts/buildsystems/vcpkg.cmake")
         set(VCPKG_TOOLCHAIN_FILE "${CMAKE_CURRENT_BINARY_DIR}/vcpkg/scripts/buildsystems/vcpkg.cmake")
+    elseif(EXISTS "/usr/local/share/vcpkg/scripts/buildsystems/vcpkg.cmake")
+        set(VCPKG_TOOLCHAIN_FILE "/usr/local/share/vcpkg/scripts/buildsystems/vcpkg.cmake")
     endif()
     
+    # If vcpkg toolchain file is found, use it
     if(DEFINED VCPKG_TOOLCHAIN_FILE AND EXISTS "${VCPKG_TOOLCHAIN_FILE}")
-        message(STATUS "Using vcpkg for dependency management")
+        message(STATUS "Using vcpkg for dependency management: ${VCPKG_TOOLCHAIN_FILE}")
         include("${VCPKG_TOOLCHAIN_FILE}")
         set(USE_VCPKG TRUE)
         
@@ -72,6 +126,62 @@ if(NOT USE_CONAN)
         find_package(UUID REQUIRED)
         # Uncomment if needed
         # find_package(GTest REQUIRED)
+    else()
+        # Try to find vcpkg executable and bootstrap it if needed
+        find_program(VCPKG_EXECUTABLE vcpkg)
+        
+        if(VCPKG_EXECUTABLE)
+            message(STATUS "Found vcpkg executable: ${VCPKG_EXECUTABLE}")
+            
+            # Get vcpkg root directory
+            execute_process(
+                COMMAND ${VCPKG_EXECUTABLE} root
+                OUTPUT_VARIABLE VCPKG_ROOT
+                OUTPUT_STRIP_TRAILING_WHITESPACE
+            )
+            
+            if(VCPKG_ROOT)
+                set(VCPKG_TOOLCHAIN_FILE "${VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake")
+                
+                # Check if vcpkg.json exists and install dependencies
+                if(EXISTS "${CMAKE_SOURCE_DIR}/vcpkg.json")
+                    message(STATUS "Found vcpkg.json, installing dependencies")
+                    
+                    # Install dependencies using vcpkg
+                    execute_process(
+                        COMMAND ${VCPKG_EXECUTABLE} install --triplet=x64-linux
+                        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+                        RESULT_VARIABLE VCPKG_INSTALL_RESULT
+                    )
+                    
+                    if(VCPKG_INSTALL_RESULT EQUAL 0)
+                        message(STATUS "vcpkg dependencies installed successfully")
+                    else()
+                        message(WARNING "vcpkg install failed with code: ${VCPKG_INSTALL_RESULT}")
+                    endif()
+                endif()
+                
+                # Include vcpkg toolchain file
+                if(EXISTS "${VCPKG_TOOLCHAIN_FILE}")
+                    message(STATUS "Using vcpkg toolchain: ${VCPKG_TOOLCHAIN_FILE}")
+                    include("${VCPKG_TOOLCHAIN_FILE}")
+                    set(USE_VCPKG TRUE)
+                    
+                    # Find packages with vcpkg
+                    find_package(SDL2 REQUIRED)
+                    find_package(SDL2_image REQUIRED)
+                    find_package(UUID REQUIRED)
+                    # Uncomment if needed
+                    # find_package(GTest REQUIRED)
+                else()
+                    message(STATUS "vcpkg toolchain file not found at ${VCPKG_TOOLCHAIN_FILE}")
+                endif()
+            else()
+                message(STATUS "Could not determine vcpkg root directory")
+            endif()
+        else()
+            message(STATUS "vcpkg executable not found")
+        endif()
     endif()
 endif()
 
@@ -79,13 +189,36 @@ endif()
 if(NOT USE_CONAN AND NOT USE_VCPKG)
     message(STATUS "Using pkg-config for dependency management")
     set(USE_PKG_CONFIG TRUE)
-    INCLUDE(FindPkgConfig)
-    pkg_check_modules(SDL REQUIRED sdl2)
-    pkg_check_modules(SDL_IMAGE REQUIRED SDL2_image)
-    pkg_check_modules(UUID REQUIRED uuid)
-    # Uncomment if needed
-    # pkg_check_modules(GTEST REQUIRED gtest)
-    # pkg_check_modules(TCMALLOC REQUIRED libtcmalloc)
+    
+    # Check if pkg-config is available
+    find_package(PkgConfig QUIET)
+    if(PKG_CONFIG_FOUND)
+        message(STATUS "pkg-config found: ${PKG_CONFIG_EXECUTABLE}")
+        
+        # Try to find required packages
+        pkg_check_modules(SDL2 REQUIRED sdl2)
+        pkg_check_modules(SDL2_IMAGE REQUIRED SDL2_image)
+        pkg_check_modules(UUID REQUIRED uuid)
+        # Optional packages
+        pkg_check_modules(GTEST gtest)
+        
+        # Check if all required dependencies were found
+        if(SDL2_FOUND AND SDL2_IMAGE_FOUND AND UUID_FOUND)
+            message(STATUS "All required dependencies found via pkg-config")
+        else()
+            message(FATAL_ERROR "Not all required dependencies were found via pkg-config")
+        endif()
+        
+        # Report found package versions
+        message(STATUS "SDL2 version: ${SDL2_VERSION}")
+        message(STATUS "SDL2_image version: ${SDL2_IMAGE_VERSION}")
+        message(STATUS "UUID version: ${UUID_VERSION}")
+        if(GTEST_FOUND)
+            message(STATUS "GTest version: ${GTEST_VERSION}")
+        endif()
+    else()
+        message(FATAL_ERROR "pkg-config not found and neither Conan nor vcpkg are available. Cannot resolve dependencies.")
+    endif()
 endif()
 
 
@@ -100,21 +233,31 @@ file(GLOB_RECURSE mEntitySources Entities/*.cpp)
 message("Headers:\t$${mEntityIncludes};\n\t${mProcessorsIncludes}\n\
 Sources:\t${mSources};\n\t${mEntitySources};\n\t${mProcessorsSources}\n")
 
-#includes
+# Always include the project source directory
 include_directories(${CMAKE_SOURCE_DIR})
 
 # Add include directories based on the dependency management system
 if(USE_CONAN)
-    # Conan includes are handled by conan_basic_setup()
+    # Conan includes are handled by conan_basic_setup() for Conan 1.x
+    # For Conan 2.x, the toolchain file handles includes
+    message(STATUS "Using Conan-provided include directories")
 elseif(USE_VCPKG)
     # vcpkg includes are handled by find_package()
+    message(STATUS "Using vcpkg-provided include directories")
 elseif(USE_PKG_CONFIG)
-    include_directories(${SDL_INCLUDE_DIRS})
-    include_directories(${SDL_IMAGE_INCLUDE_DIRS})
+    # Add pkg-config include directories
+    include_directories(${SDL2_INCLUDE_DIRS})
+    include_directories(${SDL2_IMAGE_INCLUDE_DIRS})
     include_directories(${UUID_INCLUDE_DIRS})
-    # Uncomment if needed
-    # include_directories(${TCMALLOC_INCLUDE_DIRS})
-    # include_directories(${GTEST_INCLUDE_DIRS})
+    
+    if(GTEST_FOUND)
+        include_directories(${GTEST_INCLUDE_DIRS})
+    endif()
+    
+    message(STATUS "Using pkg-config include directories:")
+    message(STATUS "  SDL2: ${SDL2_INCLUDE_DIRS}")
+    message(STATUS "  SDL2_IMAGE: ${SDL2_IMAGE_INCLUDE_DIRS}")
+    message(STATUS "  UUID: ${UUID_INCLUDE_DIRS}")
 endif()
 
 #options

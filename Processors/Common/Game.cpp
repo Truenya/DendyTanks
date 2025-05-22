@@ -4,76 +4,121 @@
 
 #include <iostream>
 #include "Game.h"
+#include "../Graphics/Renderer.h"
+#include "MainProcessor.h"
+#include "../Parsers/WorldGenerator.h"
 
-std::atomic_bool Game::isCurrentlyWorking_;
+// Initialize static member
+std::atomic_bool Game::isCurrentlyWorking_{false};
 
-void Game::sigHandler (int signal)
-{
-	isCurrentlyWorking_.store (false);
+// Static method to stop the game
+void Game::stopGame() {
+    isCurrentlyWorking_.store(false);
 }
 
-// Движение на стрелки, стрелять на пробел
-Game::Game(): syncStreamErrors_(std::cerr),
+// Constructor
+Game::Game(): 
+    syncStreamErrors_(std::cerr)
 #ifdef MAKE_LOG
-				logFileForEverything_("1.txt")
-				, logsSynchroStream_(logFileForEverything_),
-				renderer_(isCurrentlyWorking_,logsSynchroStream_),
-				processor_(WorldGenerator::generateWorld("labirinth.txt"),logsSynchroStream_)
-#else
-	renderer_(isCurrentlyWorking_),
-	processor_(WorldGenerator::generateWorld("../resources/labirinth.txt"))
+    , logFileForEverything_("game_log.txt")
+    , logsSynchroStream_(logFileForEverything_)
 #endif
 {
-	isCurrentlyWorking_.store(false);
-	renderer_.setProcessor(&processor_);
+    // Initialize game components
+#ifdef MAKE_LOG
+    renderer_ = new Renderer(isCurrentlyWorking_, logsSynchroStream_);
+    processor_ = new MainProcessor(
+        WorldGenerator::generateWorld("../resources/labirinth.txt"), 
+        logsSynchroStream_
+    );
+#else
+    renderer_ = new Renderer(isCurrentlyWorking_);
+    processor_ = new MainProcessor(
+        WorldGenerator::generateWorld("../resources/labirinth.txt")
+    );
+#endif
+
+    // Connect components
+    renderer_->setProcessor(processor_);
 }
 
-Game::~Game() = default;
-
-void Game::mainLoop () {
-// От SDL ивентов образуется набор команд, которые обрабатываются в потоке процессора
-// Обработка движения снарядов происходит на каждой итерации обработки.
-//TODO P.S. Все проверки должны быть убраны из метода update, это игровой цикл, он критичен к производительности.
-//TODO P.P.S. Проверки должны производится в месте, обрабатывающем возможность перемещения, при добавлении в очередь.
-//FIXME Проблемные места - processTankMove, processShoot
-// (в отдельном потоке, при добавлении процессору в очередь обновленных данных)
-	while(isCurrentlyWorking_.load()){
-		update();
-	}
+// Destructor
+Game::~Game() {
+    // Ensure game is stopped
+    isCurrentlyWorking_.store(false);
+    
+    // Clean up resources
+    delete renderer_;
+    delete processor_;
 }
 
+// Main game loop
+void Game::mainLoop() {
+    // Game loop runs until isCurrentlyWorking_ is set to false
+    while(isCurrentlyWorking_.load()) {
+        update();
+    }
+}
+
+// Start the game
 void Game::start() {
-	if (!isCurrentlyWorking_.load()) {
-		renderer_.prepare();
-		isCurrentlyWorking_.store(true);
-		thProcessingEvents_ = std::jthread([&](){ renderer_.processingEventsLoop();});
-		thProcessingNpc = std::jthread([&]() {processor_.processingNpcLoop (isCurrentlyWorking_);});
-		mainLoop();
-	}
-	else{
-		syncStreamErrors_ << "Trying to start work, when already working.";
-		syncStreamErrors_.emit();
-	}
+    if (!isCurrentlyWorking_.load()) {
+        // Prepare renderer
+        renderer_->prepare();
+        
+        // Set game as running
+        isCurrentlyWorking_.store(true);
+        
+        // Start threads
+        thProcessingEvents_ = std::jthread([this]() { 
+            renderer_->processingEventsLoop();
+        });
+        
+        thProcessingNpc = std::jthread([this]() {
+            processor_->processingNpcLoop(isCurrentlyWorking_);
+        });
+        
+        // Start main loop
+        mainLoop();
+    } else {
+        // Log error if already running
+        syncStreamErrors_ << "Trying to start game when it's already running.";
+        syncStreamErrors_.emit();
+    }
 }
 
-void Game::update ()
-{
-	static long long unsigned i{0};
-
-	typedef std::chrono::high_resolution_clock Clock;
-
-	auto t1 = Clock::now();
-	processor_.processProjectilesMoving();
-	auto t2 = Clock::now();
-	processor_.processCommands();
-	auto t3 = Clock::now();
-	renderer_.render();
-	auto t4 = Clock::now();
-	if (i % 5000 == 1) {
-		std::cout << "shoots: " << t2 - t1 << '\n';
-		std::cout << "moves: " << t3 - t2 << '\n';
-		std::cout << "render: " << t4 - t3 << '\n';
-	}
-	i++;
-	sched_yield();
+// Update game state
+void Game::update() {
+    // Performance tracking
+    using Clock = std::chrono::high_resolution_clock;
+    
+    // Process game logic
+    auto t1 = Clock::now();
+    processor_->processProjectilesMoving();
+    auto t2 = Clock::now();
+    processor_->processCommands();
+    auto t3 = Clock::now();
+    renderer_->render();
+    auto t4 = Clock::now();
+    
+    // Performance logging (only every 5000 frames)
+    static unsigned long long frameCount{0};
+    
+#ifdef DEBUG
+    if (frameCount % 5000 == 1) {
+        auto projectileTime = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1);
+        auto commandTime = std::chrono::duration_cast<std::chrono::microseconds>(t3 - t2);
+        auto renderTime = std::chrono::duration_cast<std::chrono::microseconds>(t4 - t3);
+        
+        std::cout << "Performance metrics (microseconds):\n"
+                  << "  Projectiles: " << projectileTime.count() << "\n"
+                  << "  Commands: " << commandTime.count() << "\n"
+                  << "  Rendering: " << renderTime.count() << "\n";
+    }
+#endif
+    
+    frameCount++;
+    
+    // Yield to other threads
+    std::this_thread::yield();
 }
