@@ -11,29 +11,63 @@
 #include <queue>
 #include <thread>
 #include <functional>
-#include "../Graphics/Renderer.h"
-#include "MainProcessor.h"
+#include <atomic>
 
+// Forward declarations to avoid circular dependencies
+class Renderer;
+class MainProcessor;
 
-struct Game {
-	Game();
-	~Game();
-	void start();
-	static void sigHandler (int);
-	static std::atomic_bool isCurrentlyWorking_;
+/**
+ * @class Game
+ * @brief Main game class that manages the game loop and threads
+ */
+class Game {
+public:
+    /**
+     * @brief Constructor
+     */
+    Game();
+    
+    /**
+     * @brief Destructor
+     */
+    ~Game();
+    
+    /**
+     * @brief Start the game
+     */
+    void start();
+    
+    /**
+     * @brief Static method to stop the game
+     */
+    static void stopGame();
+    
 private:
-	std::osyncstream syncStreamErrors_;
-	std::jthread thProcessingEvents_;
-	std::jthread thProcessingCommands_;
-	std::jthread thProcessingNpc;
-	void mainLoop () ;
-	void update();
+    // Static atomic flag for controlling game execution
+    static std::atomic_bool isCurrentlyWorking_;
+    
+    // Thread-safe error stream
+    std::osyncstream syncStreamErrors_;
+    
+    // Game threads
+    std::jthread thProcessingEvents_;
+    std::jthread thProcessingCommands_;
+    std::jthread thProcessingNpc;
+    
+    // Game loop methods
+    void mainLoop();
+    void update();
+    
+    // Logging
 #ifdef MAKE_LOG
-	std::ofstream logFileForEverything_;
-	std::osyncstream logsSynchroStream_;
+    std::ofstream logFileForEverything_;
+    std::osyncstream logsSynchroStream_;
 #endif
-	Renderer renderer_;
-	MainProcessor processor_;
+
+    // Game components
+    Renderer* renderer_;
+    MainProcessor* processor_;
 };
 
 
