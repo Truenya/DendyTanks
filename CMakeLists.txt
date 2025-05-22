@@ -4,25 +4,56 @@ project(ssdl)
 #settings
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_FLAGS "-g -O0 -std=c++2a -fsized-deallocation -Wall -Wextra -Wpedantic")
-#set(CMAKE_CXX_FLAGS "-g -O0 -std=c_++2a -fsized-deallocation -fprofile-use="1.profraw" -Wall -Wextra -Wpedantic")
+set(CMAKE_CXX_EXTENSIONS OFF)
+
+# Debug build flags
+set(CMAKE_CXX_FLAGS_DEBUG "-g -O0 -fsized-deallocation -Wall -Wextra -Wpedantic -DDEBUG")
+
+# Release build flags
+set(CMAKE_CXX_FLAGS_RELEASE "-O3 -fsized-deallocation -Wall -Wextra -Wpedantic")
+
+# Common settings
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-#if(EXISTS ${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
-#	include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
-#	conan_basic_setup()
-#else()
-#	execute_process(COMMAND which conan)
-#	if (WIN32)
-#		message (FATAL_ERROR "в **пу винду, сами разбирайтесь")
-#	elseif (UNIX)
-#	elseif (${CMAKE_SYSTEM} MATCHES "Darwin")
-#		execute_process(COMMAND pip install conan)
-#	endif ()
-#	execute_process(COMMAND conan install .. --install-folder . --build=missing)
-#	message(WARNING "The file conanbuildinfo.cmake doesn't exist at ${CMAKE_BINARY_DIR}, you have to run conan install first")
-#endif()
+# Check for Conan package manager
+if(EXISTS ${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
+    include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
+    conan_basic_setup()
+else()
+    # Try to find Conan
+    find_program(CONAN_COMMAND conan)
+    
+    if(CONAN_COMMAND)
+        # Platform-specific setup
+        if(WIN32)
+            message(STATUS "Windows platform detected")
+        elseif(UNIX)
+            message(STATUS "Unix platform detected")
+        elseif(${CMAKE_SYSTEM} MATCHES "Darwin")
+            message(STATUS "macOS platform detected")
+            # Install Conan if needed on macOS
+            execute_process(COMMAND pip install conan)
+        endif()
+        
+        # Install dependencies using Conan
+        message(STATUS "Installing dependencies with Conan")
+        execute_process(
+            COMMAND ${CONAN_COMMAND} install .. --install-folder . --build=missing
+            WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+        )
+        
+        # Include the generated Conan file if it exists now
+        if(EXISTS ${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
+            include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
+            conan_basic_setup()
+        else()
+            message(WARNING "The file conanbuildinfo.cmake doesn't exist at ${CMAKE_BINARY_DIR}, you may need to run conan install manually")
+        endif()
+    else()
+        message(STATUS "Conan not found, using system libraries")
+    endif()
+endif()
 #libs
 INCLUDE(FindPkgConfig)
 pkg_check_modules(SDL REQUIRED sdl2)
