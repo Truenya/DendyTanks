@@ -8,6 +8,8 @@ profdata/*.profdata
 *.png
 *.bmp
 *.txt
+!conanfile.txt
+!vcpkg.json
 
 #ignore build_dirs
 .idea
@@ -21,3 +23,8 @@ cmake-build-debug-remote-host
 #ignore cmake things
 cmake*
 *.cmake
+
+# Nix specific
+result
+result-*
+.direnv/
