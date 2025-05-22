@@ -1,10 +1,10 @@
 [requires]                     # The Conan packages which are used in the application
-sdl/2.0.20
+sdl/2.28.3
 stduuid/1.2.2
 gtest/cci.20210126
-sdl_image/2.0.5
+sdl_image/2.6.3
 
 [generators]
-#CMakeDeps
-#CMakeToolchain
+CMakeDeps
+CMakeToolchain
 cmake
