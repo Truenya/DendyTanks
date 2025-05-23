@@ -1,28 +1,80 @@
 cmake_minimum_required(VERSION 3.20)
 
-# Check for Nix environment and set compiler paths before project declaration
-if(DEFINED ENV{NIX_CC} OR DEFINED ENV{NIX_STORE})
-    message(STATUS "Nix environment detected, setting compiler paths")
+# Special handling for Nix environments to fix compiler detection issues
+if(DEFINED ENV{NIX_CC} OR DEFINED ENV{NIX_STORE} OR DEFINED ENV{IN_NIX_SHELL})
+    message(STATUS "Nix environment detected, handling compiler detection")
     
-    # Try to find gcc and g++ in the PATH
-    find_program(CMAKE_C_COMPILER NAMES gcc cc)
-    find_program(CMAKE_CXX_COMPILER NAMES g++ c++)
+    # Try multiple approaches to find working compilers in Nix
     
-    # Print the compilers that will be used
-    if(CMAKE_C_COMPILER)
-        message(STATUS "Using C compiler: ${CMAKE_C_COMPILER}")
-    else()
-        message(WARNING "C compiler not found in PATH")
+    # Approach 1: Use simple compiler names that resolve through PATH
+    if(NOT DEFINED CMAKE_C_COMPILER OR NOT DEFINED CMAKE_CXX_COMPILER)
+        message(STATUS "Trying simple compiler names...")
+        set(ENV{CC} "cc")
+        set(ENV{CXX} "c++")
+        set(CMAKE_C_COMPILER "cc" CACHE FILEPATH "C compiler" FORCE)
+        set(CMAKE_CXX_COMPILER "c++" CACHE FILEPATH "C++ compiler" FORCE)
     endif()
     
-    if(CMAKE_CXX_COMPILER)
-        message(STATUS "Using C++ compiler: ${CMAKE_CXX_COMPILER}")
-    else()
-        message(WARNING "C++ compiler not found in PATH")
+    # Approach 2: Find actual executables in PATH
+    if(NOT DEFINED CMAKE_C_COMPILER OR NOT DEFINED CMAKE_CXX_COMPILER)
+        message(STATUS "Trying to find compiler executables in PATH...")
+        execute_process(
+            COMMAND which cc
+            OUTPUT_VARIABLE CC_PATH
+            OUTPUT_STRIP_TRAILING_WHITESPACE
+        )
+        execute_process(
+            COMMAND which c++
+            OUTPUT_VARIABLE CXX_PATH
+            OUTPUT_STRIP_TRAILING_WHITESPACE
+        )
+        
+        if(CC_PATH AND CXX_PATH)
+            message(STATUS "Found C compiler: ${CC_PATH}")
+            message(STATUS "Found C++ compiler: ${CXX_PATH}")
+            set(CMAKE_C_COMPILER "${CC_PATH}" CACHE FILEPATH "C compiler" FORCE)
+            set(CMAKE_CXX_COMPILER "${CXX_PATH}" CACHE FILEPATH "C++ compiler" FORCE)
+        endif()
+    endif()
+    
+    # Approach 3: Use gcc/g++ directly if cc/c++ didn't work
+    if(NOT DEFINED CMAKE_C_COMPILER OR NOT DEFINED CMAKE_CXX_COMPILER)
+        message(STATUS "Trying gcc/g++...")
+        execute_process(
+            COMMAND which gcc
+            OUTPUT_VARIABLE GCC_PATH
+            OUTPUT_STRIP_TRAILING_WHITESPACE
+        )
+        execute_process(
+            COMMAND which g++
+            OUTPUT_VARIABLE GXX_PATH
+            OUTPUT_STRIP_TRAILING_WHITESPACE
+        )
+        
+        if(GCC_PATH AND GXX_PATH)
+            message(STATUS "Found GCC: ${GCC_PATH}")
+            message(STATUS "Found G++: ${GXX_PATH}")
+            set(CMAKE_C_COMPILER "${GCC_PATH}" CACHE FILEPATH "C compiler" FORCE)
+            set(CMAKE_CXX_COMPILER "${GXX_PATH}" CACHE FILEPATH "C++ compiler" FORCE)
+        endif()
+    endif()
+    
+    # Final message about compiler settings
+    message(STATUS "Using C compiler: ${CMAKE_C_COMPILER}")
+    message(STATUS "Using C++ compiler: ${CMAKE_CXX_COMPILER}")
+    
+    # Instruct users if we still don't have compilers
+    if(NOT DEFINED CMAKE_C_COMPILER OR NOT DEFINED CMAKE_CXX_COMPILER)
+        message(FATAL_ERROR "Could not find C/C++ compilers in Nix environment. Please run:\n"
+                           "cmake -B build -DCMAKE_C_COMPILER=\$(which cc) -DCMAKE_CXX_COMPILER=\$(which c++)")
     endif()
 endif()
 
-project(ssdl)
+# Set language before project to avoid compiler checks
+set(CMAKE_C_COMPILER_WORKS 1)
+set(CMAKE_CXX_COMPILER_WORKS 1)
+
+project(ssdl LANGUAGES C CXX)
 
 #settings
 set(CMAKE_CXX_STANDARD 23)
