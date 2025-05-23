@@ -10,6 +10,7 @@
 #include <memory>
 #include <syncstream>
 #include <vector>
+#include <atomic>
 
 typedef std::vector<std::pair<Position,Position>> RenderMoveInfo;
 typedef RenderMoveInfo RenderShootInfo;
@@ -23,7 +24,7 @@ struct MainProcessor {
 	void addCommand(BaseCommand command);
 	void processCommands();
 	bool processProjectilesMoving();
-	void processingNpcLoop (const atomic<bool> &working);
+	void processingNpcLoop (const std::atomic<bool> &working);
 	bool noTankAtPos (const Position pos);
 	[[nodiscard]] RenderMoveInfo getPlayerChangedPositions();
 	[[nodiscard]] RenderMoveInfo getNpcChangedPositions();
