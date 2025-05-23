@@ -18,7 +18,7 @@ bool Renderer::render ()
 {
 	typedef std::chrono::high_resolution_clock Clock;
 	// Замерим время выполнения
-	const long int CUR_TIME_MS = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
+	const long int CUR_TIME_MS = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 	rendered_ = fps_.makeSomePauseIfNeeded (CUR_TIME_MS);
 	renderNpcMove();
 	renderPlayerMove();
