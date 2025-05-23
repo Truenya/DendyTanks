@@ -1,4 +1,27 @@
 cmake_minimum_required(VERSION 3.20)
+
+# Check for Nix environment and set compiler paths before project declaration
+if(DEFINED ENV{NIX_CC} OR DEFINED ENV{NIX_STORE})
+    message(STATUS "Nix environment detected, setting compiler paths")
+    
+    # Try to find gcc and g++ in the PATH
+    find_program(CMAKE_C_COMPILER NAMES gcc cc)
+    find_program(CMAKE_CXX_COMPILER NAMES g++ c++)
+    
+    # Print the compilers that will be used
+    if(CMAKE_C_COMPILER)
+        message(STATUS "Using C compiler: ${CMAKE_C_COMPILER}")
+    else()
+        message(WARNING "C compiler not found in PATH")
+    endif()
+    
+    if(CMAKE_CXX_COMPILER)
+        message(STATUS "Using C++ compiler: ${CMAKE_CXX_COMPILER}")
+    else()
+        message(WARNING "C++ compiler not found in PATH")
+    endif()
+endif()
+
 project(ssdl)
 
 #settings

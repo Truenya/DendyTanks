@@ -56,8 +56,14 @@ nix develop
 Then build the project with:
 
 ```bash
-cmake -B build
+# Option 1: Use the helper script (recommended for Nix environments)
+./nix-cmake-build.sh
+
+# Option 2: Manual CMake commands
+cmake -B build -DCMAKE_C_COMPILER=$(which cc) -DCMAKE_CXX_COMPILER=$(which c++)
 cmake --build build
 ```
+
+If you encounter compiler detection issues in Nix, always use the explicit compiler path approach shown above.
 
 The executable will be available at `build/ssdl`.
