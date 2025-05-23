@@ -301,3 +301,9 @@ elseif(USE_PKG_CONFIG)
         # ${GTEST_LIBRARIES}
     )
 endif()
+
+# Enable testing
+enable_testing()
+
+# Add tests subdirectory
+add_subdirectory(tests)
