@@ -16,4 +16,13 @@ else
     nix-build
 fi
 
-echo "Build completed. The result is in ./result/bin/dendy-tanks"
+echo "Nix build completed. The result is in ./result/bin/dendy-tanks"
+
+# Offer to build with CMake directly as an alternative
+echo ""
+echo "Alternatively, you can build with CMake directly:"
+echo "To build with CMake, run:"
+echo "  # Enter the Nix development environment first"
+echo "  nix develop # or nix-shell"
+echo "  # Then build with CMake"
+echo "  cmake -B build && cmake --build build"

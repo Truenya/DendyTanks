@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.20)
-project(ssdl)
+
+project(ssdl LANGUAGES C CXX)
 
 #settings
 set(CMAKE_CXX_STANDARD 23)

@@ -37,9 +37,10 @@ nix-shell
 
 ### Quick build script
 
-You can also use the provided build script:
+You can use the provided build script:
 
 ```bash
+# Standard Nix build
 ./nix-build.sh
 ```
 
@@ -56,8 +57,7 @@ nix develop
 Then build the project with:
 
 ```bash
-cmake -B build
-cmake --build build
+cmake -B build && cmake --build build
 ```
 
 The executable will be available at `build/ssdl`.
