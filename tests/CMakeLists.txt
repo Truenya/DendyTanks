@@ -15,41 +15,27 @@ endif()
 # Include directories
 include_directories(${CMAKE_SOURCE_DIR})
 
-# Add test executables
-add_executable(utility_tests
-    utility_tests.cpp
-)
-
-add_executable(simple_tests
-    simple_tests.cpp
+# Add test executable
+add_executable(managed_vector_tests
+    managed_vector_tests.cpp
 )
 
 # Link with GTest
 if(USE_CONAN)
-    target_link_libraries(utility_tests ${CONAN_LIBS})
-    target_link_libraries(simple_tests ${CONAN_LIBS})
+    target_link_libraries(managed_vector_tests ${CONAN_LIBS})
 elseif(USE_VCPKG)
-    target_link_libraries(utility_tests
-        GTest::GTest
-        GTest::Main
-    )
-    target_link_libraries(simple_tests
+    target_link_libraries(managed_vector_tests
         GTest::GTest
         GTest::Main
     )
 elseif(USE_PKG_CONFIG)
-    target_link_libraries(utility_tests
-        ${GTEST_LIBRARIES}
-    )
-    target_link_libraries(simple_tests
+    target_link_libraries(managed_vector_tests
         ${GTEST_LIBRARIES}
     )
 else()
     # Default case for simple builds
-    target_link_libraries(utility_tests gtest gtest_main pthread)
-    target_link_libraries(simple_tests gtest gtest_main pthread)
+    target_link_libraries(managed_vector_tests gtest gtest_main pthread)
 endif()
 
-# Add tests to CTest
-add_test(NAME UtilityTests COMMAND utility_tests)
-add_test(NAME SimpleTests COMMAND simple_tests)
+# Add test to CTest
+add_test(NAME ManagedVectorTests COMMAND managed_vector_tests)

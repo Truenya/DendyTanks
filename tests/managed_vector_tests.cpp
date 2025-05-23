@@ -1,11 +1,19 @@
 #include <gtest/gtest.h>
-#include "Entities/Utility.h"
+#include "../Entities/Utility.h"
 
-// Test fixture for ManagedVector tests
+// Test fixture for ManagedVector
 class ManagedVectorTest : public ::testing::Test {
 protected:
     ManagedVector<int> intVector;
     ManagedVector<std::string> stringVector;
+
+    void SetUp() override {
+        // This will be called before each test
+    }
+
+    void TearDown() override {
+        // This will be called after each test
+    }
 };
 
 // Test adding elements to the vector
