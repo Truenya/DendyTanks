@@ -278,7 +278,8 @@ RenderShootInfo MainProcessor::getShoots ()
 //}
 
 #include <thread>
-void MainProcessor::processingNpcLoop (const atomic_bool &working)
+#include <atomic>
+void MainProcessor::processingNpcLoop (const std::atomic<bool> &working)
 {
 	while(working.load ()) {
 		std::this_thread::sleep_for (std::chrono::milliseconds (500));
