@@ -35,7 +35,7 @@ nix-build
 nix-shell
 ```
 
-### Quick build scripts
+### Quick build script
 
 You can use the provided build script:
 
@@ -57,16 +57,6 @@ nix develop
 Then build the project with:
 
 ```bash
-# Use the nix-cmake.sh wrapper script (recommended for Nix environments)
-./nix-cmake.sh -B build && cmake --build build
-```
-
-If you encounter compiler detection issues in Nix, you can also try:
-
-```bash
-# Alternative: Set environment variables manually
-export CC=$(which cc)
-export CXX=$(which c++)
 cmake -B build && cmake --build build
 ```
 

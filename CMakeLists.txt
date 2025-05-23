@@ -1,8 +1,5 @@
 cmake_minimum_required(VERSION 3.20)
 
-# We don't need special handling in CMakeLists.txt anymore
-# The nix-cmake.sh script handles setting the correct environment variables
-
 project(ssdl LANGUAGES C CXX)
 
 #settings

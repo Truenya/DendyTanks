@@ -7,15 +7,6 @@ if ! command -v nix &> /dev/null; then
     exit 1
 fi
 
-# Find compilers in the PATH
-CC_PATH=$(which cc 2>/dev/null || which gcc 2>/dev/null)
-CXX_PATH=$(which c++ 2>/dev/null || which g++ 2>/dev/null)
-
-if [ -z "$CC_PATH" ] || [ -z "$CXX_PATH" ]; then
-    echo "Warning: Could not find C/C++ compilers in PATH"
-    echo "Will try to continue with Nix build, but CMake might fail to detect compilers"
-fi
-
 # Check if flakes are enabled
 if nix flake --help &> /dev/null; then
     echo "Building with flakes..."
@@ -31,6 +22,7 @@ echo "Nix build completed. The result is in ./result/bin/dendy-tanks"
 echo ""
 echo "Alternatively, you can build with CMake directly:"
 echo "To build with CMake, run:"
-echo "  mkdir -p build && cd build"
-echo "  cmake -DCMAKE_C_COMPILER=\"$CC_PATH\" -DCMAKE_CXX_COMPILER=\"$CXX_PATH\" .."
-echo "  cmake --build ."
+echo "  # Enter the Nix development environment first"
+echo "  nix develop # or nix-shell"
+echo "  # Then build with CMake"
+echo "  cmake -B build && cmake --build build"
