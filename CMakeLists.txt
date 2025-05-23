@@ -1,35 +1,7 @@
 cmake_minimum_required(VERSION 3.20)
 
-# Create a toolchain file for Nix if we're in a Nix environment
-if(DEFINED ENV{NIX_CC} OR DEFINED ENV{NIX_STORE} OR DEFINED ENV{IN_NIX_SHELL})
-    message(STATUS "Nix environment detected, creating toolchain file")
-    
-    # Create a temporary toolchain file
-    file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/nix-toolchain.cmake" "
-# Toolchain file for Nix environments
-set(CMAKE_SYSTEM_NAME Linux)
-
-# Specify the compilers (use simple names that will be found in PATH)
-set(CMAKE_C_COMPILER cc)
-set(CMAKE_CXX_COMPILER c++)
-
-# Skip compiler checks
-set(CMAKE_C_COMPILER_WORKS TRUE)
-set(CMAKE_CXX_COMPILER_WORKS TRUE)
-
-# Skip compiler ABI detection
-set(CMAKE_C_ABI_COMPILED TRUE)
-set(CMAKE_CXX_ABI_COMPILED TRUE)
-
-# Use pkg-config for finding libraries
-set(PKG_CONFIG_EXECUTABLE pkg-config)
-")
-
-    # Use the toolchain file
-    set(CMAKE_TOOLCHAIN_FILE "${CMAKE_CURRENT_BINARY_DIR}/nix-toolchain.cmake" CACHE FILEPATH "Toolchain file" FORCE)
-    
-    message(STATUS "Created and set toolchain file: ${CMAKE_TOOLCHAIN_FILE}")
-endif()
+# We don't need special handling in CMakeLists.txt anymore
+# The nix-cmake.sh script handles setting the correct environment variables
 
 project(ssdl LANGUAGES C CXX)
 
