@@ -1,78 +1,35 @@
 cmake_minimum_required(VERSION 3.20)
 
-# Special handling for Nix environments to fix compiler detection issues
+# Create a toolchain file for Nix if we're in a Nix environment
 if(DEFINED ENV{NIX_CC} OR DEFINED ENV{NIX_STORE} OR DEFINED ENV{IN_NIX_SHELL})
-    message(STATUS "Nix environment detected, handling compiler detection")
+    message(STATUS "Nix environment detected, creating toolchain file")
     
-    # Try multiple approaches to find working compilers in Nix
-    
-    # Approach 1: Use simple compiler names that resolve through PATH
-    if(NOT DEFINED CMAKE_C_COMPILER OR NOT DEFINED CMAKE_CXX_COMPILER)
-        message(STATUS "Trying simple compiler names...")
-        set(ENV{CC} "cc")
-        set(ENV{CXX} "c++")
-        set(CMAKE_C_COMPILER "cc" CACHE FILEPATH "C compiler" FORCE)
-        set(CMAKE_CXX_COMPILER "c++" CACHE FILEPATH "C++ compiler" FORCE)
-    endif()
-    
-    # Approach 2: Find actual executables in PATH
-    if(NOT DEFINED CMAKE_C_COMPILER OR NOT DEFINED CMAKE_CXX_COMPILER)
-        message(STATUS "Trying to find compiler executables in PATH...")
-        execute_process(
-            COMMAND which cc
-            OUTPUT_VARIABLE CC_PATH
-            OUTPUT_STRIP_TRAILING_WHITESPACE
-        )
-        execute_process(
-            COMMAND which c++
-            OUTPUT_VARIABLE CXX_PATH
-            OUTPUT_STRIP_TRAILING_WHITESPACE
-        )
-        
-        if(CC_PATH AND CXX_PATH)
-            message(STATUS "Found C compiler: ${CC_PATH}")
-            message(STATUS "Found C++ compiler: ${CXX_PATH}")
-            set(CMAKE_C_COMPILER "${CC_PATH}" CACHE FILEPATH "C compiler" FORCE)
-            set(CMAKE_CXX_COMPILER "${CXX_PATH}" CACHE FILEPATH "C++ compiler" FORCE)
-        endif()
-    endif()
-    
-    # Approach 3: Use gcc/g++ directly if cc/c++ didn't work
-    if(NOT DEFINED CMAKE_C_COMPILER OR NOT DEFINED CMAKE_CXX_COMPILER)
-        message(STATUS "Trying gcc/g++...")
-        execute_process(
-            COMMAND which gcc
-            OUTPUT_VARIABLE GCC_PATH
-            OUTPUT_STRIP_TRAILING_WHITESPACE
-        )
-        execute_process(
-            COMMAND which g++
-            OUTPUT_VARIABLE GXX_PATH
-            OUTPUT_STRIP_TRAILING_WHITESPACE
-        )
-        
-        if(GCC_PATH AND GXX_PATH)
-            message(STATUS "Found GCC: ${GCC_PATH}")
-            message(STATUS "Found G++: ${GXX_PATH}")
-            set(CMAKE_C_COMPILER "${GCC_PATH}" CACHE FILEPATH "C compiler" FORCE)
-            set(CMAKE_CXX_COMPILER "${GXX_PATH}" CACHE FILEPATH "C++ compiler" FORCE)
-        endif()
-    endif()
-    
-    # Final message about compiler settings
-    message(STATUS "Using C compiler: ${CMAKE_C_COMPILER}")
-    message(STATUS "Using C++ compiler: ${CMAKE_CXX_COMPILER}")
-    
-    # Instruct users if we still don't have compilers
-    if(NOT DEFINED CMAKE_C_COMPILER OR NOT DEFINED CMAKE_CXX_COMPILER)
-        message(FATAL_ERROR "Could not find C/C++ compilers in Nix environment. Please run:\n"
-                           "cmake -B build -DCMAKE_C_COMPILER=\$(which cc) -DCMAKE_CXX_COMPILER=\$(which c++)")
-    endif()
-endif()
+    # Create a temporary toolchain file
+    file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/nix-toolchain.cmake" "
+# Toolchain file for Nix environments
+set(CMAKE_SYSTEM_NAME Linux)
 
-# Set language before project to avoid compiler checks
-set(CMAKE_C_COMPILER_WORKS 1)
-set(CMAKE_CXX_COMPILER_WORKS 1)
+# Specify the compilers (use simple names that will be found in PATH)
+set(CMAKE_C_COMPILER cc)
+set(CMAKE_CXX_COMPILER c++)
+
+# Skip compiler checks
+set(CMAKE_C_COMPILER_WORKS TRUE)
+set(CMAKE_CXX_COMPILER_WORKS TRUE)
+
+# Skip compiler ABI detection
+set(CMAKE_C_ABI_COMPILED TRUE)
+set(CMAKE_CXX_ABI_COMPILED TRUE)
+
+# Use pkg-config for finding libraries
+set(PKG_CONFIG_EXECUTABLE pkg-config)
+")
+
+    # Use the toolchain file
+    set(CMAKE_TOOLCHAIN_FILE "${CMAKE_CURRENT_BINARY_DIR}/nix-toolchain.cmake" CACHE FILEPATH "Toolchain file" FORCE)
+    
+    message(STATUS "Created and set toolchain file: ${CMAKE_TOOLCHAIN_FILE}")
+endif()
 
 project(ssdl LANGUAGES C CXX)
 

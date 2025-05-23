@@ -35,12 +35,16 @@ nix-build
 nix-shell
 ```
 
-### Quick build script
+### Quick build scripts
 
-You can also use the provided build script:
+You can use one of the provided build scripts:
 
 ```bash
+# Option 1: Standard Nix build
 ./nix-build.sh
+
+# Option 2: Build with CMake using toolchain file (recommended for Nix environments)
+./nix-build-with-toolchain.sh
 ```
 
 ## Development
@@ -56,14 +60,18 @@ nix develop
 Then build the project with:
 
 ```bash
-# Option 1: Use the helper script (recommended for Nix environments)
-./nix-cmake-build.sh
+# Option 1: Use the toolchain file (recommended for Nix environments)
+cmake -B build -DCMAKE_TOOLCHAIN_FILE=./nix-toolchain.cmake
+cmake --build build
 
-# Option 2: Manual CMake commands
+# Option 2: Use the helper script
+./nix-build-with-toolchain.sh
+
+# Option 3: Manual CMake commands with explicit compiler paths
 cmake -B build -DCMAKE_C_COMPILER=$(which cc) -DCMAKE_CXX_COMPILER=$(which c++)
 cmake --build build
 ```
 
-If you encounter compiler detection issues in Nix, always use the explicit compiler path approach shown above.
+If you encounter compiler detection issues in Nix, always use the toolchain file approach shown above.
 
 The executable will be available at `build/ssdl`.
