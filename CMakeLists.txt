@@ -293,8 +293,8 @@ elseif(USE_VCPKG)
 elseif(USE_PKG_CONFIG)
     # Link with pkg-config-provided libraries
     target_link_libraries(ssdl 
-        ${SDL_LIBRARIES}
-        ${SDL_IMAGE_LIBRARIES}
+        ${SDL2_LIBRARIES}
+        ${SDL2_IMAGE_LIBRARIES}
         ${UUID_LIBRARIES}
         # Uncomment if needed
         # ${TCMALLOC_LIBRARIES}
