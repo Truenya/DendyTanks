@@ -20,10 +20,24 @@ bool Renderer::render ()
 	// Замерим время выполнения
 	const long int CUR_TIME_MS = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 	rendered_ = fps_.makeSomePauseIfNeeded (CUR_TIME_MS);
-	renderNpcMove();
-	renderPlayerMove();
-	renderShoots();
-	if (rendered_) SDL_RenderPresent(renderData_.sdlRenderer_);
+	
+	if (rendered_) {
+		// Очищаем экран перед рендерингом
+		SDL_SetRenderDrawColor(renderData_.sdlRenderer_, 0, 0, 0, 255);
+		SDL_RenderClear(renderData_.sdlRenderer_);
+		
+		// Отрисовываем карту
+		fillMap();
+		
+		// Отрисовываем движущиеся объекты
+		renderNpcMove();
+		renderPlayerMove();
+		renderShoots();
+		
+		// Обновляем экран
+		SDL_RenderPresent(renderData_.sdlRenderer_);
+	}
+	
 	renderData_.fps_ = fps_.fps_;
 	return rendered_;
 }
@@ -119,8 +133,8 @@ bool Renderer::init ()
 		std::cout << "Can't create renderer: " << SDL_GetError() << std::endl;
 		quit();
 	}
-	static constexpr int WHITE = 0xFF;
-	if (SDL_SetRenderDrawColor(renderData_.sdlRenderer_, WHITE, WHITE, WHITE, WHITE))
+	// Устанавливаем черный цвет фона
+	if (SDL_SetRenderDrawColor(renderData_.sdlRenderer_, 0, 0, 0, 255))
 	{
 		std::cout << "Can't fill renderer: " << SDL_GetError() << std::endl;
 		quit();
@@ -181,10 +195,17 @@ int Renderer::quit ()
 
 void Renderer::fillMap ()
 {
-	prepareTextures();
+	static bool firstRun = true;
+	
+	// Подготавливаем текстуры только при первом запуске
+	if (firstRun) {
+		prepareTextures();
+		firstRun = false;
+	}
 
 	SDL_Rect dstrect;
-	SDL_Delay(300);
+	
+	// Отрисовываем все клетки карты
 	for (int i = 0; i < renderData_.worldSize_.x_; ++i)
 	{
 		for (int j = 0; j < renderData_.worldSize_.y_; ++j)
@@ -192,15 +213,19 @@ void Renderer::fillMap ()
 			fillRectByPosition(dstrect, i, j);
 		}
 	}
-
-	SDL_RenderPresent(renderData_.sdlRenderer_);
 }
 
 void Renderer::fillRectByPosition (SDL_Rect &dstrect, int i, int j) const
 {
 	auto type = processor_->typeAt({i, j});
-	if (type == GameObject::Type::UNDEFINED)
-		throw std::logic_error ("Trying to render unknown object");
+	
+	// Если тип неопределен, просто отрисовываем пустое пространство
+	if (type == GameObject::Type::UNDEFINED) {
+		setScreenPosition(dstrect, i, j);
+		SDL_RenderCopy(renderData_.sdlRenderer_, renderData_.sdlFillTexture_, nullptr, &dstrect);
+		return;
+	}
+	
 	setScreenPosition(dstrect, i, j);
 	switch (type)
 	{
@@ -226,7 +251,8 @@ void Renderer::fillRectByPosition (SDL_Rect &dstrect, int i, int j) const
 				throw std::runtime_error("Cannot render space");
 			break;
 		default:
-			throw std::logic_error ("Trying to render unknown object");
+			// Для любых других типов отрисовываем пустое пространство
+			SDL_RenderCopy(renderData_.sdlRenderer_, renderData_.sdlFillTexture_, nullptr, &dstrect);
 	}
 }
 
@@ -239,12 +265,19 @@ void Renderer::setScreenPosition (SDL_Rect &dstrect, int i, int j) const
 
 void Renderer::prepareTextures ()
 {
-	if(SDL_RenderCopy(renderData_.sdlRenderer_, renderData_.sdlFillTexture_, nullptr, nullptr))
-		throw std::runtime_error("cannot prepare texture");
+	// Очищаем экран перед началом рендеринга
+	SDL_SetRenderDrawColor(renderData_.sdlRenderer_, 0, 0, 0, 255);
+	SDL_RenderClear(renderData_.sdlRenderer_);
+	
+	// Вычисляем размер клетки на основе размера мира и экрана
 	renderData_.rectSize_ = (renderData_.screenHeight_ / renderData_.worldSize_.y_) - 1;
+	
+	// Получаем размеры текстуры танка
 	SDL_Point player_texture_size;
 	if(SDL_QueryTexture(renderData_.sdlTankBottomTextures_, nullptr, nullptr, &player_texture_size.x, &player_texture_size.y))
 		throw std::runtime_error("cannot query texture");
+	
+	// Устанавливаем размеры прямоугольников для игрока и врага
 	renderData_.playerRect_.w = player_texture_size.x / 3 - 1;
 	renderData_.playerRect_.h = player_texture_size.y / 3 - 1;
 	renderData_.enemyRect_.w = player_texture_size.x / 3 - 1;
