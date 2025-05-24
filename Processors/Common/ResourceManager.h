@@ -5,6 +5,7 @@
 #include <iostream>
 #include <fstream>
 #include <stdexcept>
+#include <unordered_map>
 
 // Only include SDL headers when not in test mode
 #ifndef RESOURCE_MANAGER_TEST
@@ -80,44 +81,25 @@ public:
         // Try to find a matching texture in the resources directory
         std::string baseName = getBaseName(textureName);
         
-        // Handle special cases for tank textures
-        if (baseName == "tank_b.png") {
-            resourcePath = "../resources/tanks_b_green_blue_red_512x605.png";
+        // Use unordered_map for texture mappings
+        static const std::unordered_map<std::string, std::string> textureMap = {
+            {"tank_b.png", "../resources/tanks_b_green_blue_red_512x605.png"},
+            {"tank_t.png", "../resources/tanks_t_green_blue_red_512x605.png"},
+            {"tank_l.png", "../resources/tanks_l_green_blue_red_512x605.png"},
+            {"tank_r.png", "../resources/tanks_r_green_blue_red_512x605.png"},
+            {"explosion.png", "../resources/explosion.png"},
+            {"cvetok.png", "../resources/cvetok.png"},
+            {"fill.png", "../resources/fill.png"}
+        };
+        
+        // Look up the texture path in the map
+        auto it = textureMap.find(baseName);
+        if (it != textureMap.end()) {
+            resourcePath = it->second;
             if (fileExists(resourcePath)) {
-                std::cout << "Using texture: " << resourcePath << " for " << textureName << std::endl;
-                return loadTextureFromPath(renderer, resourcePath);
-            }
-        } else if (baseName == "tank_t.png") {
-            resourcePath = "../resources/tanks_t_green_blue_red_512x605.png";
-            if (fileExists(resourcePath)) {
-                std::cout << "Using texture: " << resourcePath << " for " << textureName << std::endl;
-                return loadTextureFromPath(renderer, resourcePath);
-            }
-        } else if (baseName == "tank_l.png") {
-            resourcePath = "../resources/tanks_l_green_blue_red_512x605.png";
-            if (fileExists(resourcePath)) {
-                std::cout << "Using texture: " << resourcePath << " for " << textureName << std::endl;
-                return loadTextureFromPath(renderer, resourcePath);
-            }
-        } else if (baseName == "tank_r.png") {
-            resourcePath = "../resources/tanks_r_green_blue_red_512x605.png";
-            if (fileExists(resourcePath)) {
-                std::cout << "Using texture: " << resourcePath << " for " << textureName << std::endl;
-                return loadTextureFromPath(renderer, resourcePath);
-            }
-        } else if (baseName == "explosion.png") {
-            resourcePath = "../resources/explosion.png";
-            if (fileExists(resourcePath)) {
-                return loadTextureFromPath(renderer, resourcePath);
-            }
-        } else if (baseName == "cvetok.png") {
-            resourcePath = "../resources/cvetok.png";
-            if (fileExists(resourcePath)) {
-                return loadTextureFromPath(renderer, resourcePath);
-            }
-        } else if (baseName == "fill.png") {
-            resourcePath = "../resources/fill.png";
-            if (fileExists(resourcePath)) {
+                if (baseName.find("tank_") == 0) {
+                    std::cout << "Using texture: " << resourcePath << " for " << textureName << std::endl;
+                }
                 return loadTextureFromPath(renderer, resourcePath);
             }
         }
