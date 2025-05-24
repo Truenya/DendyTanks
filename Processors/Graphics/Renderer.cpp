@@ -133,7 +133,7 @@ bool Renderer::init ()
 		quit();
 	}
 
-	return false;
+	return true;
 }
 
 bool Renderer::load()

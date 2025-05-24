@@ -10,6 +10,7 @@ profdata/*.profdata
 *.txt
 !conanfile.txt
 !vcpkg.json
+!resources/labirinth*.txt
 
 #ignore build_dirs
 .idea
