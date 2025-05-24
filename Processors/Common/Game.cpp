@@ -28,13 +28,13 @@ Game::Game():
 #ifdef MAKE_LOG
     renderer_ = new Renderer(isCurrentlyWorking_, logsSynchroStream_);
     processor_ = new MainProcessor(
-        WorldGenerator::generateWorld("../resources/labirinth.txt"), 
+        WorldGenerator::generateWorld("../resources/labirinth20x20.txt"), 
         logsSynchroStream_
     );
 #else
     renderer_ = new Renderer(isCurrentlyWorking_);
     processor_ = new MainProcessor(
-        WorldGenerator::generateWorld("../resources/labirinth.txt")
+        WorldGenerator::generateWorld("../resources/labirinth20x20.txt")
     );
 #endif
 
