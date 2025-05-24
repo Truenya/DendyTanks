@@ -12,9 +12,10 @@
 #include <thread>
 #include <functional>
 #include <atomic>
+#include <memory>
 
 // Forward declarations to avoid circular dependencies
-class Renderer;
+class IRenderer;
 class MainProcessor;
 
 /**
@@ -66,8 +67,8 @@ private:
 #endif
 
     // Game components
-    Renderer* renderer_;
-    MainProcessor* processor_;
+    std::unique_ptr<IRenderer> renderer_;
+    std::unique_ptr<MainProcessor> processor_;
 };
 
 
