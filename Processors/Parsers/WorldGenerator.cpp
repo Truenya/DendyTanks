@@ -3,15 +3,56 @@
 //
 
 #include "WorldGenerator.h"
+#include "../Common/ResourceManager.h"
 #include <iostream>
+
 GameWorld &WorldGenerator::generateWorld(const std::string& map_filepath) {
 	static GameWorld* ptr = nullptr;
 	if (ptr != nullptr)
 		return *ptr;
-	std::ifstream map_file(map_filepath);
-	std::string str((std::istreambuf_iterator<char>(map_file)),
-	                std::istreambuf_iterator<char>());
-	return parseFromString(str,ptr);
+	
+	try {
+		// Get the actual map file path using ResourceManager
+		std::string actualPath = ResourceManager::getMapFilePath(map_filepath);
+		
+		std::ifstream map_file(actualPath);
+		if (!map_file.is_open()) {
+			throw std::runtime_error("Failed to open map file: " + actualPath);
+		}
+		
+		std::string str((std::istreambuf_iterator<char>(map_file)),
+		                std::istreambuf_iterator<char>());
+		
+		return parseFromString(str, ptr);
+	} catch (const std::exception& e) {
+		std::cerr << "Error loading map: " << e.what() << std::endl;
+		std::cerr << "Using default empty map instead." << std::endl;
+		
+		// Create a simple default map if the file can't be loaded
+		std::string defaultMap = 
+			"####################\n"
+			"#                  #\n"
+			"#  A               #\n"
+			"#                  #\n"
+			"#                  #\n"
+			"#                  #\n"
+			"#                  #\n"
+			"#                  #\n"
+			"#                  #\n"
+			"#                  #\n"
+			"#                  #\n"
+			"#                  #\n"
+			"#                  #\n"
+			"#                  #\n"
+			"#                  #\n"
+			"#                  #\n"
+			"#                  #\n"
+			"#                  #\n"
+			"#                  #\n"
+			"####################\n";
+		
+		return parseFromString(defaultMap, ptr);
+	}
 }
 
 #include <list>

@@ -8,12 +8,14 @@
 #include <SDL2/SDL.h>
 #include "../../Entities/Commands/BaseCommand.h"
 #include "../Common/MainProcessor.h"
+#include "../Common/ResourceManager.h"
 #include "../Parsers/WorldGenerator.h"
 #include "Processors/Common/FpsController.h"
 #include "RenderData.h"
 #include <atomic>
 #include <chrono>
 #include <iostream>
+#include <stdexcept>
 
 /**
  * @class Renderer

@@ -28,15 +28,22 @@ Game::Game():
 #ifdef MAKE_LOG
     renderer_ = new Renderer(isCurrentlyWorking_, logsSynchroStream_);
     processor_ = new MainProcessor(
-        WorldGenerator::generateWorld("../resources/labirinth.txt"), 
+        WorldGenerator::generateWorld("../resources/labirinth20x20.txt"), 
         logsSynchroStream_
     );
 #else
     renderer_ = new Renderer(isCurrentlyWorking_);
     processor_ = new MainProcessor(
-        WorldGenerator::generateWorld("../resources/labirinth.txt")
+        WorldGenerator::generateWorld("../resources/labirinth20x20.txt")
     );
 #endif
+
+    // Print helpful message about resources
+    std::cout << "Game initialized. Using resources from the resources directory." << std::endl;
+    std::cout << "If you encounter any issues with resources, make sure the following files exist:" << std::endl;
+    std::cout << "  - Map file: resources/labirinth20x20.txt or resources/labirinth50x50.txt" << std::endl;
+    std::cout << "  - Texture files: resources/cvetok.png, resources/fill.png" << std::endl;
+    std::cout << "  - Tank textures: resources/tanks_b_green_blue_red_512x605.png, etc." << std::endl;
 
     // Connect components
     renderer_->setProcessor(processor_);

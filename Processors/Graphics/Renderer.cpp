@@ -133,126 +133,41 @@ bool Renderer::init ()
 		quit();
 	}
 
-	return false;
+	return true;
 }
 
-bool Renderer::load ()
+bool Renderer::load()
 {
-//    bool isLoadedIncorrectly = false;
-
-	SDL_Surface *temp_surf;
-	temp_surf = IMG_Load("../resources/cvetok.png");
-	if (temp_surf == nullptr)
-	{
-		std::cout << "Can't load image: " << IMG_GetError() << std::endl;
-//	    isLoadedIncorrectly |= true;
-		exit(-1);
+	try {
+		// Load wall texture
+		renderData_.sdlWallTexture_ = ResourceManager::loadTexture(renderData_.sdlRenderer_, "../resources/cvetok.png");
+		
+		// Load fill texture
+		renderData_.sdlFillTexture_ = ResourceManager::loadTexture(renderData_.sdlRenderer_, "../resources/fill.png");
+		
+		// Load tank textures
+		renderData_.sdlTankBottomTextures_ = ResourceManager::loadTexture(renderData_.sdlRenderer_, "../resources/tank_b.png");
+		renderData_.sdlTankTopTextures_ = ResourceManager::loadTexture(renderData_.sdlRenderer_, "../resources/tank_t.png");
+		renderData_.sdlTankLeftTextures_ = ResourceManager::loadTexture(renderData_.sdlRenderer_, "../resources/tank_l.png");
+		renderData_.sdlTankRightTextures_ = ResourceManager::loadTexture(renderData_.sdlRenderer_, "../resources/tank_r.png");
+		
+		// Load explosion texture
+		renderData_.sdlExplosionTextures_ = ResourceManager::loadTexture(renderData_.sdlRenderer_, "../resources/explosion.png");
+		
+		// Fill the map with textures
+		fillMap();
+		
+		return true;
+	} catch (const std::exception& e) {
+		std::cerr << "Error loading textures: " << e.what() << std::endl;
+		std::cerr << "Please make sure all required texture files exist in the resources directory." << std::endl;
+		std::cerr << "Required textures: cvetok.png, fill.png, tank_b.png, tank_t.png, tank_l.png, tank_r.png, explosion.png" << std::endl;
+		std::cerr << "Or their alternatives: tanks_b_green_blue_red_512x605.png, tanks_t_green_blue_red_512x605.png, etc." << std::endl;
+		
+		// Gracefully exit instead of segfaulting
+		work_.store(false);
+		return false;
 	}
-	renderData_.sdlWallTexture_ = SDL_CreateTextureFromSurface(renderData_.sdlRenderer_, temp_surf);
-	SDL_FreeSurface(temp_surf);
-
-	if (renderData_.sdlWallTexture_ == nullptr)
-	{
-		std::cout << "Can't convert: " << SDL_GetError() << std::endl;
-//		isLoadedIncorrectly |= true;
-		exit(-1);
-	}
-
-	temp_surf = IMG_Load("../resources/fill.png");
-	if (temp_surf == nullptr)
-	{
-		std::cout << "Can't load image: " << IMG_GetError() << std::endl;
-//		isLoadedIncorrectly |= true;
-		exit(-1);
-	}
-	renderData_.sdlFillTexture_ = SDL_CreateTextureFromSurface(renderData_.sdlRenderer_, temp_surf);
-	SDL_FreeSurface(temp_surf);
-
-	if (renderData_.sdlFillTexture_ == nullptr)
-	{
-		std::cout << "Can't convert: " << SDL_GetError() << std::endl;
-//		isLoadedIncorrectly |= true;
-		exit(-1);
-	}
-	temp_surf = IMG_Load("../resources/tank_b.png");
-	if (temp_surf == nullptr)
-	{
-		std::cout << "Can't load image: " << IMG_GetError() << std::endl;
-//		isLoadedIncorrectly |= true;
-		exit(-1);
-	}
-	renderData_.sdlTankBottomTextures_ = SDL_CreateTextureFromSurface(renderData_.sdlRenderer_, temp_surf);
-	if (renderData_.sdlTankBottomTextures_ == nullptr)
-	{
-		std::cout << "Can't convert: " << SDL_GetError() << std::endl;
-//		isLoadedIncorrectly |= true;
-		exit(-1);
-	}
-
-	temp_surf = IMG_Load("../resources/tank_t.png");
-	if (temp_surf == nullptr)
-	{
-		std::cout << "Can't load image: " << IMG_GetError() << std::endl;
-//		isLoadedIncorrectly |= true;
-		exit(-1);
-	}
-	renderData_.sdlTankTopTextures_ = SDL_CreateTextureFromSurface(renderData_.sdlRenderer_, temp_surf);
-	if (renderData_.sdlTankTopTextures_ == nullptr)
-	{
-		std::cout << "Can't convert: " << SDL_GetError() << std::endl;
-//		isLoadedIncorrectly |= true;
-		exit(-1);
-	}
-
-
-	temp_surf = IMG_Load("../resources/tank_l.png");
-	if (temp_surf == nullptr)
-	{
-		std::cout << "Can't load image: " << IMG_GetError() << std::endl;
-//		isLoadedIncorrectly |= true;
-		exit(-1);
-	}
-	renderData_.sdlTankLeftTextures_ = SDL_CreateTextureFromSurface(renderData_.sdlRenderer_, temp_surf);
-	if (renderData_.sdlTankLeftTextures_ == nullptr)
-	{
-		std::cout << "Can't convert: " << SDL_GetError() << std::endl;
-//		isLoadedIncorrectly |= true;
-		exit(-1);
-	}
-
-	temp_surf = IMG_Load("../resources/tank_r.png");
-	if (temp_surf == nullptr)
-	{
-		std::cout << "Can't load image: " << IMG_GetError() << std::endl;
-//		isLoadedIncorrectly |= true;
-		exit(-1);
-	}
-	renderData_.sdlTankRightTextures_ = SDL_CreateTextureFromSurface(renderData_.sdlRenderer_, temp_surf);
-	if (renderData_.sdlTankRightTextures_ == nullptr)
-	{
-		std::cout << "Can't convert: " << SDL_GetError() << std::endl;
-//		isLoadedIncorrectly |= true;
-		exit(-1);
-	}
-
-	temp_surf = IMG_Load("../resources/explosion.png");
-	if (temp_surf == nullptr)
-	{
-		std::cout << "Can't load image: " << IMG_GetError() << std::endl;
-//		isLoadedIncorrectly |= true;
-		exit(-1);
-	}
-	renderData_.sdlExplosionTextures_ = SDL_CreateTextureFromSurface(renderData_.sdlRenderer_, temp_surf);
-	if (renderData_.sdlExplosionTextures_ == nullptr)
-	{
-		std::cout << "Can't convert: " << SDL_GetError() << std::endl;
-//		isLoadedIncorrectly |= true;
-		exit(-1);
-	}
-	fillMap();
-
-
-	return false;
 }
 
 int Renderer::quit ()
@@ -538,10 +453,26 @@ void Renderer::setProcessor (MainProcessor *processor)
 	processor_ = processor;
 }
 
-void Renderer::prepare ()
+void Renderer::prepare()
 {
-	init();
-	load();
+    try {
+        if (!init()) {
+            std::cerr << "Failed to initialize renderer." << std::endl;
+            work_.store(false);
+            return;
+        }
+        
+        if (!load()) {
+            std::cerr << "Failed to load resources." << std::endl;
+            work_.store(false);
+            return;
+        }
+        
+        std::cout << "Renderer prepared successfully." << std::endl;
+    } catch (const std::exception& e) {
+        std::cerr << "Error preparing renderer: " << e.what() << std::endl;
+        work_.store(false);
+    }
 }
 
 Renderer::~Renderer ()
