@@ -231,8 +231,10 @@ file(GLOB_RECURSE mProcessorsIncludes Processors/*.h )
 file(GLOB_RECURSE mProcessorsSources Processors/*.cpp )
 file(GLOB_RECURSE mEntityIncludes Entities/*.h)
 file(GLOB_RECURSE mEntitySources Entities/*.cpp)
-message("Headers:\t$${mEntityIncludes};\n\t${mProcessorsIncludes}\n\
-Sources:\t${mSources};\n\t${mEntitySources};\n\t${mProcessorsSources}\n")
+file(GLOB_RECURSE mCoreIncludes Core/*.h)
+file(GLOB_RECURSE mCoreSources Core/*.cpp)
+message("Headers:\t$${mEntityIncludes};\n\t${mProcessorsIncludes};\n\t${mCoreIncludes}\n\
+Sources:\t${mSources};\n\t${mEntitySources};\n\t${mProcessorsSources};\n\t${mCoreSources}\n")
 
 # Always include the project source directory
 include_directories(${CMAKE_SOURCE_DIR})
@@ -274,12 +276,16 @@ else()
 endif (logging_game)
 
 #results
-add_executable(ssdl ${mIncludes} ${mSources} ${mEntityIncludes} ${mEntitySources} ${mProcessorsIncludes} ${mProcessorsSources} Processors/Common/NpcProcessor.cpp Processors/Common/NpcProcessor.h)
+add_executable(ssdl ${mIncludes} ${mSources} ${mEntityIncludes} ${mEntitySources} ${mProcessorsIncludes} ${mProcessorsSources} ${mCoreIncludes} ${mCoreSources} Processors/Common/NpcProcessor.cpp Processors/Common/NpcProcessor.h)
+
+# Add new executable with improved architecture
+add_executable(dendy_tanks_new new_main.cpp Game.cpp Game.h ${mCoreIncludes} ${mCoreSources})
 
 #linking
 if(USE_CONAN)
     # Link with Conan-provided libraries
     target_link_libraries(ssdl ${CONAN_LIBS})
+    target_link_libraries(dendy_tanks_new ${CONAN_LIBS})
 elseif(USE_VCPKG)
     # Link with vcpkg-provided libraries
     target_link_libraries(ssdl 
@@ -291,6 +297,12 @@ elseif(USE_VCPKG)
         # GTest::GTest
         # GTest::Main
     )
+    target_link_libraries(dendy_tanks_new 
+        SDL2::SDL2 
+        SDL2::SDL2main
+        SDL2_image::SDL2_image
+        UUID::UUID
+    )
 elseif(USE_PKG_CONFIG)
     # Link with pkg-config-provided libraries
     target_link_libraries(ssdl 
@@ -300,6 +312,11 @@ elseif(USE_PKG_CONFIG)
         # Uncomment if needed
         # ${TCMALLOC_LIBRARIES}
         # ${GTEST_LIBRARIES}
+    )
+    target_link_libraries(dendy_tanks_new 
+        ${SDL_LIBRARIES}
+        ${SDL_IMAGE_LIBRARIES}
+        ${UUID_LIBRARIES}
     )
 endif()
 
