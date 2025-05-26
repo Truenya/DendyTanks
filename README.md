@@ -1,5 +1,14 @@
-# DendyTanks
-Currently, training of this project in game programming patterns.
+# DendyTanks - Game Programming Patterns Training
+
+This project is focused on learning and practicing game programming patterns through the development of a simple tank game. The goal is to implement various design patterns commonly used in game development while creating an engaging gameplay experience.
+
+## Table of Contents
+- [Building on Ubuntu](#building-on-ubuntu)
+- [Building with Nix/NixOS](#building-with-nixnixos)
+  - [Using flakes (modern Nix)](#using-flakes-modern-nix)
+  - [Using legacy Nix](#using-legacy-nix)
+  - [Quick Build Script](#quick-build-script)
+- [Development](#development)
 
 ## Building on Ubuntu
 
@@ -13,7 +22,7 @@ cd SDL_image && mkdir build && cd build && cmake .. && make -j8 && make install
 
 ## Building with Nix/NixOS
 
-This project can be built using Nix package manager, which provides a reproducible build environment.
+This project can be built using the Nix package manager, which provides a reproducible build environment.
 
 ### Using flakes (modern Nix)
 
@@ -35,9 +44,9 @@ nix-build
 nix-shell
 ```
 
-### Quick build script
+### Quick Build Script
 
-You can use the provided build script:
+For convenience, you can use the provided build script:
 
 ```bash
 # Standard Nix build
@@ -60,4 +69,4 @@ Then build the project with:
 cmake -B build && cmake --build build
 ```
 
-The executable will be available at `build/ssdl`.
+The executable will be available at `build/ssdl` after a successful build.
