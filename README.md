@@ -1,3 +1,4 @@
+
 # DendyTanks
 
 Welcome to DendyTanks! This is a game project built with an innovative new architecture.
@@ -25,7 +26,7 @@ To build and run DendyTanks, you'll need the following tools installed on your s
 To build the project from source, follow these steps:
 
 1. Clone the repository:
-   ```
+   ```bash
    git clone https://github.com/Truenya/DendyTanks.git
    cd DendyTanks
    ```
