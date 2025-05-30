@@ -15,6 +15,11 @@ protected:
     std::unique_ptr<GameWorld> world;
 };
 
+int main(int argc, char **argv) {
+    ::testing::InitGoogleTest(&argc, argv);
+    return RUN_ALL_TESTS();
+}
+
 // Test the constructor and size method
 TEST_F(GameWorldTests, ConstructorAndSize) {
     Position size = world->size();
@@ -33,17 +38,17 @@ TEST_F(GameWorldTests, ConstructorWithInvalidDimensions) {
 
 // Test typeAt method
 TEST_F(GameWorldTests, TypeAt) {
-    // Check that all positions are initially UNDEFINED
+    // Check that all positions are initially SPACE
     for (int x = 0; x < 10; x++) {
         for (int y = 0; y < 10; y++) {
             Position pos(x, y, 0, Position::Direction::TOP);
-            EXPECT_EQ(world->typeAt(pos), GameObject::Type::UNDEFINED);
+            EXPECT_EQ(world->typeAt(pos), GameObject::Type::SPACE);
         }
     }
     
     // Test with invalid position
     Position invalidPos(-1, -1, 0, Position::Direction::TOP);
-    EXPECT_EQ(world->typeAt(invalidPos), GameObject::Type::UNDEFINED);
+    EXPECT_EQ(world->typeAt(invalidPos), GameObject::Type::SPACE);
 }
 
 // Test adding a tank
@@ -110,16 +115,45 @@ TEST_F(GameWorldTests, TypeAtWithDifferentTypes) {
     // Check that the position has the correct type
     EXPECT_EQ(world->typeAt(projectilePos), GameObject::Type::PROJECTILE);
     
-    // Check a position that should be UNDEFINED
+    // Check a position that should be SPACE
     Position emptyPos(7, 7, 0, Position::Direction::TOP);
-    EXPECT_EQ(world->typeAt(emptyPos), GameObject::Type::UNDEFINED);
+    EXPECT_EQ(world->typeAt(emptyPos), GameObject::Type::SPACE);
     
     // Check an invalid position
     Position invalidPos(-1, -1, 0, Position::Direction::TOP);
-    EXPECT_EQ(world->typeAt(invalidPos), GameObject::Type::UNDEFINED);
+    EXPECT_EQ(world->typeAt(invalidPos), GameObject::Type::SPACE);
 }
 
-int main(int argc, char **argv) {
-    ::testing::InitGoogleTest(&argc, argv);
-    return RUN_ALL_TESTS();
+// Test multiple steps for tanks with collision detection
+TEST_F(GameWorldTests, MultipleStepsWithCollision) {
+    // Add tank 1 at position (5,5)
+    Position pos1(5, 5, 0, Position::Direction::TOP);
+    GameObject tank1(pos1, GameObject::Type::PLAYER);
+    std::string uuid1 = world->addTank(tank1);
+
+    // Add tank 2 at position (5,4) - directly above tank 1
+    Position pos2(5, 4, 0, Position::Direction::TOP);
+    GameObject tank2(pos2, GameObject::Type::ENEMY);
+    std::string uuid2 = world->addTank(tank2);
+
+    // Tank 1 tries to move up towards tank 2
+    Positions positions;
+    positions.curPos_ = pos1;
+    positions.curPos_.direction_ = Position::Direction::TOP;
+
+    // Perform the step (should not allow collision)
+    StepReturn result = world->step(positions);
+
+// Check that tank 1 is stopped by tank 2
+    EXPECT_EQ(result.ret_, StepReturn::UNDEFINED_BEHAVIOR);
+
+    // Check that tank 1's position hasn't changed
+    const GameObject& tank1AfterStep = world->tanks_[uuid1];
+    EXPECT_EQ(tank1AfterStep.getPositions().curPos_.x_, pos1.x_);
+    EXPECT_EQ(tank1AfterStep.getPositions().curPos_.y_, pos1.y_);
+
+    // Check that tank 2's position hasn't changed
+    const GameObject& tank2AfterStep = world->tanks_[uuid2];
+    EXPECT_EQ(tank2AfterStep.getPositions().curPos_.x_, pos2.x_);
+    EXPECT_EQ(tank2AfterStep.getPositions().curPos_.y_, pos2.y_);
 }
