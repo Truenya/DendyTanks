@@ -4,7 +4,8 @@
 
 #include <iostream>
 #include "Game.h"
-#include "../Graphics/Renderer.h"
+#include "../Graphics/IRenderer.h"
+#include "../Graphics/RendererFactory.h"
 #include "MainProcessor.h"
 #include "../Parsers/WorldGenerator.h"
 
@@ -26,16 +27,25 @@ Game::Game():
 {
     // Initialize game components
 #ifdef MAKE_LOG
-    renderer_ = new Renderer(isCurrentlyWorking_, logsSynchroStream_);
-    processor_ = new MainProcessor(
+    // Устанавливаем поток логирования для фабрики рендереров
+    RendererFactory::setLogStream(logsSynchroStream_);
+    
+    // Создаем процессор
+    processor_ = std::make_unique<MainProcessor>(
         WorldGenerator::generateWorld("../resources/labirinth20x20.txt"), 
         logsSynchroStream_
     );
+    
+    // Создаем рендерер через фабрику
+    renderer_ = RendererFactory::createRenderer(RendererType::SDL2);
 #else
-    renderer_ = new Renderer(isCurrentlyWorking_);
-    processor_ = new MainProcessor(
+    // Создаем процессор
+    processor_ = std::make_unique<MainProcessor>(
         WorldGenerator::generateWorld("../resources/labirinth20x20.txt")
     );
+    
+    // Создаем рендерер через фабрику
+    renderer_ = RendererFactory::createRenderer(RendererType::SDL2);
 #endif
 
     // Print helpful message about resources
@@ -46,7 +56,7 @@ Game::Game():
     std::cout << "  - Tank textures: resources/tanks_b_green_blue_red_512x605.png, etc." << std::endl;
 
     // Connect components
-    renderer_->setProcessor(processor_);
+    renderer_->setProcessor(processor_.get());
 }
 
 // Destructor
@@ -54,9 +64,7 @@ Game::~Game() {
     // Ensure game is stopped
     isCurrentlyWorking_.store(false);
     
-    // Clean up resources
-    delete renderer_;
-    delete processor_;
+    // Умные указатели автоматически освободят ресурсы
 }
 
 // Main game loop
