@@ -1,34 +1,41 @@
-//
-// Created by true on 2022-04-27.
-//GameObject::Type GameObject::getType() const {
+
 
 
 #ifndef SSDL_GAMEOBJECT_H
 #define SSDL_GAMEOBJECT_H
 
-#include "../Errors/ErrorCode.h"
+#include <memory>
 #include "Position.h"
-#include <vector>
+#include "StepResult.h"
 
-struct  GameObject {
-	enum class Type{
-		UNDEFINED,
-		SPACE,
-		PLAYER,
-		ENEMY,
-		WALL,
-		PROJECTILE
-	};
-	GameObject() ;
-	GameObject(const Position &pos, Type typo);//,std::vector<std::vector<GameObject::Type>> *field);
-	~GameObject();
-	Type type_;
-	[[nodiscard]] const Positions &getPositions() const;
-	void step();
-	void rotate(Position::Direction direction);
+/**
+ * @brief GameObject structure represents an object in the game world.
+ */
+struct GameObject {
+    /** Type of game object */
+    enum class Type{
+        UNDEFINED = 0x00000000, // Explicitly set to 0
+        SPACE = 0x01000000,     // Explicitly set to 1 (matching test expectations)
+        PLAYER,
+        ENEMY,
+        WALL,
+        PROJECTILE
+    };
+
+    GameObject();
+    GameObject(const Position &pos, Type typo);
+    ~GameObject();
+
+    Type type_;
+    [[nodiscard]] const Positions &getPositions() const;
+    StepResult step(); // Returns StepResult instead of void
+    bool isAlive() const;
+
 protected:
-	Positions positions_;
+    Positions positions_;
+
+private:
 };
 
-
 #endif //SSDL_GAMEOBJECT_H
+

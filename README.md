@@ -1,6 +1,7 @@
-# DendyTanks - Game Programming Patterns Training
 
-This project is focused on learning and practicing game programming patterns through the development of a simple tank game. The goal is to implement various design patterns commonly used in game development while creating an engaging gameplay experience.
+# DendyTanks: Game Programming Patterns Training
+
+Welcome to **DendyTanks**! This project is focused on learning and practicing game programming patterns through the development of a simple tank game. The goal is to implement various design patterns commonly used in game development while creating an engaging gameplay experience.
 
 ## Table of Contents
 - [Building on Ubuntu](#building-on-ubuntu)
@@ -13,7 +14,7 @@ This project is focused on learning and practicing game programming patterns thr
 ## Building on Ubuntu
 
 ```bash
-apt update && apt install cmake clang pkg-config libsdl2-dev google-perftools libgtest-dev git 
+apt update && apt install cmake clang pkg-config libsdl2-dev google-perftools libgtest-dev git
 
 git clone https://github.com/libsdl-org/SDL_image
 
