@@ -4,35 +4,35 @@
 
 #ifndef SSDL_MAINPROCESSOR_H
 #define SSDL_MAINPROCESSOR_H
-#include "../../Entities/Commands/BaseCommand.h"
+#include "Entities/Commands/BaseCommand.h"
 #include "Entities/GameObjects/GameWorld.h"
 #include "NpcProcessor.h"
-#include <memory>
+#include <atomic>
 #include <syncstream>
 #include <vector>
-#include <atomic>
 
-typedef std::vector<std::pair<Position,Position>> RenderMoveInfo;
+typedef std::vector<std::pair<Position, Position>> RenderMoveInfo;
 typedef RenderMoveInfo RenderShootInfo;
 
 struct MainProcessor {
 #ifndef MAKE_LOG
-	MainProcessor(GameWorld &world); // NOLINT(google-explicit-constructor)
+	MainProcessor (GameWorld &world);// NOLINT(google-explicit-constructor)
 #else
-	MainProcessor(GameWorld &world,std::osyncstream &logs); // NOLINT(google-explicit-constructor)
+	MainProcessor (GameWorld &world, std::osyncstream &logs);// NOLINT(google-explicit-constructor)
 #endif
-	void addCommand(BaseCommand command);
-	void processCommands();
-	bool processProjectilesMoving();
+	void addCommand (BaseCommand command);
+	void processCommands ();
+	bool processProjectilesMoving ();
 	void processingNpcLoop (const std::atomic<bool> &working);
 	bool noTankAtPos (const Position pos);
-	[[nodiscard]] RenderMoveInfo getPlayerChangedPositions();
-	[[nodiscard]] RenderMoveInfo getNpcChangedPositions();
-	[[nodiscard]] RenderMoveInfo getShoots();
-	[[nodiscard]] Position worldSize() const;
+	[[nodiscard]] RenderMoveInfo getPlayerChangedPositions ();
+	[[nodiscard]] RenderMoveInfo getNpcChangedPositions ();
+	[[nodiscard]] RenderMoveInfo getShoots ();
+	[[nodiscard]] Position worldSize () const;
 	// Используется для заполнения мира, до начала поступления команд, соответственно не страшно.
-	GameObject::Type typeAt(const Position&) const;
+	GameObject::Type typeAt (const Position &) const;
 	ManagedVector<Position> projectiles_;
+
 private:
 	RenderMoveInfo playerChangedPositions_;
 	RenderMoveInfo npcChangedPositions_;
@@ -49,10 +49,10 @@ private:
 	std::mutex mutexShoots_;
 
 	void processTankMove (const BaseCommand &command);
-	bool processShoot(const BaseCommand &command);
+	bool processShoot (const BaseCommand &command);
 	bool processMoveCommands (std::vector<BaseCommand> &commands);
-	bool processShootCommands(std::vector<BaseCommand> &commands);
+	bool processShootCommands (std::vector<BaseCommand> &commands);
 	void prepareCommands (std::vector<BaseCommand> &empty);
 	void prepareShoots (std::vector<BaseCommand> &empty);
 };
-#endif //SSDL_MAINPROCESSOR_H
+#endif//SSDL_MAINPROCESSOR_H

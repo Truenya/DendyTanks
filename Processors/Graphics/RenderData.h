@@ -5,10 +5,15 @@
 #ifndef SSDL_RENDERDATA_H
 #define SSDL_RENDERDATA_H
 
-struct RenderData{
+#include "Entities/GameObjects/Position.h"
+#include "SDL_events.h"
+#include "SDL_render.h"
+#include "SDL_video.h"
+#include <sys/types.h>
+struct RenderData {
 	ssize_t screenWidth_ = 1000;
 	ssize_t screenHeight_ = 1000;
-	Position worldSize_ {0,0,0};
+	Position worldSize_{0, 0, 0};
 	ssize_t rectSize_ = 25;
 	int fps_ = 15;
 	SDL_Window *sdlWindowTest_ = nullptr;
@@ -21,7 +26,7 @@ struct RenderData{
 	SDL_Texture *sdlExplosionTextures_ = nullptr;
 	SDL_Texture *sdlFillTexture_ = nullptr;
 	SDL_Event sdlEvent_{};
-	SDL_Rect playerRect_{0,0,0,0};
-	SDL_Rect enemyRect_{0,0,0,0};
+	SDL_Rect playerRect_{0, 0, 0, 0};
+	SDL_Rect enemyRect_{0, 0, 0, 0};
 };
-#endif //SSDL_RENDERDATA_H
+#endif//SSDL_RENDERDATA_H

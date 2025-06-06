@@ -1,12 +1,9 @@
-//
-// Created by true on 2022-04-30.
-//
-
-
 #include "MainProcessor.h"
+#include <atomic>
 #include <cassert>
 #include <iostream>
 #include <mutex>
+#include <thread>
 
 #ifndef MAKE_LOG
 MainProcessor::MainProcessor (GameWorld &world) :
@@ -34,9 +31,8 @@ void MainProcessor::addCommand (BaseCommand command)
 	using enum BaseCommand::Type;
 	if (command.type_ == SHOOT_COMMAND)
 	{
-		if (command.uid == world_.my_uuid())
-			command.positions_ = world_.tanks_[command.uid].getPositions();
-		//assert(command.positions_.curPos_.direction_ != Position::Direction::EQUAL); FIXME
+		if (command.uid == world_.my_uuid ())
+			command.positions_ = world_.tanks_[command.uid].getPositions ();
 		const std::scoped_lock LOCK (mutexShoots_);
 		shootCommands_.emplace_back (command);
 	}
@@ -59,7 +55,6 @@ void MainProcessor::processCommands ()
 		prepareShoots (empty);
 		processShootCommands (empty);
 	}
-
 }
 void MainProcessor::prepareShoots (std::vector<BaseCommand> &empty)
 {
@@ -103,43 +98,13 @@ bool MainProcessor::processMoveCommands (std::vector<BaseCommand> &commands)
 	return true;
 }
 
-//bool MainProcessor::processNpcMoveCommands (std::vector<BaseCommand> &commands)
-//{
-//	if (commands.empty ())
-//		return false;
-//	processTankMove (commands.back ());
-//	return true;
-//}
-
-// For other commands please create new methods
-//void MainProcessor::processNpcMove (const BaseCommand &command)
-//{
-//	const size_t size = world_.tanks_.count();
-//	for (size_t i = 0; i < size; i++) {
-//		auto s_r = world_.step({world_.tanks_[i]});
-//		if (s_r.ret_ == StepReturn::UNDEFINED_BEHAVIOR)
-//			throw std::runtime_error("[UB] processNpcMove");
-//		const auto POSITIONS = world_.player_.getPositions ();
-//		if (s_r.ret_ == StepReturn::SUCCESS)
-//		{
-//			playerChangedPositions_.emplace_back (POSITIONS.prevPos_, POSITIONS.curPos_);
-//		} else
-//		{
-//			// обработка вращения на танка на месте.
-//			// отрисовщик не поймет, что надо перерисовать
-//			playerChangedPositions_.emplace_back (POSITIONS.curPos_, POSITIONS.curPos_);
-//		}
-//	}
-//}
-
 // For other commands please create new methods
 void MainProcessor::processTankMove (const BaseCommand &command)
 {
 	auto &tank = world_.tanks_[command.uid];
-	assert(command.positions_.curPos_.direction_ != Position::Direction::EQUAL);
+	assert (command.positions_.curPos_.direction_ != Position::Direction::EQUAL);
 	tank.rotate (command.positions_.curPos_.direction_);
-//	world_.player_.rotate (command.positions_.curPos_.direction_);
-	auto s_r = world_.step(tank.getPositions());
+	auto s_r = world_.step (tank.getPositions ());
 	if (s_r.ret_ == StepReturn::UNDEFINED_BEHAVIOR)
 		return;
 #ifdef DEBUG
@@ -160,22 +125,21 @@ void MainProcessor::processTankMove (const BaseCommand &command)
 #endif
 	if (s_r.ret_ == StepReturn::SUCCESS)
 	{
-//		world_.player_.step();
-		tank.step();
-		playerChangedPositions_.emplace_back (tank.getPositions().prevPos_, tank.getPositions().curPos_);
-//		playerChangedPositions_.emplace_back (world_.player_.getPositions().prevPos_, world_.player_.getPositions().curPos_);
-	} else
+		tank.step ();
+		playerChangedPositions_.emplace_back (tank.getPositions ().prevPos_, tank.getPositions ().curPos_);
+	}
+	else
 	{
-		playerChangedPositions_.emplace_back (tank.getPositions().curPos_, tank.getPositions().curPos_);
-//		playerChangedPositions_.emplace_back (world_.player_.getPositions().curPos_, world_.player_.getPositions().curPos_);
+		playerChangedPositions_.emplace_back (tank.getPositions ().curPos_, tank.getPositions ().curPos_);
 	}
 }
+
 // If player press SPACE - lets shoot
 bool MainProcessor::processShoot (const BaseCommand &command)
 {
 	Position first_shoot_render_place;
-	if (command.uid == world_.my_uuid())
-		first_shoot_render_place = world_.tanks_[GameWorld::my_uuid()].getPositions ().curPos_;// take position of player
+	if (command.uid == world_.my_uuid ())
+		first_shoot_render_place = world_.tanks_[GameWorld::my_uuid ()].getPositions ().curPos_;// take position of player
 	else
 		first_shoot_render_place = command.positions_.curPos_;
 
@@ -205,10 +169,6 @@ RenderMoveInfo MainProcessor::getNpcChangedPositions ()
 	return out;
 }
 
-//GameObject MainProcessor::getPlayer() const {
-//	return world_.player_;
-//}
-
 Position MainProcessor::worldSize () const
 {
 	return world_.size ();
@@ -227,61 +187,9 @@ RenderShootInfo MainProcessor::getShoots ()
 	return empty;
 }
 
-//void MainProcessor::processingLoop ()
-//{
-//	// обработать все и передать конкретные координаты для обмена в мир для обновления
-//	auto positions = allProjectilesStepSecond();
-//}
-
-//#include <unordered_set>
-//std::vector<Positions> MainProcessor::allProjectilesStepSecond ()
-//{
-//	std::vector<Positions> output{};
-//	std::unordered_set<size_t> explosed;
-//	for (size_t i = 0; i < projectiles_.count(); ++i)
-//	{
-//		auto pos = projectiles_[i];
-//		const auto PREV_POS = pos;
-//		pos.stepInDirection();
-//		const auto D_POS = pos - PREV_POS;
-//		auto s_r = projectileStepSecond(projectiles_[i], typeAt(pos),pos);
-//		if(s_r.ret_ == StepReturn::MEET_WALL        || s_r.ret_ == StepReturn::MEET_PLAYER
-//		|| s_r.ret_ == StepReturn::MEET_PROJECTILE  || s_r.ret_ == StepReturn::OUT_OF_FIELD)
-//			explosed.insert(i);
-//		else
-//			projectiles_[i].stepInDirection();
-//		output.emplace_back(Positions{PREV_POS,pos});//,D_POS,{}});
-//	}
-//	for (const auto EXPLOSE: explosed)
-//	{
-//		projectiles_.remove(EXPLOSE);
-//	}
-//	return output;
-//}
-
-//StepReturn
-//MainProcessor::projectileStepSecond (const Position &prev_pos, GameObject::Type dst_type, const Position &dst_pos)
-//{
-//	switch (dst_type)
-//	{
-////		case GameObject::Type::SPACE:	return {StepReturn::SUCCESS, dst_pos};
-////		case GameObject::Type::PROJECTILE:	return {StepReturn::MEET_PROJECTILE, dst_pos};
-////		case GameObject::Type::WALL: return {StepReturn::MEET_WALL, dst_pos};
-////		case GameObject::Type::PLAYER:	return {StepReturn::MEET_PLAYER, dst_pos};
-////		default: return {StepReturn::UNDEFINED_BEHAVIOR,{}};
-//		case GameObject::Type::SPACE:	return {StepReturn::SUCCESS};
-//		case GameObject::Type::PROJECTILE:	return {StepReturn::MEET_PROJECTILE};
-//		case GameObject::Type::WALL: return {StepReturn::MEET_WALL};
-//		case GameObject::Type::PLAYER:	return {StepReturn::MEET_PLAYER};
-//		default: return {StepReturn::UNDEFINED_BEHAVIOR};
-//	}
-//}
-
-#include <thread>
-#include <atomic>
 void MainProcessor::processingNpcLoop (const std::atomic<bool> &working)
 {
-	while(working.load ()) {
+	while (working.load ()) {
 		std::this_thread::sleep_for (std::chrono::milliseconds (500));
 		const auto NPC_DATA = npcProcessor_.step ();
 		auto shoots = NPC_DATA.NpcShoots;
@@ -297,9 +205,10 @@ void MainProcessor::processingNpcLoop (const std::atomic<bool> &working)
 	}
 }
 
-bool MainProcessor::noTankAtPos (const Position pos){
-	for (const auto&[_, tank] : world_.tanks_){
-		if (tank.getPositions().curPos_ == pos) return true;
+bool MainProcessor::noTankAtPos (const Position pos)
+{
+	for (const auto &[_, tank] : world_.tanks_) {
+		if (tank.getPositions ().curPos_ == pos) return true;
 	}
 	return false;
 }

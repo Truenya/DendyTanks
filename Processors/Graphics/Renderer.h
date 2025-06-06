@@ -5,114 +5,109 @@
 #ifndef SSDL_RENDERER_H
 #define SSDL_RENDERER_H
 
-#include <SDL2/SDL.h>
-#include "../../Entities/Commands/BaseCommand.h"
-#include "../Common/MainProcessor.h"
-#include "../Common/ResourceManager.h"
-#include "../Parsers/WorldGenerator.h"
 #include "Processors/Common/FpsController.h"
+#include "Processors/Common/MainProcessor.h"
 #include "RenderData.h"
+#include <SDL2/SDL.h>
 #include <atomic>
-#include <chrono>
-#include <iostream>
-#include <stdexcept>
 
 /**
  * @class Renderer
  * @brief Class for interacting with the SDL2 library
  * @details All logic is contained within, only processingEventsLoop is called externally
  */
-class Renderer {
+class Renderer
+{
 private:
-    // Game components
-    FpsController fps_;
-    RenderData renderData_;
-    std::atomic_bool &work_;
-    MainProcessor *processor_;
-    ManagedVector<std::pair<Position,int>> explosed_;
-    bool rendered_{false};
-    
-    // Logging
+	// Game components
+	FpsController fps_;
+	RenderData renderData_;
+	std::atomic_bool &work_;
+	MainProcessor *processor_;
+	ManagedVector<std::pair<Position, int>> explosed_;
+	bool rendered_{false};
+
+	// Logging
 #ifdef MAKE_LOG
-    std::osyncstream &logsSynchroStream_;
+	std::osyncstream &logsSynchroStream_;
 #endif
 
-    // Private methods
-    bool init();
-    bool load();
-    void fillMap();
-    int quit();
-    void processEvents();
-    void prepareTextures();
+	// Private methods
+	bool init ();
+	bool load ();
+	void fillMap ();
+	int quit ();
+	void processEvents ();
+	void prepareTextures ();
 
 public:
-    /**
+	/**
      * @brief Constructor
      * @param run Reference to atomic flag controlling execution
      */
 #ifndef MAKE_LOG
-    explicit Renderer(std::atomic_bool& run);
+	explicit Renderer (std::atomic_bool &run);
 #else
-    explicit Renderer(std::atomic_bool& run, std::osyncstream& logStream);
+	explicit Renderer (std::atomic_bool &run, std::osyncstream &logStream);
 #endif
 
-    /**
+	/**
      * @brief Destructor
      */
-    ~Renderer();
+	~Renderer ();
 
-    /**
+	/**
      * @brief Prepare the renderer
      */
-    void prepare();
+	void prepare ();
 
-    /**
+	/**
      * @brief Main event processing loop
      */
-    void processingEventsLoop();
+	void processingEventsLoop ();
 
-    /**
+	/**
      * @brief Render the current frame
      * @return True if rendering was successful
      */
-    bool render();
+	bool render ();
 
-    /**
+	/**
      * @brief Set the processor reference
      * @param processor Pointer to the MainProcessor
      */
-    void setProcessor(MainProcessor *processor);
+	void setProcessor (MainProcessor *processor);
 
-    /**
+	/**
      * @brief Render player movement
      */
-    void renderPlayerMove();
+	void renderPlayerMove ();
 
-    /**
+	/**
      * @brief Render NPC movement
      */
-    void renderNpcMove();
+	void renderNpcMove ();
 
-    /**
+	/**
      * @brief Render projectiles
      */
-    void renderShoots();
+	void renderShoots ();
 
-    /**
+	/**
      * @brief Set screen position for rendering
      * @param dstrect Rectangle to position
      * @param i Row index
      * @param j Column index
      */
-    void setScreenPosition(SDL_Rect &dstrect, int i, int j) const;
+	void setScreenPosition (SDL_Rect &dstrect, int i, int j) const;
 
-    /**
+	/**
      * @brief Fill rectangle at position
      * @param dstrect Rectangle to fill
      * @param i Row index
      * @param j Column index
      */
-    void fillRectByPosition(SDL_Rect &dstrect, int i, int j) const;
+	void fillRectByPosition (SDL_Rect &dstrect, int i, int j) const;
 };
 
-#endif //SSDL_RENDERER_H
+#endif//SSDL_RENDERER_H
